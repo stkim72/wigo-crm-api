@@ -42,9 +42,9 @@
                     , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'CU300' AND COMN_CD = A.CNTPLC_TYPE_CD AND  COMN_CD_LVL_NO = 2) CNTPLC_TYPE_CD_NM
                     , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'CU100' AND COMN_CD = A.DISTRCT_CD AND  COMN_CD_LVL_NO = 2) DISTRCT_CD_NM
                     , (SELECT CUST_NM FROM CRM_CUST_BAS WHERE ITG_CUST_NO = A.ITG_CUST_NO) CUST_NM
-                    , DAMO.DECRYPT_VAR_B64('AES_256',A.EMAIL_ADDR,'') EMAIL_ADDR                    /*이메일주소        */
-                    , DAMO.DECRYPT_VAR_B64('AES_256',A.TEL_NO,'')   TEL_NO                    /*전화번호        */
-                    , DAMO.DECRYPT_VAR_B64('AES_256',A.ADDR_2_CTNTS,'') ADDR_2_CTNTS                    /*주소2내용        */
+                    , A.EMAIL_ADDR EMAIL_ADDR                    /*이메일주소        */
+                    , A.TEL_NO   TEL_NO                    /*전화번호        */
+                    , A.ADDR_2_CTNTS ADDR_2_CTNTS                    /*주소2내용        */
 <!--     <choose> -->
 <!--             <when test="'Y'.toString().equals(decryptYn) "><include refid="sqlSelectDecCols"></include></when> -->
 <!--             <otherwise><include refid="sqlSelectEncCols"></include></otherwise> -->
@@ -58,8 +58,8 @@
 <!--     </sql> -->
 <!--     <sql id="sqlSelectDecCols"> -->
     
-<!--                     , DAMO.DECRYPT_VAR_B64('AES_256',A.TEL_NO,'')   TEL_NO                    /*전화번호        */ -->
-<!--                     , DAMO.DECRYPT_VAR_B64('AES_256',A.ADDR_2_CTNTS,'') ADDR_2_CTNTS                    /*주소2내용        */ -->
+<!--                     , A.TEL_NO   TEL_NO                    /*전화번호        */ -->
+<!--                     , A.ADDR_2_CTNTS ADDR_2_CTNTS                    /*주소2내용        */ -->
                     
 <!--     </sql> -->
     <sql id="sqlConditions">
@@ -88,10 +88,10 @@
                   AND A.REP_CNTPLC_YN   =       #{repCntplcYn}
         </if>
         <if test="telNo != null and telNo != ''">
-                  AND A.TEL_NO          =       DAMO.ENCRYPT_VAR_B64('AES_256',#{telNo},'')
+                  AND A.TEL_NO          =       #{telNo}
         </if>
         <if test="telNo != null and telNo != ''">
-                  AND A.TEL_NO         =        DAMO.ENCRYPT_VAR_B64('AES_256',#{telNo},'')
+                  AND A.TEL_NO         =        #{telNo}
         </if>
         <if test="telBkDgtNo != null and telBkDgtNo != ''">
                   AND A.TEL_BK_DGT_NO   =       #{telBkDgtNo}
@@ -126,10 +126,10 @@
                   AND A.ADDR_1_CTNTS    =       #{addr1Ctnts}
         </if>
         <if test="addr2Ctnts != null and addr2Ctnts != ''">
-                  AND A.ADDR_2_CTNTS    =       DAMO.ENCRYPT_VAR_B64('AES_256',#{addr2Ctnts},'')
+                  AND A.ADDR_2_CTNTS    =       #{addr2Ctnts}
         </if>
         <if test="emailAddr != null and emailAddr != ''">
-                  AND A.EMAIL_ADDR      =       DAMO.ENCRYPT_VAR_B64('AES_256',#{emailAddr},'')
+                  AND A.EMAIL_ADDR      =       #{emailAddr}
         </if>
         <if test="delYn != null and delYn != ''">
                   AND A.DEL_YN          =       #{delYn}
@@ -194,13 +194,13 @@
                      , #{itgCustNo}
                      , #{cntplcTypeCd}
                      , NVL(#{repCntplcYn},'N')
-                     , DAMO.ENCRYPT_VAR_B64('AES_256',#{telNo} ,'')
+                     , #{telNo} 
                      , #{telBkDgtNo}
                      , #{distrctCd}
                      , #{zipCd}
                      , #{addr1Ctnts}
-                     , DAMO.ENCRYPT_VAR_B64('AES_256',#{addr2Ctnts} ,'')
-                     , DAMO.ENCRYPT_VAR_B64('AES_256',#{emailAddr} ,'')
+                     , #{addr2Ctnts} 
+                     , #{emailAddr} 
                      , NVL(#{delYn},'N')
                      , #{amdrId}
                      , SYSDATE
@@ -213,13 +213,13 @@
                UPDATE CRM_CUST_CNTPLC_BAS /* com.ceragem.api.crm.dao.CrmCustCntplcBasDao.update */
                   SET CNTPLC_TYPE_CD                          =         #{cntplcTypeCd}
                     , REP_CNTPLC_YN                           =         NVL(#{repCntplcYn},'N')
-                    , TEL_NO                                  =         DAMO.ENCRYPT_VAR_B64('AES_256',#{telNo} ,'')
+                    , TEL_NO                                  =         #{telNo} 
                     , TEL_BK_DGT_NO                           =         #{telBkDgtNo}
                     , DISTRCT_CD                              =         #{distrctCd}
                     , ZIP_CD                                  =         #{zipCd}
                     , ADDR_1_CTNTS                            =         #{addr1Ctnts}
-                    , ADDR_2_CTNTS                            =         DAMO.ENCRYPT_VAR_B64('AES_256',#{addr2Ctnts} ,'')
-                    , EMAIL_ADDR                              =         DAMO.ENCRYPT_VAR_B64('AES_256',#{emailAddr},'')
+                    , ADDR_2_CTNTS                            =         #{addr2Ctnts} 
+                    , EMAIL_ADDR                              =         #{emailAddr}
                     , DEL_YN                                  =         NVL(#{delYn},'N')
                     , AMDR_ID                                 =         #{amdrId}
                     , AMD_DT                                  =         SYSDATE

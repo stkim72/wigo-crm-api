@@ -23,9 +23,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class BosApiService {
-	@Value("${bos.api.rest-url}/crm/CRM_API_0001Ctl/getRandomKey.do")
+//	@Value("${bos.api.rest-url}/crm/CRM_API_0001Ctl/getRandomKey.do")
 	String randomKeyUrl;
-	@Value("${bos.api.rest-url}/crm/CRM_API_0056Ctl/saveCrmCustInfo.do")
+//	@Value("${bos.api.rest-url}/crm/CRM_API_0056Ctl/saveCrmCustInfo.do")
 	String bosEventUrl;
 	String enc = "UTF-8";
 

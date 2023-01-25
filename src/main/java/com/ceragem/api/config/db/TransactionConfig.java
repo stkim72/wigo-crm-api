@@ -41,16 +41,7 @@ public class TransactionConfig {
 		return tx;
 	}
 
-	@Bean(name = "ctcTransactionManager")
-	DataSourceTransactionManager ctcTxManager(@Qualifier("ctcDataSource") DataSource dataSource)
-			throws Exception {
-		return new DataSourceTransactionManager(dataSource);
-	}
-
-	@Bean(name = "asTransactionManager")
-	DataSourceTransactionManager asTxManager(@Qualifier("asDataSource") DataSource dataSource) throws Exception {
-		return new DataSourceTransactionManager(dataSource);
-	}
+	
 
 //	@Bean(name = "txManager")
 //	public PlatformTransactionManager chainedTransactionManager(

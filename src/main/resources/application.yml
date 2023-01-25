@@ -1,18 +1,59 @@
+# server(embbeded tomcat) config
+server:
+  port: 8052
+
+# spring config
 spring:
-  application:
-    name: ceragem-api
+  servlet:
+      multipart:
+        max-file-size: 10GB
+        max-request-size: 10GB
+  nas:
+    path:   c:/nas/crm/
+    url:    https://files.ceragem.com/crm/
+  jwt:
+    secret: tpfkwpadnsdudzl
+    auth-validation : true
+  datasource:
+    crm:
+      driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+      url: jdbc:log4jdbc:oracle:thin:@S3.MOARA.ORG:6030:ORCL
+      username: CERAGEM
+      password: ceragem
+#      url: jdbc:log4jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=glcmdb51p)(PORT=51401))(ADDRESS=(PROTOCOL=TCP)(HOST=glcmdb52p)(PORT=51401))(LOAD_BALANCE=OFF)(FAILOVER=ON))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=PCRMDB)))
+#      username: CRMCON
+#      password: ENC(tXsLiMFNX9RxlhodmsaY15Pgi9GF15rb)
+      # Pool
+      hikari:
+        connection-timeout: 10000
+        maximum-pool-size: 100
+  eon:
+    sms-sender-no:  15775570
+    sms-sender-name: 세라젬
+    talk-sender-key : senderkey_001
+    user: crm_1
+    mail-addr: noreply@creagem.com
+    mail-name: 세라젬        
+# log config
+logging:
+  #  file: logs/application.log
+  config: classpath:logback-prod.xml
+
+# swagger config    
+springdoc:
+  version: '@project.version@'
+  api-docs:
+    path: /api-docs
+  server-url : http://localhost:8082/
+  swagger-ui:
+    path: /ceragem/
+    enabled: true
   
 
-server:
-  port: 80
-  tomcat:
-    basedir: /log/sw/
-    accesslog:
-      directory: tomcat/api/
-      enabled: true
-      file-date-format: .yyyy-MM-dd
-      max-days: 30
-      pattern: '%h %l %u %t "%r" %s %b %D'
-      prefix: access
-      rotate: true
-      suffix: .log
+    
+jasypt:
+  encryptor:
+    bean: jasyptStringEncryptor    
+    
+
+

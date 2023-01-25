@@ -1,6 +1,6 @@
 # server(embbeded tomcat) config
 server:
-  port: 8082
+  port: 8052
 
 # spring config
 spring:
@@ -17,34 +17,16 @@ spring:
   datasource:
     crm:
       driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
-      url: jdbc:log4jdbc:oracle:thin:@172.23.1.91:8122:DCRMDB
-      username: crmown
-      password: ENC(yapd7t/7RcUAZC56+WVcJg==)
+      url: jdbc:log4jdbc:oracle:thin:@S3.MOARA.ORG:6030:ORCL
+      username: CERAGEM
+      password: ceragem
 #      url: jdbc:log4jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=glcmdb51p)(PORT=51401))(ADDRESS=(PROTOCOL=TCP)(HOST=glcmdb52p)(PORT=51401))(LOAD_BALANCE=OFF)(FAILOVER=ON))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=PCRMDB)))
 #      username: CRMCON
 #      password: ENC(tXsLiMFNX9RxlhodmsaY15Pgi9GF15rb)
       # Pool
       hikari:
         connection-timeout: 10000
-        maximum-pool-size: 3
-    ctc:
-      driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
-      url: jdbc:log4jdbc:oracle:thin:@172.23.1.91:8122:DCRMDB
-      username: CTCOWN
-      password: ENC(K7u4MmQG4WKvlJiY8dIzdQ==)
-      # Pool
-      hikari:
-        connection-timeout: 10000
-        maximum-pool-size: 3
-    as:
-      driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
-      url: jdbc:log4jdbc:oracle:thin:@172.23.1.91:8122:DCRMDB
-      username: ASMOWN
-      password: ENC(D0LpgFNqrulxN9+2GUPpjA==)
-      # Pool
-      hikari:
-        connection-timeout: 10000
-        maximum-pool-size: 3
+        maximum-pool-size: 100
   eon:
     sms-sender-no:  15775570
     sms-sender-name: 세라젬
@@ -67,26 +49,11 @@ springdoc:
     path: /ceragem/
     enabled: true
   
-# as config
-as:
-  api:
-    rest-url: http://localhost:80
+
     
 jasypt:
   encryptor:
     bean: jasyptStringEncryptor    
     
-# sap config
-sap:
-  api:
-    rest-url: http://cedev.ceragem.co.kr:8010/sap/opu/odata/sap
-       
 
-# bos config
-bos:
-  api:
-    rest-url: https://mapone.ceragem.com
-  use-event: true
-crm:
-  event:
-    lab-url: https://dev-parent-api.ceragem.com/membership/
+

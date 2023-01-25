@@ -1,44 +1,32 @@
 # server(embbeded tomcat) config
 server:
-  port: 8082
-  tomcat:
-    accesslog:
-      enabled: true
-      directory: /log/sw/tomcat/api
-  
+  port: 8052
+
 # spring config
 spring:
+  servlet:
+      multipart:
+        max-file-size: 10GB
+        max-request-size: 10GB
+  nas:
+    path:   c:/nas/crm/
+    url:    https://files.ceragem.com/crm/
   jwt:
-    secret: 1qaz@WSX
+    secret: tpfkwpadnsdudzl
     auth-validation : true
   datasource:
     crm:
       driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
-      url: jdbc:log4jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=glcmdb51p)(PORT=51401))(ADDRESS=(PROTOCOL=TCP)(HOST=glcmdb52p)(PORT=51401))(LOAD_BALANCE=OFF)(FAILOVER=ON))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=PCRMDB)))
-      username: CRMCON
-      password: ENC(tXsLiMFNX9RxlhodmsaY15Pgi9GF15rb)
+      url: jdbc:log4jdbc:oracle:thin:@S3.MOARA.ORG:6030:ORCL
+      username: CERAGEM
+      password: ceragem
+#      url: jdbc:log4jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=glcmdb51p)(PORT=51401))(ADDRESS=(PROTOCOL=TCP)(HOST=glcmdb52p)(PORT=51401))(LOAD_BALANCE=OFF)(FAILOVER=ON))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=PCRMDB)))
+#      username: CRMCON
+#      password: ENC(tXsLiMFNX9RxlhodmsaY15Pgi9GF15rb)
       # Pool
       hikari:
         connection-timeout: 10000
-        maximum-pool-size: 50
-    ctc:
-      driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
-      url: jdbc:log4jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=glcmdb51p)(PORT=51401))(ADDRESS=(PROTOCOL=TCP)(HOST=glcmdb52p)(PORT=51401))(LOAD_BALANCE=OFF)(FAILOVER=ON))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=PCRMDB)))
-      username: CTCCON
-      password: ENC(K3lUeoJYXy1CfHgxGO1ZTd7QWg0Yuq1n)
-      # Pool
-      hikari:
-        connection-timeout: 10000
-        maximum-pool-size: 50
-    as:
-      driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
-      url: jdbc:log4jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=glcmdb51p)(PORT=51401))(ADDRESS=(PROTOCOL=TCP)(HOST=glcmdb52p)(PORT=51401))(LOAD_BALANCE=OFF)(FAILOVER=ON))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=PCRMDB)))
-      username: ASMCON
-      password: ENC(wVK4M2ngP7puuGo5fjI4HZpHnTlyTWfH)
-      # Pool
-      hikari:
-        connection-timeout: 10000
-        maximum-pool-size: 50
+        maximum-pool-size: 100
   eon:
     sms-sender-no:  15775570
     sms-sender-name: 세라젬
@@ -55,31 +43,17 @@ logging:
 springdoc:
   version: '@project.version@'
   api-docs:
-    path: /api-docs    
-  server-url : https://api.ceragem.com/
+    path: /api-docs
+  server-url : http://localhost:8082/
   swagger-ui:
     path: /ceragem/
     enabled: true
   
-# as config
-as:
-  api:
-    rest-url: https://asm.ceragem.com
+
     
 jasypt:
   encryptor:
     bean: jasyptStringEncryptor    
     
-# sap config
-sap:
-  api:
-    rest-url: http://ceprdp1.ceragem.co.kr:8000/sap/opu/odata/sap
-    
-bos:
-  api:
-#    rest-url: https://mapone.ceragem.com
-    rest-url: https://onemap.ceragem.com
-  use-event: true
-crm:
-  event:
-    lab-url: https://prd-parent-api.ceragem.com/membership/
+
+

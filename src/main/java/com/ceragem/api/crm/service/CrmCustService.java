@@ -96,7 +96,6 @@ public class CrmCustService extends AbstractCrmService {
 	@Value("${spring.eon.user}")
 	String eonUser;
 
-	@Value("${bos.use-event}")
 	boolean useEvent = false;
 
 	private final static String API_EVENT_EXIST = "NOT_EXIST";
@@ -174,8 +173,7 @@ public class CrmCustService extends AbstractCrmService {
 	@Autowired
 	CrmRcmdHstDao rcmdHstDao;
 
-	@Value("${crm.event.lab-url}")
-	String labEventUrl;
+
 
 	@Autowired
 	BosApiService bosApiService;
@@ -1955,15 +1953,7 @@ public class CrmCustService extends AbstractCrmService {
 		} catch (Exception ex) {
 			log.debug(ex.getMessage());
 		}
-		try {
-			String url = String.format("%s%s/sync/%s", labEventUrl, itgCustNo, code);
-			log.debug(url);
-			if (!"PRC".equals(exceptCh))
-				Utilities.wget(url, null, null, false, "POST");
-
-		} catch (Exception ex) {
-			log.debug(ex.getMessage());
-		}
+		
 	}
 
 	public String getCallChannel() {
