@@ -1,0 +1,407 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ceragem.api.crm.dao.CrmPointHstDao">
+    <sql id="sqlPkConditions">
+                WHERE POINT_HST_SEQ     =       #{pointHstSeq}
+    </sql>
+    <sql id="sqlCols">
+                      POINT_HST_SEQ                    /*포인트이력일련번호        */
+                    , ITG_CUST_NO                    /*통합고객번호        */
+                    , MSHIP_GRADE_CD                    /*멤버십등급코드        공통코드 : MB020        [001 : 일반 , 002 : 화이트 , 003 : 브론즈 , 004 : 실버 , 005 : 골드 , 006 : VIP]*/
+                    , STOR_NO                    /*매장번호        */
+                    , CHIT_NO                    /*전표번호        */
+                    , BUY_GODS_NO                    /*구매제품번호        */
+                    , ORDR_AMT                    /*주문금액        */
+                    , APPLY_AMT                    /*적용금액        */
+                    , PAY_AMT                    /*결제금액        */
+                    , PBLS_DIV_CD                      /*발행구분코드        공통코드 : EV100 */
+                    , OCCUR_POINT_SCORE                    /*발생포인트점수        */
+                    , REMAIN_POINT_SCORE           /*잔여포인트점수*/
+                    , VALID_PERD_STA_YMD                    /*유효기간시작년월일        */
+                    , VALID_PERD_END_YMD                    /*유효기간종료년월일        */
+                    , PBLS_DT                    /*발행일시        */
+                    , EXTNC_DT                    /*소멸일시        */
+                    , TXN                    /*내역        */
+                    , PBLS_CHL_CD                    /*발행채널코드        공통코드 : S000        [CTC : 상담 , AS : AS , SAP : SAP , test : test]*/
+                    , CARD_PBLS_HST_SEQ                    /*카드발행이력일련번호        */
+                    , USE_TYPE_CD                    /*사용유형코드        공통코드 : PO010        [001 : 사용 , 002 : 적립 , 003 : 취소]*/
+                    , DEAL_NO                    /*거래번호        */
+                    , PROM_NO                    /*프로모션번호        */
+                    , CAMP_NO                    /*캠페인번호        */
+                    , COUPN_NO                    /*쿠폰번호        */
+                    , USE_DT                    /*사용일시        */
+                    , AMDR_ID                    /*수정자ID        */
+                    , AMD_DT                    /*수정일시        */
+                    , REGR_ID                    /*등록자ID        */
+                    , REG_DT                    /*등록일시        */
+                    , REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CTC : 상담 , AS : AS , SAP : SAP , test : test]*/
+                    , ACCUM_YN
+                    , RCMDR_CUST_NO
+                    , ORG_CHIT_NO
+    </sql>
+    <sql id="sqlSelectCols">
+                      A.POINT_HST_SEQ                    /*포인트이력일련번호        */
+                    , A.ITG_CUST_NO                    /*통합고객번호        */
+                    , A.MSHIP_GRADE_CD                    /*멤버십등급코드        공통코드 : MB020        [001 : 일반 , 002 : 화이트 , 003 : 브론즈 , 004 : 실버 , 005 : 골드 , 006 : VIP]*/
+                    , A.STOR_NO                    /*매장번호        */
+                    , A.CHIT_NO                    /*전표번호        */
+                    , A.BUY_GODS_NO                    /*구매제품번호        */
+                    , A.ORDR_AMT                    /*주문금액        */
+                    , A.APPLY_AMT                    /*적용금액        */
+                    , A.PAY_AMT                    /*결제금액        */
+                    , A.PBLS_DIV_CD                      /*발행구분코드        공통코드 : PO020        [001 : 구매포인트 , 002 : 구매추천포인트 , 003 : 웰카페체험추천포인트 , 004 : 홈체험추천포인트 , 005 : 웰카페체험포인트 , 006 : 홈카페체험포인트 , 007 : 구매등급포인트 , 008 : 승급포인트 , 009 : 쿠폰포인트 , 010 : 출석체크포인트 , 011 : 세라체크포인트 , 012 : 서베이포인트 , 013 : 후기포인트 , 014 : iot포인트 , 101 : 선물 , 999 : 기타]*/
+                    , A.OCCUR_POINT_SCORE                    /*발생포인트점수        */
+                    , A.REMAIN_POINT_SCORE           /*잔여포인트점수*/
+                    , A.VALID_PERD_STA_YMD                    /*유효기간시작년월일        */
+                    , A.VALID_PERD_END_YMD                    /*유효기간종료년월일        */
+                    , TO_CHAR(A.PBLS_DT,'YYYYMMDDHH24MISS')    PBLS_DT                    /*발행일시        */
+                    , TO_CHAR(A.EXTNC_DT,'YYYYMMDDHH24MISS')    EXTNC_DT                    /*소멸일시        */
+                    , A.TXN                    /*내역        */
+                    , A.PBLS_CHL_CD                    /*발행채널코드        공통코드 : S000        [CTC : 상담 , AS : AS , SAP : SAP , test : test]*/
+                    , A.CARD_PBLS_HST_SEQ                    /*카드발행이력일련번호        */
+                    , A.USE_TYPE_CD                    /*사용유형코드        공통코드 : PO010        [001 : 사용 , 002 : 적립 , 003 : 취소]*/
+                    , A.DEAL_NO                    /*거래번호        */
+                    , A.PROM_NO                    /*프로모션번호        */
+                    , A.CAMP_NO                    /*캠페인번호        */
+                    , A.COUPN_NO                    /*쿠폰번호        */
+                    , TO_CHAR(A.USE_DT,'YYYYMMDDHH24MISS')    USE_DT                    /*사용일시        */
+                    , A.AMDR_ID                    /*수정자ID        */
+                    , TO_CHAR(A.AMD_DT,'YYYYMMDDHH24MISS')    AMD_DT                    /*수정일시        */
+                    , A.REGR_ID                    /*등록자ID        */
+                    , TO_CHAR(A.REG_DT,'YYYYMMDDHH24MISS')    REG_DT                    /*등록일시        */
+                    , A.REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CTC : 상담 , AS : AS , SAP : SAP , test : test]*/
+                    , ( SELECT COMN_CD_NM 
+                         FROM CRM_COMN_CD_BAS
+                        WHERE TOP_COMN_CD = 'PO020' 
+                          AND COMN_CD  = A.PBLS_DIV_CD
+                          AND COMN_CD_LVL_NO = 2 ) PBLS_DIV_NM
+                    , ( SELECT COMN_CD_NM 
+                         FROM CRM_COMN_CD_BAS
+                        WHERE TOP_COMN_CD = 'PO020' 
+                          AND COMN_CD  = A.USE_TYPE_CD
+                          AND COMN_CD_LVL_NO = 2 ) USE_TYPE_NM
+                    , ACCUM_YN
+    </sql>
+    <sql id="sqlConditions">
+    <where>
+        <if test="pointHstSeq != null and pointHstSeq != ''">
+                  AND A.POINT_HST_SEQ   =       #{pointHstSeq}
+        </if>
+        <if test="itgCustNo != null and itgCustNo != ''">
+                  AND A.ITG_CUST_NO     =       #{itgCustNo}
+        </if>
+        <if test="mshipGradeCd != null and mshipGradeCd != ''">
+            <choose>
+                <when test="mshipGradeCd instanceof String">
+                    AND A.MSHIP_GRADE_CD  =       #{mshipGradeCd}
+                </when>
+                <otherwise>
+                    AND A.MSHIP_GRADE_CD  IN
+                    <foreach item="item" index="index" collection="mshipGradeCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="storNo != null and storNo != ''">
+                  AND A.STOR_NO         =       #{storNo}
+        </if>
+        <if test="chitNo != null and chitNo != ''">
+                  AND A.CHIT_NO         =       #{chitNo}
+        </if>
+        <if test="buyGodsNo != null and buyGodsNo != ''">
+                  AND A.BUY_GODS_NO     =       #{buyGodsNo}
+        </if>
+        <if test="ordrAmt != null and ordrAmt != ''">
+                  AND A.ORDR_AMT        =       #{ordrAmt}
+        </if>
+        <if test="applyAmt != null and applyAmt != ''">
+                  AND A.APPLY_AMT       =       #{applyAmt}
+        </if>
+        <if test="payAmt != null and payAmt != ''">
+                  AND A.PAY_AMT         =       #{payAmt}
+        </if>
+        <if test="pblsDivCd != null and pblsDivCd != ''">
+            <choose>
+                <when test="pblsDivCd instanceof String">
+                    AND A.PBLS_DIV_CD     =       #{pblsDivCd}
+                </when>
+                <otherwise>
+                    AND A.PBLS_DIV_CD     IN
+                    <foreach item="item" index="index" collection="pblsDivCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="occurPointScore != null and occurPointScore != ''">
+                  AND A.OCCUR_POINT_SCORE=       #{occurPointScore}
+        </if>
+        
+        <if test="pblsDt != null and pblsDt != ''">
+                  AND A.PBLS_DT         =       TO_DATE(#{pblsDt},'YYYYMMDDHH24MISS')
+        </if>
+        <if test="extncDt != null and extncDt != ''">
+                  AND A.EXTNC_DT        =       TO_DATE(#{extncDt},'YYYYMMDDHH24MISS')
+        </if>
+        <if test="txn != null and txn != ''">
+                  AND A.TXN             =       #{txn}
+        </if>
+        <if test="pblsChlCd != null and pblsChlCd != ''">
+            <choose>
+                <when test="pblsChlCd instanceof String">
+                    AND A.PBLS_CHL_CD     =       #{pblsChlCd}
+                </when>
+                <otherwise>
+                    AND A.PBLS_CHL_CD     IN
+                    <foreach item="item" index="index" collection="pblsChlCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="cardPblsHstSeq != null and cardPblsHstSeq != ''">
+                  AND A.CARD_PBLS_HST_SEQ=       #{cardPblsHstSeq}
+        </if>
+        <if test="useTypeCd != null and useTypeCd != ''">
+            <choose>
+                <when test="useTypeCd instanceof String">
+                    AND A.USE_TYPE_CD     =       #{useTypeCd}
+                </when>
+                <otherwise>
+                    AND A.USE_TYPE_CD     IN
+                    <foreach item="item" index="index" collection="useTypeCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="dealNo != null and dealNo != ''">
+                  AND A.DEAL_NO         =       #{dealNo}
+        </if>
+        <if test="promNo != null and promNo != ''">
+                  AND A.PROM_NO         =       #{promNo}
+        </if>
+        <if test="campNo != null and campNo != ''">
+                  AND A.CAMP_NO         =       #{campNo}
+        </if>
+        <if test="coupnNo != null and coupnNo != ''">
+                  AND A.COUPN_NO        =       #{coupnNo}
+        </if>
+        <if test="useDt != null and useDt != ''">
+                  AND A.USE_DT          =       TO_DATE(#{useDt},'YYYYMMDDHH24MISS')
+        </if>
+        <if test="regChlCd != null and regChlCd != ''">
+            <choose>
+                <when test="regChlCd instanceof String">
+                    AND A.REG_CHL_CD      =       #{regChlCd}
+                </when>
+                <otherwise>
+                    AND A.REG_CHL_CD      IN
+                    <foreach item="item" index="index" collection="regChlCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="startDt != null and startDt != ''" >
+        	AND PBLS_DT >= TO_DATE(#{startDt},'YYYYMMDD')
+        </if>
+        <if test="endDt != null and endDt != ''" >
+        	AND TO_DATE(#{endDt},'YYYYMMDD') + 1 > PBLS_DT
+        </if>
+        <if test="useCard !=null and userCard !=''">
+        	<choose>
+        		<when test="useCard.toString().equals('N')">
+        	AND CARD_PBLS_HST_SEQ IS NULL	
+        		</when>
+        		<otherwise>
+        	AND CARD_PBLS_HST_SEQ IS NOT NULL
+        		</otherwise>
+        	</choose>
+        	
+        </if>
+        </where>
+    </sql>
+    <select id="selectListCount" resultType="int">
+                SELECT /* com.ceragem.api.crm.dao.CrmPointHstDao.selectListCount */ COUNT(1)
+                 FROM CRM_POINT_HST A
+        <include refid="sqlConditions"/>
+    </select>
+    <select id="selectList" resultType="com.ceragem.api.crm.model.CrmPointHstVo">
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingHeader"/>
+               SELECT /* com.ceragem.api.crm.dao.CrmPointHstDao.selectList */ <include refid="sqlSelectCols"/>
+                 FROM CRM_POINT_HST A
+        <include refid="sqlConditions"/>
+               ORDER BY REG_DT DESC
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingFooter"/>
+    </select>
+    <select id="select" resultType="com.ceragem.api.crm.model.CrmPointHstVo">
+               SELECT  /* com.ceragem.api.crm.dao.CrmPointHstDao.select */ <include refid="sqlSelectCols"/>
+                 FROM CRM_POINT_HST A
+        <include refid="sqlPkConditions"/>
+    </select>
+    <insert id="insert">
+    	<selectKey order="BEFORE" keyProperty="pointHstSeq" resultType="String">
+    		SELECT FN_CRM_AUTO_SEQ('PNT') FROM DUAL
+    	</selectKey>
+                INSERT  /* com.ceragem.api.crm.dao.CrmPointHstDao.insert */ INTO CRM_POINT_HST (
+        <include refid="sqlCols"/>
+                 ) VALUES (
+                       #{pointHstSeq}
+                     , #{itgCustNo}
+                     , #{mshipGradeCd}
+                     , NVL(#{storNo}, '141359' )
+                     , NVL(#{chitNo},#{pointHstSeq})
+                     , #{buyGodsNo}
+                     , #{ordrAmt}
+                     , #{applyAmt}
+                     , #{payAmt}
+                     , #{pblsDivCd}
+                     , #{occurPointScore}
+                     , #{remainPointScore}
+                     , NVL(#{validPerdStaYmd},TO_CHAR(SYSDATE,'YYYYMMDD'))
+                     , CASE WHEN #{pblsDivCd} = '940' THEN NULL ELSE NVL(#{validPerdEndYmd},TO_CHAR(ADD_MONTHS(SYSDATE,DECODE(#{pblsDivCd},'101',12,24)),'YYYYMMDD')) END  
+                     , SYSDATE
+                     , NULL
+<!--                      , TO_DATE(#{extncDt},'YYYYMMDDHH24MISS') -->
+                     , #{txn}
+                     , NVL(#{pblsChlCd}, NVL(#{regChlCd}, #{regrId}))
+                     , #{cardPblsHstSeq}
+                     , #{useTypeCd}
+                     , #{dealNo}
+                     , #{promNo}
+                     , #{campNo}
+                     , #{coupnNo}
+<!--                      , NVL(TO_DATE(#{useDt},'YYYYMMDDHH24MISS'),SYSDATE) -->
+                     , CASE WHEN #{occurPointScore} > 0 THEN NULL ELSE SYSDATE END
+                     , #{amdrId}
+                     , SYSDATE
+                     , #{regrId}
+                     , SYSDATE
+                     , NVL(#{regChlCd}, #{regrId})
+                     , #{accumYn}
+                     , #{rcmdrCustNo2}
+                     , #{orgChitNo}
+                 )
+    </insert>
+    <update id="update">
+               UPDATE CRM_POINT_HST  /* com.ceragem.api.crm.dao.CrmPointHstDao.update */ 
+                  SET ITG_CUST_NO                             =         #{itgCustNo}
+                    , MSHIP_GRADE_CD                          =         #{mshipGradeCd}
+                    , STOR_NO                                 =         #{storNo}
+                    , CHIT_NO                                 =         #{chitNo}
+                    , BUY_GODS_NO                             =         #{buyGodsNo}
+                    , ORDR_AMT                                =         #{ordrAmt}
+                    , APPLY_AMT                               =         #{applyAmt}
+                    , PAY_AMT                                 =         #{payAmt}
+                    , PBLS_DIV_CD                             =         #{pblsDivCd}
+                    , OCCUR_POINT_SCORE                       =         #{occurPointScore}
+                    , PBLS_DT                                 =         TO_DATE( NVL(#{pblsDt}, SYSDATE) ,'YYYYMMDDHH24MISS')
+<!--                     , EXTNC_DT                                =         TO_DATE( NVL(#{extncDt}, SYSDATE) ,'YYYYMMDDHH24MISS') -->
+                    , TXN                                     =         #{txn}
+                    , PBLS_CHL_CD                             =         #{pblsChlCd}
+                    , CARD_PBLS_HST_SEQ                       =         #{cardPblsHstSeq}
+                    , USE_TYPE_CD                             =         #{useTypeCd}
+                    , DEAL_NO                                 =         #{dealNo}
+                    , PROM_NO                                 =         #{promNo}
+                    , CAMP_NO                                 =         #{campNo}
+                    , COUPN_NO                                =         #{coupnNo}
+<!--                     , USE_DT                                  =         TO_DATE( NVL(#{useDt}, SYSDATE),'YYYYMMDDHH24MISS') -->
+                    , AMDR_ID                                 =         #{amdrId}
+                    , AMD_DT                                  =         SYSDATE
+                    , REG_CHL_CD                              =         #{regChlCd}
+                    , ACCUM_YN                              =         #{accumYn}
+        <include refid="sqlPkConditions"/>
+    </update>
+    <update id="updateExtncDt">
+               UPDATE CRM_POINT_HST  /* com.ceragem.api.crm.dao.CrmPointHstDao.updateExtncDt */ 
+                  SET EXTNC_DT                                =         NVL(TO_DATE(#{extncDt},'YYYYMMDDHH24MISS'),SYSDATE)
+        <include refid="sqlPkConditions"/>
+        		  AND EXTNC_DT IS NULL
+    </update>
+    <delete id="delete">
+               DELETE /* com.ceragem.api.crm.dao.CrmPointHstDao.delete */ 
+                 FROM CRM_POINT_HST
+        <include refid="sqlPkConditions"/>
+    </delete>
+    
+    <select id="selectPointInfo" resultType="com.ceragem.api.crm.model.CrmPointInfoVo">
+    	       SELECT /* com.ceragem.api.crm.dao.CrmPointHstDao.selectPointInfo */  #{itgCustNo} ITG_CUST_NO
+                    , NVL(SUM(
+			                    CASE WHEN 0 >= OCCUR_POINT_SCORE THEN OCCUR_POINT_SCORE
+			                    	 WHEN EXTNC_DT IS NOT NULL THEN OCCUR_POINT_SCORE
+			                         WHEN TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN VALID_PERD_STA_YMD AND VALID_PERD_END_YMD THEN OCCUR_POINT_SCORE
+			                         WHEN VALID_PERD_STA_YMD > TO_CHAR(SYSDATE,'YYYYMMDD') THEN OCCUR_POINT_SCORE
+			                         WHEN TO_CHAR(SYSDATE,'YYYYMMDD') > VALID_PERD_END_YMD THEN
+			                         	  NVL((SELECT NVL(SUM(USE_POINT_SCORE),0) FROM CRM_POINT_USE_REL WHERE OCCUR_POINT_HST_SEQ = A.POINT_HST_SEQ ),0) 
+			                         ELSE 0 END
+                    ),0) TOTAL_POINT
+                    , NVL(SUM(
+			                    CASE WHEN 0 >= OCCUR_POINT_SCORE THEN OCCUR_POINT_SCORE
+			                    	 WHEN EXTNC_DT IS NOT NULL THEN OCCUR_POINT_SCORE
+			                         WHEN TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN VALID_PERD_STA_YMD AND VALID_PERD_END_YMD THEN OCCUR_POINT_SCORE
+			                         WHEN TO_CHAR(SYSDATE,'YYYYMMDD') NOT BETWEEN VALID_PERD_STA_YMD AND VALID_PERD_END_YMD THEN
+			                         	  NVL((SELECT NVL(SUM(USE_POINT_SCORE),0) FROM CRM_POINT_USE_REL WHERE OCCUR_POINT_HST_SEQ = A.POINT_HST_SEQ ),0) 
+			                         ELSE 0 END
+                    ),0) AVAILABLE_POINT
+					, NVL(SUM(
+			                    CASE WHEN TO_CHAR(SYSDATE,'YYYYMMDD') > VALID_PERD_END_YMD AND OCCUR_POINT_SCORE > 0 THEN
+			                    		OCCUR_POINT_SCORE - NVL((SELECT NVL(SUM(USE_POINT_SCORE),0) FROM CRM_POINT_USE_REL WHERE OCCUR_POINT_HST_SEQ = A.POINT_HST_SEQ ),0) 
+			                        ELSE 0 END
+                    ),0) EXPIRED_POINT
+                    , NVL(SUM(
+                    			CASE WHEN USE_TYPE_CD != '001' OR CHIT_NO IN (SELECT CHIT_NO FROM CRM_POINT_HST WHERE ITG_CUST_NO = #{itgCustNo} AND USE_TYPE_CD = '003') THEN 0
+                    			ELSE OCCUR_POINT_SCORE END
+                    ),0) * -1 TOTAL_WITHDRAWAL
+                    , NVL(SUM(
+                    			CASE WHEN USE_TYPE_CD != '002' OR CHIT_NO IN (SELECT CHIT_NO FROM CRM_POINT_HST WHERE ITG_CUST_NO = #{itgCustNo} AND USE_TYPE_CD = '003') THEN 0
+                    			ELSE OCCUR_POINT_SCORE END
+                    ),0) TOTAL_DEPOSIT
+                 FROM CRM_POINT_HST A
+        		WHERE ITG_CUST_NO = #{itgCustNo}
+    </select>
+    
+     <select id="selectAvailableList" resultType="com.ceragem.api.crm.model.CrmPointHstVo">
+               SELECT /* com.ceragem.api.crm.dao.CrmPointHstDao.selectAvailableList */ <include refid="sqlSelectCols"/>
+                    , NVL((SELECT SUM(USE_POINT_SCORE) FROM CRM_POINT_USE_REL WHERE OCCUR_POINT_HST_SEQ = A.POINT_HST_SEQ),0) USE_POINT_SCORE
+                 FROM CRM_POINT_HST A
+        		WHERE ITG_CUST_NO = #{itgCustNo}
+        		  AND EXTNC_DT IS NULL
+<!--                   AND OCCUR_POINT_SCORE - NVL((SELECT SUM(USE_POINT_SCORE) FROM CRM_POINT_USE_REL WHERE OCCUR_POINT_HST_SEQ = A.POINT_HST_SEQ),0) > 0  -->
+        		  AND OCCUR_POINT_SCORE > 0
+        		  AND TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN VALID_PERD_STA_YMD AND VALID_PERD_END_YMD 
+                ORDER BY VALID_PERD_END_YMD
+                    , POINT_HST_SEQ
+    </select>
+    
+    <select id="selectDebtList" resultType="com.ceragem.api.crm.model.CrmPointHstVo">
+       SELECT /* com.ceragem.api.crm.dao.CrmPointHstDao.selectDebtList */ A.* 
+         FROM ( 
+               SELECT <include refid="sqlSelectCols"/>
+                    , NVL((SELECT SUM(USE_POINT_SCORE) FROM CRM_POINT_USE_REL WHERE USE_POINT_HST_SEQ = A.POINT_HST_SEQ),0) USE_POINT_SCORE
+                 FROM CRM_POINT_HST A
+        		WHERE ITG_CUST_NO = #{itgCustNo}
+        		  AND EXTNC_DT IS NULL
+<!--                   AND OCCUR_POINT_SCORE - NVL((SELECT SUM(USE_POINT_SCORE) FROM CRM_POINT_USE_REL WHERE OCCUR_POINT_HST_SEQ = A.POINT_HST_SEQ),0) > 0 -->
+        		  AND 0 > OCCUR_POINT_SCORE
+             ) A
+         WHERE 0 > USE_POINT_SCORE + OCCUR_POINT_SCORE 
+         ORDER BY POINT_HST_SEQ
+    </select>
+    
+    
+     <select id="selectChitNoChk" resultType="com.ceragem.api.crm.model.CrmPointHstVo">
+       SELECT /* com.ceragem.api.crm.dao.CrmPointHstDao.selectChitNoChk */ A.* 
+         FROM ( 
+			SELECT 
+			  (SELECT COUNT(*) FROM  CRM_POINT_HST B WHERE B.CHIT_NO = #{chitNo} ) PNT_CNT
+			, (SELECT COUNT(*) FROM  CRM_COUPN_PBLS_HST B WHERE B.CHIT_NO = #{chitNo}  ) CPN_CNT
+			, (SELECT COUNT(*) FROM  CRM_ADVNCMT_HST B WHERE B.CHIT_NO = #{chitNo}  ) ADVN_CNT
+			FROM DUAL
+		) A
+		WHERE PNT_CNT > 0 OR CPN_CNT  > 0 OR ADVN_CNT > 0
+    </select>
+    
+    
+</mapper>

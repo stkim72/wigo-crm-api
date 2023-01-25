@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ceragem.api.crm.dao.CrmMshipCardBasDao">
+    <sql id="sqlPkConditions">
+                WHERE MSHIP_CARD_BAS_NO =       #{mshipCardBasNo}
+    </sql>
+    <sql id="sqlCols">
+                      MSHIP_CARD_BAS_NO                    /*멤버십카드기본번호        */
+                    , CARD_TYPE_CD                    /*카드유형코드        */
+                    , MSHIP_GRADE_APPLY_CTNTS                    /*멤버십등급적용내용        */
+                    , CARD_USE_PERD                    /*카드사용기간        */
+                    , CARD_VALID_PERD                    /*카드유효기간        */
+                    , ISSUE_CNT                    /*발급수        */
+                    , POINT_ACCUM_RATE                    /*포인트적립율        */
+                    , SBSC_POINT_SCORE                    /*가입포인트점수        */
+                    , SBSC_POINT_APPLY_STD_CD                    /*가입포인트적용기준코드        */
+                    , ADVNCMT_POINT_SCORE                    /*승급포인트점수        */
+                    , ADVNCMT_POINT_APPLY_STD_CD                    /*승급포인트적용기준코드        */
+                    , DRNK_DC_RATE                    /*음료할인율        */
+                    , DAY_DRNK_PRV_CNT                    /*일음료제공수        */
+                    , DRNK_PRV_CNT                    /*음료제공수        */
+                    , MYCOM_MALL_FREE_DLV_YN                    /*자사몰무료배송여부        */
+                    , DRNK_FREE_APPLY_STMP_CNT                    /*음료무료적용스탬프수        */
+                    , FREE_SVC_EXTNSN_MONS_CNT                    /*무료서비스연장개월수        */
+                    , CERAC_COUPN_PRV_MONS_CNT                    /*세라케어쿠폰제공개월수        */
+                    , CRCK_COUPN_PRV_MONS_CNT                    /*세라체크쿠폰제공개월수        */
+                    , GODS_RSTRTN_YN                    /*제품제한여부        */
+                    , STATUS_CD                    /*상태코드        */
+                    , CARD_BAS_NM                    /*카드기본명        */
+                    , CARD_BAS_CTNTS                    /*카드기본내용        */
+                    , AMDR_ID                    /*수정자ID        */
+                    , AMD_DT                    /*수정일시        */
+                    , REGR_ID                    /*등록자ID        */
+                    , REG_DT                    /*등록일시        */
+                    , REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS]*/
+                    , USE_PERD_CD                    /*사용기간코드        */
+                    , VALID_PERD_CD                    /*유효기간코드        */
+                    , ISSUE_CNT_CD                    /*발급수코드        */
+                    
+    </sql>
+    <sql id="sqlSelectCols">
+                      A.MSHIP_CARD_BAS_NO                    /*멤버십카드기본번호        */
+                    , A.CARD_TYPE_CD                    /*카드유형코드        */
+                    , A.MSHIP_GRADE_APPLY_CTNTS                    /*멤버십등급적용내용        */
+                    , A.CARD_USE_PERD                    /*카드사용기간        */
+                    , A.CARD_VALID_PERD                    /*카드유효기간        */
+                    , A.ISSUE_CNT                    /*발급수        */
+                    , A.POINT_ACCUM_RATE                    /*포인트적립율        */
+                    , A.SBSC_POINT_SCORE                    /*가입포인트점수        */
+                    , A.SBSC_POINT_APPLY_STD_CD                    /*가입포인트적용기준코드        */
+                    , A.ADVNCMT_POINT_SCORE                    /*승급포인트점수        */
+                    , A.ADVNCMT_POINT_APPLY_STD_CD                    /*승급포인트적용기준코드        */
+                    , A.DRNK_DC_RATE                    /*음료할인율        */
+                    , A.DAY_DRNK_PRV_CNT                    /*일음료제공수        */
+                    , A.DRNK_PRV_CNT                    /*음료제공수        */
+                    , A.MYCOM_MALL_FREE_DLV_YN                    /*자사몰무료배송여부        */
+                    , A.DRNK_FREE_APPLY_STMP_CNT                    /*음료무료적용스탬프수        */
+                    , A.FREE_SVC_EXTNSN_MONS_CNT                    /*무료서비스연장개월수        */
+                    , A.CERAC_COUPN_PRV_MONS_CNT                    /*세라케어쿠폰제공개월수        */
+                    , A.CRCK_COUPN_PRV_MONS_CNT                    /*세라체크쿠폰제공개월수        */
+                    , A.GODS_RSTRTN_YN                    /*제품제한여부        */
+                    , A.STATUS_CD                    /*상태코드        */
+                    , A.CARD_BAS_NM                    /*카드기본명        */
+                    , A.CARD_BAS_CTNTS                    /*카드기본내용        */
+                    , A.AMDR_ID                    /*수정자ID        */
+                    , TO_CHAR(A.AMD_DT,'YYYYMMDDHH24MISS')    AMD_DT                    /*수정일시        */
+                    , A.REGR_ID                    /*등록자ID        */
+                    , TO_CHAR(A.REG_DT,'YYYYMMDDHH24MISS')    REG_DT                    /*등록일시        */
+                    , A.REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS]*/
+                    , A.USE_PERD_CD                    /*사용기간코드        */
+                    , A.VALID_PERD_CD                    /*유효기간코드        */
+                    , A.ISSUE_CNT_CD                    /*발급수코드        */
+                    
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'CD010' AND COMN_CD = A.CARD_TYPE_CD AND  COMN_CD_LVL_NO = 2) CARD_TYPE_CD_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = '' AND COMN_CD = A.SBSC_POINT_APPLY_STD_CD AND  COMN_CD_LVL_NO = 2) SBSC_POINT_APPLY_STD_CD_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = '' AND COMN_CD = A.ADVNCMT_POINT_APPLY_STD_CD AND  COMN_CD_LVL_NO = 2) ADVNCMT_POINT_APPLY_STD_CD_NM
+    </sql>
+    <sql id="sqlConditions">
+    <where>
+        <if test="mshipCardBasNo != null and mshipCardBasNo != ''">
+                  AND A.MSHIP_CARD_BAS_NO=       #{mshipCardBasNo}
+        </if>
+        <if test="cardTypeCd != null and cardTypeCd != ''">
+            <choose>
+                <when test="cardTypeCd instanceof String">
+                    AND A.CARD_TYPE_CD    =       #{cardTypeCd}
+                </when>
+                <otherwise>
+                    AND A.CARD_TYPE_CD    IN
+                    <foreach item="item" index="index" collection="cardTypeCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="mshipGradeApplyCtnts != null and mshipGradeApplyCtnts != ''">
+                  AND A.MSHIP_GRADE_APPLY_CTNTS=       #{mshipGradeApplyCtnts}
+        </if>
+        <if test="cardUsePerd != null and cardUsePerd != ''">
+                  AND A.CARD_USE_PERD   =       #{cardUsePerd}
+        </if>
+        <if test="cardValidPerd != null and cardValidPerd != ''">
+                  AND A.CARD_VALID_PERD =       #{cardValidPerd}
+        </if>
+        <if test="issueCnt != null and issueCnt != ''">
+                  AND A.ISSUE_CNT       =       #{issueCnt}
+        </if>
+        <if test="pointAccumRate != null and pointAccumRate != ''">
+                  AND A.POINT_ACCUM_RATE=       #{pointAccumRate}
+        </if>
+        <if test="sbscPointScore != null and sbscPointScore != ''">
+                  AND A.SBSC_POINT_SCORE=       #{sbscPointScore}
+        </if>
+        <if test="sbscPointApplyStdCd != null and sbscPointApplyStdCd != ''">
+            <choose>
+                <when test="sbscPointApplyStdCd instanceof String">
+                    AND A.SBSC_POINT_APPLY_STD_CD=       #{sbscPointApplyStdCd}
+                </when>
+                <otherwise>
+                    AND A.SBSC_POINT_APPLY_STD_CDIN
+                    <foreach item="item" index="index" collection="sbscPointApplyStdCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="advncmtPointScore != null and advncmtPointScore != ''">
+                  AND A.ADVNCMT_POINT_SCORE=       #{advncmtPointScore}
+        </if>
+        <if test="advncmtPointApplyStdCd != null and advncmtPointApplyStdCd != ''">
+            <choose>
+                <when test="advncmtPointApplyStdCd instanceof String">
+                    AND A.ADVNCMT_POINT_APPLY_STD_CD=       #{advncmtPointApplyStdCd}
+                </when>
+                <otherwise>
+                    AND A.ADVNCMT_POINT_APPLY_STD_CDIN
+                    <foreach item="item" index="index" collection="advncmtPointApplyStdCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="drnkDcRate != null and drnkDcRate != ''">
+                  AND A.DRNK_DC_RATE    =       #{drnkDcRate}
+        </if>
+        <if test="dayDrnkPrvCnt != null and dayDrnkPrvCnt != ''">
+                  AND A.DAY_DRNK_PRV_CNT=       #{dayDrnkPrvCnt}
+        </if>
+        <if test="drnkPrvCnt != null and drnkPrvCnt != ''">
+                  AND A.DRNK_PRV_CNT    =       #{drnkPrvCnt}
+        </if>
+        <if test="mycomMallFreeDlvYn != null and mycomMallFreeDlvYn != ''">
+                  AND A.MYCOM_MALL_FREE_DLV_YN=       #{mycomMallFreeDlvYn}
+        </if>
+        <if test="drnkFreeApplyStmpCnt != null and drnkFreeApplyStmpCnt != ''">
+                  AND A.DRNK_FREE_APPLY_STMP_CNT=       #{drnkFreeApplyStmpCnt}
+        </if>
+        <if test="freeSvcExtnsnMonsCnt != null and freeSvcExtnsnMonsCnt != ''">
+                  AND A.FREE_SVC_EXTNSN_MONS_CNT=       #{freeSvcExtnsnMonsCnt}
+        </if>
+        <if test="ceracCoupnPrvMonsCnt != null and ceracCoupnPrvMonsCnt != ''">
+                  AND A.CERAC_COUPN_PRV_MONS_CNT=       #{ceracCoupnPrvMonsCnt}
+        </if>
+        <if test="crckCoupnPrvMonsCnt != null and crckCoupnPrvMonsCnt != ''">
+                  AND A.CRCK_COUPN_PRV_MONS_CNT=       #{crckCoupnPrvMonsCnt}
+        </if>
+        <if test="godsRstrtnYn != null and godsRstrtnYn != ''">
+                  AND A.GODS_RSTRTN_YN  =       #{godsRstrtnYn}
+        </if>
+        <if test="statusCd != null and statusCd != ''">
+            <choose>
+                <when test="statusCd instanceof String">
+                    AND A.STATUS_CD       =       #{statusCd}
+                </when>
+                <otherwise>
+                    AND A.STATUS_CD       IN
+                    <foreach item="item" index="index" collection="statusCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="cardBasNm != null and cardBasNm != ''">
+                  AND A.CARD_BAS_NM     =       #{cardBasNm}
+        </if>
+        <if test="cardBasCtnts != null and cardBasCtnts != ''">
+                  AND A.CARD_BAS_CTNTS  =       #{cardBasCtnts}
+        </if>
+        <if test="regChlCd != null and regChlCd != ''">
+            <choose>
+                <when test="regChlCd instanceof String">
+                    AND A.REG_CHL_CD      =       #{regChlCd}
+                </when>
+                <otherwise>
+                    AND A.REG_CHL_CD      IN
+                    <foreach item="item" index="index" collection="regChlCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="usePerdCd != null and usePerdCd != ''">
+            <choose>
+                <when test="usePerdCd instanceof String">
+                    AND A.USE_PERD_CD     =       #{usePerdCd}
+                </when>
+                <otherwise>
+                    AND A.USE_PERD_CD     IN
+                    <foreach item="item" index="index" collection="usePerdCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="validPerdCd != null and validPerdCd != ''">
+            <choose>
+                <when test="validPerdCd instanceof String">
+                    AND A.VALID_PERD_CD   =       #{validPerdCd}
+                </when>
+                <otherwise>
+                    AND A.VALID_PERD_CD   IN
+                    <foreach item="item" index="index" collection="validPerdCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="issueCntCd != null and issueCntCd != ''">
+            <choose>
+                <when test="issueCntCd instanceof String">
+                    AND A.ISSUE_CNT_CD    =       #{issueCntCd}
+                </when>
+                <otherwise>
+                    AND A.ISSUE_CNT_CD    IN
+                    <foreach item="item" index="index" collection="issueCntCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+       </where>
+    </sql>
+    <select id="selectListCount" resultType="int">
+                SELECT COUNT(1) /* com.ceragem.api.crm.dao.CrmMshipCardBasDao.selectListCount */
+                 FROM CRM_MSHIP_CARD_BAS A
+        <include refid="sqlConditions"/>
+    </select>
+    <select id="selectList" resultType="com.ceragem.api.crm.model.CrmMshipCardBasVo">
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingHeader"/>
+               SELECT /* com.ceragem.api.crm.dao.CrmMshipCardBasDao.selectList */ <include refid="sqlSelectCols"/>
+                 FROM CRM_MSHIP_CARD_BAS A
+        <include refid="sqlConditions"/>
+               ORDER BY REG_DT DESC
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingFooter"/>
+    </select>
+    <select id="select" resultType="com.ceragem.api.crm.model.CrmMshipCardBasVo">
+               SELECT /* com.ceragem.api.crm.dao.CrmMshipCardBasDao.select */ <include refid="sqlSelectCols"/>
+                 FROM CRM_MSHIP_CARD_BAS A
+        <include refid="sqlPkConditions"/>
+    </select>
+    <insert id="insert">
+                INSERT /* com.ceragem.api.crm.dao.CrmMshipCardBasDao.insert */ INTO CRM_MSHIP_CARD_BAS (
+        <include refid="sqlCols"/>
+                 ) VALUES (
+                       #{mshipCardBasNo}
+                     , #{cardTypeCd}
+                     , #{mshipGradeApplyCtnts}
+                     , #{cardUsePerd}
+                     , #{cardValidPerd}
+                     , #{issueCnt}
+                     , #{pointAccumRate}
+                     , #{sbscPointScore}
+                     , #{sbscPointApplyStdCd}
+                     , #{advncmtPointScore}
+                     , #{advncmtPointApplyStdCd}
+                     , #{drnkDcRate}
+                     , #{dayDrnkPrvCnt}
+                     , #{drnkPrvCnt}
+                     , NVL(#{mycomMallFreeDlvYn},'N')
+                     , #{drnkFreeApplyStmpCnt}
+                     , #{freeSvcExtnsnMonsCnt}
+                     , #{ceracCoupnPrvMonsCnt}
+                     , #{crckCoupnPrvMonsCnt}
+                     , NVL(#{godsRstrtnYn},'N')
+                     , #{statusCd}
+                     , #{cardBasNm}
+                     , #{cardBasCtnts}
+                     , #{amdrId}
+                     , SYSDATE
+                     , #{regrId}
+                     , SYSDATE
+                     , #{regChlCd}
+                     , #{usePerdCd}
+                     , #{validPerdCd}
+                     , #{issueCntCd}
+         
+                 )
+    </insert>
+    <update id="update">
+               UPDATE CRM_MSHIP_CARD_BAS /* com.ceragem.api.crm.dao.CrmMshipCardBasDao.update */ 
+                  SET CARD_TYPE_CD                            =         #{cardTypeCd}
+                    , MSHIP_GRADE_APPLY_CTNTS                 =         #{mshipGradeApplyCtnts}
+                    , CARD_USE_PERD                           =         #{cardUsePerd}
+                    , CARD_VALID_PERD                         =         #{cardValidPerd}
+                    , ISSUE_CNT                               =         #{issueCnt}
+                    , POINT_ACCUM_RATE                        =         #{pointAccumRate}
+                    , SBSC_POINT_SCORE                        =         #{sbscPointScore}
+                    , SBSC_POINT_APPLY_STD_CD                 =         #{sbscPointApplyStdCd}
+                    , ADVNCMT_POINT_SCORE                     =         #{advncmtPointScore}
+                    , ADVNCMT_POINT_APPLY_STD_CD              =         #{advncmtPointApplyStdCd}
+                    , DRNK_DC_RATE                            =         #{drnkDcRate}
+                    , DAY_DRNK_PRV_CNT                        =         #{dayDrnkPrvCnt}
+                    , DRNK_PRV_CNT                            =         #{drnkPrvCnt}
+                    , MYCOM_MALL_FREE_DLV_YN                  =         NVL(#{mycomMallFreeDlvYn},'N')
+                    , DRNK_FREE_APPLY_STMP_CNT                =         #{drnkFreeApplyStmpCnt}
+                    , FREE_SVC_EXTNSN_MONS_CNT                =         #{freeSvcExtnsnMonsCnt}
+                    , CERAC_COUPN_PRV_MONS_CNT                =         #{ceracCoupnPrvMonsCnt}
+                    , CRCK_COUPN_PRV_MONS_CNT                 =         #{crckCoupnPrvMonsCnt}
+                    , GODS_RSTRTN_YN                          =         NVL(#{godsRstrtnYn},'N')
+                    , STATUS_CD                               =         #{statusCd}
+                    , CARD_BAS_NM                             =         #{cardBasNm}
+                    , CARD_BAS_CTNTS                          =         #{cardBasCtnts}
+                    , AMDR_ID                                 =         #{amdrId}
+                    , AMD_DT                                  =         SYSDATE
+                    , REG_CHL_CD                              =         #{regChlCd}
+                    , USE_PERD_CD                             =         #{usePerdCd}
+                    , VALID_PERD_CD                           =         #{validPerdCd}
+                    , ISSUE_CNT_CD                            =         #{issueCntCd}
+                    
+                    , MSHP_GRADE_CD                           =         #{mshpGradeCd}
+                    , CPRT_CMP_NO                             =         #{cprtCmpNo}
+                    
+        <include refid="sqlPkConditions"/>
+    </update>
+    <delete id="delete">
+               DELETE /* com.ceragem.api.crm.dao.CrmMshipCardBasDao.delete */ 
+                 FROM CRM_MSHIP_CARD_BAS
+        <include refid="sqlPkConditions"/>
+    </delete>
+   
+</mapper>

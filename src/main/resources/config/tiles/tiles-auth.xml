@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN" "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+<tiles-definitions>    
+<!--     <definition name="_manage_main_index" template="/WEB-INF/jsp/tiles/manage/index.jsp" /> -->
+	<definition name="_manage_main_index" template="/WEB-INF/jsp/tiles/auth/index.jsp" />
+<!--     <definition name="_manage_blank_index" template="/WEB-INF/jsp/tiles/manage/blank.jsp" /> -->
+<definition name="_manage_blank_index" template="/WEB-INF/jsp/tiles/auth/blank.jsp" />
+<!--      <definition name="_manage_blank_body_index" template="/WEB-INF/jsp/tiles/manage/blankBody.jsp" /> -->
+<definition name="_manage_blank_body_index" template="/WEB-INF/jsp/tiles/auth/blankBody.jsp" />
+
+    
+    <definition name="error" extends="_manage_blank_index">
+        <put-attribute name="content" value="/WEB-INF/jsp/view/manage/error/error.jsp" type="template" />
+    </definition>    
+
+    <definition name="manage/blank/*/**" extends="_manage_blank_index">
+        <put-attribute name="content" value="/WEB-INF/jsp/view/manage/{1}/{2}.jsp" type="template" />
+    </definition>
+    <definition name="manage/blankBody/*/**" extends="_manage_blank_body_index">
+        <put-attribute name="content" value="/WEB-INF/jsp/view/manage/{1}/{2}.jsp" type="template" />
+    </definition>
+    <definition name="manage/*/**" extends="_manage_main_index">
+        <put-attribute name="content" value="/WEB-INF/jsp/view/manage/{1}/{2}.jsp" type="template" />
+    </definition>
+    
+    
+    <definition name="login" template="/WEB-INF/jsp/tiles/auth/login.jsp" />
+    
+<!--    <definition name="main-layout" template="/WEB-INF/jsp/main/base-main.jsp" > -->
+<!--         <put-attribute name="header" value="/WEB-INF/jsp/common/header.jsp"/> -->
+<!--         <put-attribute name="body" value=""/> -->
+<!--     </definition> -->
+<!--     <definition name="*/*" extends="main-layout"> -->
+<!--         <put-attribute name="body" value="/WEB-INF/jsp/lms/{1}.jsp"/> -->
+<!--     </definition> -->
+<!--     <definition name="*/*/*" extends="main-layout"> -->
+<!--         <put-attribute name="body" value="/WEB-INF/jsp/lms/{1}/{2}.jsp"/> -->
+<!--     </definition> -->
+<!--     <definition name="*/*/*/*" extends="main-layout"> -->
+<!--         <put-attribute name="body" value="/WEB-INF/jsp/lms/{1}/{2}/{3}.jsp"/> -->
+<!--     </definition> -->
+    
+    
+</tiles-definitions>

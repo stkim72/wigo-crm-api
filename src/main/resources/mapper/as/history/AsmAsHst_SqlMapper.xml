@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ceragem.api.as.dao.AsmAsHstDao">
+
+    <sql id="sqlConditions">
+		WHERE A.USE_YN = 'Y'
+		    AND A.AS_STATUS_CD <![CDATA[ <> ]]> '34' /*처리완료*/
+			AND A.ITG_CUST_NO = #{itgCustNo}	/*통합고객번호(필수)*/
+        <if test="staSubmitDate != null and staSubmitDate != '' and endSubmitDate != null and endSubmitDate != ''">
+				AND A.CNSLG_YMDHMS BETWEEN #{staSubmitDate} AND #{endSubmitDate}	/*AS접수기간*/
+        </if>
+        <if test="staCmptDate != null and staCmptDate != '' and endCmptDate != null and endCmptDate != ''">
+				AND A.TRT_CMPT_DT BETWEEN #{staCmptDate} AND #{endCmptDate}	/*AS완료기간*/
+        </if>
+        <!-- <if test="actnCtnts != null and actnCtnts != ''">
+				AND A.ACTN_CTNTS =  #{actnCtnts}		/*조치내용(긴 내용일경우 추후 Like검색으로 변경예정)*/
+        </if> -->
+    </sql>
+
+    <!-- AS이력 총건수, 취소건수(AS_STATUS_CD:33:취소) -->
+    <select id="selectAsHistoryCount" resultType="com.ceragem.api.as.model.AsmAsSubmitBasHstCountVo">
+		SELECT	/* com.ceragem.api.as.dao.AsmAsHstDao.selectAsHistoryCount */
+			COUNT(1) AS TOTAL_CNT,
+			NVL(SUM(CASE WHEN A.AS_STATUS_CD='33' THEN 1 ELSE 0 END), 0) AS CANCEL_CNT
+		FROM AS_SUBMIT_BAS A
+        WHERE A.USE_YN = 'Y'
+			AND A.ITG_CUST_NO = #{itgCustNo}	/*통합고객번호*/
+    </select>
+
+    <!-- AS이력 TotalCount -->
+    <select id="selectListCount" resultType="int">
+		SELECT	/* com.ceragem.api.as.dao.AsmAsHstDao.selectListCount */
+			COUNT(1)
+		FROM AS_SUBMIT_BAS A
+        <include refid="sqlConditions"/>
+    </select>
+
+	<!-- AS 이력 목록 -->
+    <select id="selectList" resultType="com.ceragem.api.as.model.AsmAsHstVo">
+		SELECT  T.*
+		  FROM  (
+		        SELECT  ROWNUM AS ROW_INDEX
+		              , A.*
+		          FROM  (
+		                 SELECT  /* com.ceragem.api.as.dao.AsmAsHstDao.selectList */
+					             A.AS_SUBMIT_NO		/*AS접수번호*/
+					           , A.ITG_CUST_NO		/*통합고객번호*/
+					           , A.CSAG_EMP_ID		/*AS접수자사원ID*/
+					           , A.CNSLG_PRSN_EMP_NM				/*AS접수자*/
+					           , A.CNSLG_YMDHMS AS SUBMIT_DATE		/*접수일자*/
+					           , CASE WHEN A.ASG_CHNG_USER_ID IS NOT NULL THEN A.ASG_CHNG_USER_ID
+					                  WHEN A.ASG_CHNG_USER_ID IS NULL AND A.TRT_PIC_EMP_ID IS NOT NULL THEN A.TRT_PIC_EMP_ID
+					                  WHEN A.ASG_CHNG_USER_ID IS NULL AND A.TRT_PIC_EMP_ID IS NULL THEN ''
+					                  ELSE A.TRT_PIC_EMP_ID	/*AS처리담당자사원ID*/
+					              END AS TRT_PIC_EMP_ID
+					           , CASE WHEN A.ASG_CHNG_USER_ID IS NOT NULL THEN (SELECT USER_NM FROM AS_USER_BAS WHERE USER_ID = A.ASG_CHNG_USER_ID)
+					                  WHEN A.ASG_CHNG_USER_ID IS NULL AND A.TRT_PIC_EMP_ID IS NOT NULL THEN A.TRT_PIC_NM
+					                  WHEN A.ASG_CHNG_USER_ID IS NULL AND A.TRT_PIC_EMP_ID IS NULL THEN ''
+					                  ELSE A.TRT_PIC_NM
+					              END AS TRT_PIC_NM	/*AS처리담당자*/
+					           , A.TRT_CMPT_DT 			/*처리완료일시*/
+					           , A.GODS_SRIAL_NO			/*제품일련번호*/
+					           , A.GODS_EXPLN_NM			/*제품명*/
+					           , A.MODEL_CD				/*모델코드*/
+					           , A.MODEL_NM				/*모델명*/
+					           , (
+					           	SELECT
+					           		LISTAGG(BAD_SYMTM_NM,'/') WITHIN GROUP(ORDER BY BAD_SYMTM_SEQ) AS BAD_SYMTM_NM
+					           	FROM AS_BAD_SYMTM_DTL
+					           	WHERE AS_SUBMIT_NO = A.AS_SUBMIT_NO
+					           		AND USE_YN = 'Y'
+					           ) AS BAD_SYMTM_NM		/*불량증상명*/
+					           , (
+					           	SELECT
+					           		LISTAGG(PROD_NM,'/') WITHIN GROUP(ORDER BY TRT_PROD_SEQ) AS ACTN_CTNTS
+					           	FROM AS_USE_PROD_DTL
+					           	WHERE AS_SUBMIT_NO = A.AS_SUBMIT_NO
+					           		AND USE_YN = 'Y'
+					           ) AS ACTN_CTNTS			/*조치내용*/
+					           , A.TOT_AMT					/*총금액*/
+					           , A.TVEXPNS_AMT			/*출장비금액*/
+					           , A.PAY_AMT					/*결제금액 =>서비스비용*/
+					           , A.DC_AMT 					/*할인금액*/
+					           , A.SMS_RMARK				/*SMS비고(접수내용)*/
+					           , A.SUBMIT_RMARK			/*접수비고(접수내용)*/
+					           , A.TRT_RMARK				/*처리비고(조치사항)*/
+					           , A.AS_STATUS_CD			/*AS상태코드*/
+					           , FN_COMN_CD_NM('C07', A.AS_STATUS_CD) AS AS_STATUS_NM
+				           FROM  AS_SUBMIT_BAS A
+				           <include refid="sqlConditions"/>
+				           ORDER BY A.AMD_DT DESC, TO_NUMBER(A.AS_SUBMIT_NO) DESC
+		                ) A
+		        ) T
+ 		  WHERE T.ROW_INDEX BETWEEN NVL(#{firstRecordIndex},1) AND NVL(#{lastRecordIndex},30)
+    </select>
+
+	<!-- AS 이력 상세 조회 -->
+    <select id="select" resultType="com.ceragem.api.as.model.AsmAsSubmitBasHstVo">
+		SELECT  /* com.ceragem.api.as.dao.AsmAsHstDao.select */
+			    A.AS_SUBMIT_NO				/*AS접수번호*/
+			  , A.ITG_CUST_NO				/*통합고객번호*/
+			  , A.BOS_CUST_NO				/*BOS고객번호*/
+			  , A.CUST_NM					/*고객명*/
+			  , DAMO.DECRYPT_VAR_B64('AES_256', A.MPHON_NO, '') AS MPHON_NO	/*이동전화번호*/
+			  , A.ZIP_CD					/*우편번호*/
+			  , A.ADDR_1_CTNTS			/*주소1내용*/
+			  , DAMO.DECRYPT_VAR_B64('AES_256', A.ADDR_2_CTNTS, '') AS ADDR_2_CTNTS	/*주소2내용*/
+			  , A.GODS_SRIAL_NO				/*제품일련번호*/
+			  , A.GODS_EXPLN_NM				/*제품명*/
+			  , A.AS_STATUS_CD				/*AS상태코드*/
+			  , FN_COMN_CD_NM('C07', A.AS_STATUS_CD) AS AS_STATUS_CD_NM /*AS상태코드명*/
+			  , A.AS_TRT_DIV_CD				/*AS처리구분코드*/
+			  , FN_COMN_CD_NM('AS110', A.AS_TRT_DIV_CD) AS AS_TRT_DIV_CD_NM	/*AS처리구분코드명*/
+			  , A.CNSLG_PRSN_EMP_NM			/*AS접수자*/
+			  , A.VISIT_EXPT_DAY				/*방문예정일*/
+			  , A.VISIT_EXPT_HOUR				/*방문예정시간*/
+			  , A.SUBMIT_RMARK				/*AS상담내용*/
+			  , A.TRT_ATTCH_FILE_ID			/*첨부사진*/
+			  , A.TOT_AMT						/*총금액*/
+			  , A.TVEXPNS_AMT					/*출장비금액*/
+			  , A.DC_AMT 						/*할인금액*/
+			  , A.PAY_AMT						/*서비스비용*/
+			  , CASE WHEN A.ASG_CHNG_USER_ID IS NOT NULL THEN (SELECT USER_NM FROM AS_USER_BAS WHERE USER_ID = A.ASG_CHNG_USER_ID)
+			         WHEN A.ASG_CHNG_USER_ID IS NULL AND A.TRT_PIC_EMP_ID IS NOT NULL THEN A.TRT_PIC_NM
+			         WHEN A.ASG_CHNG_USER_ID IS NULL AND A.TRT_PIC_EMP_ID IS NULL THEN ''
+			         ELSE A.TRT_PIC_NM
+			    END AS TRT_PIC_NM				/*AS담당자*/
+			  , (SELECT MPHON_NO FROM AS_USER_BAS WHERE EMP_ID = A.TRT_PIC_EMP_ID) AS TRT_PIC_MPHON_NO	/*AS담당자 연락처 : 조직관리 이동전화번호*/
+			  , A.TRT_CMPT_DT					/*처리완료일시*/
+			  , A.SMS_RMARK					/*SMS비고(접수내용)*/
+			  , A.SUBMIT_RMARK				/*접수비고(접수내용)*/
+			  , A.TRT_RMARK					/*처리비고(조치사항)*/
+			  , A.INSTLL_ZIP_CD				/*설치우편번호*/
+			  , A.INSTLL_ADDR_1_CTNTS			/*설치주소1내용*/
+			  , DAMO.DECRYPT_VAR_B64('AES_256', A.INSTLL_ADDR_2_CTNTS,     '') AS INSTLL_ADDR_2_CTNTS	/*설치주소2내용*/
+		  FROM  AS_SUBMIT_BAS A
+	     WHERE  A.AS_SUBMIT_NO = #{asSubmitNo}
+		   AND  A.ITG_CUST_NO = #{itgCustNo}
+		   AND  A.USE_YN = 'Y'
+    </select>
+
+</mapper>

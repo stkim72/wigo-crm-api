@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ceragem.api.crm.dao.CrmCustHshldBasDao">
+    <sql id="sqlPkConditions">
+                WHERE REP_HSHLD_NO      =       #{repHshldNo}
+                  AND ITG_CUST_NO       =       #{itgCustNo}
+    </sql>
+    <sql id="sqlDelConditions">
+                WHERE #{itgCustNo} IN ( REP_HSHLD_NO                    /*대표가구번호        */
+                   					  , ITG_CUST_NO                    /*통합고객번호        */)
+                  
+    </sql>
+    <sql id="sqlCols">
+                      REP_HSHLD_NO                    /*대표가구번호        */
+                    , ITG_CUST_NO                    /*통합고객번호        */
+                    , USE_TYPE_CD                    /*사용유형코드        공통코드 : CU070        [001 : 주계약자 , 002 : AS신청자 , 003 : 설치자 , 004 : 지불고객]*/
+                    , FAMLY_REL_CD                    /*가족관계코드        공통코드 : CU040        [000 : 본인 ,001 : 부모 , 002 : 배우자 , 003 : 자녀]*/
+                    , DEL_YN                    /*삭제여부        */
+                    , AMDR_ID                    /*수정자ID        */
+                    , AMD_DT                    /*수정일시        */
+                    , REGR_ID                    /*등록자ID        */
+                    , REG_DT                    /*등록일시        */
+                    , REG_CHL_CD                    /*등록채널코드        */
+    </sql>
+    <sql id="sqlSelectCols">
+                      A.REP_HSHLD_NO                    /*대표가구번호        */
+                    , A.ITG_CUST_NO                    /*통합고객번호        */
+                    , A.USE_TYPE_CD                    /*사용유형코드        공통코드 : CU070        [001 : 주계약자 , 002 : AS신청자 , 003 : 설치자 , 004 : 지불고객]*/
+                    , A.FAMLY_REL_CD                    /*가족관계코드        공통코드 : CU040        [000 : 본인 ,001 : 부모 , 002 : 배우자 , 003 : 자녀]*/
+                    , A.DEL_YN                    /*삭제여부        */
+                    , A.AMDR_ID                    /*수정자ID        */
+                    , TO_CHAR(A.AMD_DT,'YYYYMMDDHH24MISS')    AMD_DT                    /*수정일시        */
+                    , A.REGR_ID                    /*등록자ID        */
+                    , TO_CHAR(A.REG_DT,'YYYYMMDDHH24MISS')    REG_DT                    /*등록일시        */
+                    , A.REG_CHL_CD                    /*등록채널코드        */
+                    , B.CUST_NM
+                    , DAMO.DECRYPT_VAR_B64('AES_256',B.MPHON_NO,'') MPHON_NO
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'CU070' AND COMN_CD = A.USE_TYPE_CD AND  COMN_CD_LVL_NO = 2) USE_TYPE_CD_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'CU040' AND COMN_CD = A.FAMLY_REL_CD AND  COMN_CD_LVL_NO = 2) FAMLY_REL_CD_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'S000' AND COMN_CD = A.REG_CHL_CD AND  COMN_CD_LVL_NO = 2) REG_CHL_CD_NM
+    </sql>
+    <sql id="sqlConditions">
+      <where>
+        <if test="repHshldNo != null and repHshldNo != ''">
+                  AND A.REP_HSHLD_NO    =       #{repHshldNo}
+        </if>
+        <if test="itgCustNo != null and itgCustNo != ''">
+<!--                   AND A.ITG_CUST_NO     =       #{itgCustNo} -->
+                  AND A.REP_HSHLD_NO  IN ( SELECT REP_HSHLD_NO 
+                                             FROM CRM_CUST_HSHLD_BAS
+                                            WHERE ITG_CUST_NO =       #{itgCustNo}
+                                            )
+        </if>
+        <if test="useTypeCd != null and useTypeCd != ''">
+            <choose>
+                <when test="useTypeCd instanceof String">
+                    AND A.USE_TYPE_CD     =       #{useTypeCd}
+                </when>
+                <otherwise>
+                    AND A.USE_TYPE_CD     IN
+                    <foreach item="item" index="index" collection="useTypeCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="famlyRelCd != null and famlyRelCd != ''">
+            <choose>
+                <when test="famlyRelCd instanceof String">
+                    AND A.FAMLY_REL_CD    =       #{famlyRelCd}
+                </when>
+                <otherwise>
+                    AND A.FAMLY_REL_CD    IN
+                    <foreach item="item" index="index" collection="famlyRelCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="delYn != null and delYn != ''">
+                  AND A.DEL_YN          =       #{delYn}
+        </if>
+        <if test="regChlCd != null and regChlCd != ''">
+            <choose>
+                <when test="regChlCd instanceof String">
+                    AND A.REG_CHL_CD      =       #{regChlCd}
+                </when>
+                <otherwise>
+                    AND A.REG_CHL_CD      IN
+                    <foreach item="item" index="index" collection="regChlCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+       </where>
+    </sql>
+    <select id="selectListCount" resultType="int">
+                SELECT /* com.ceragem.api.crm.dao.CrmCustHshldBasDao.selectListCount */ COUNT(1)
+                 FROM CRM_CUST_HSHLD_BAS A
+                INNER JOIN CRM_CUST_BAS B ON A.ITG_CUST_NO = B.ITG_CUST_NO
+        <include refid="sqlConditions"/>
+    </select>
+    <select id="selectList" resultType="com.ceragem.api.crm.model.CrmCustHshldBasVo">
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingHeader"/>
+               SELECT /* com.ceragem.api.crm.dao.CrmCustHshldBasDao.selectList */ <include refid="sqlSelectCols"/>
+                 FROM CRM_CUST_HSHLD_BAS A
+                INNER JOIN CRM_CUST_BAS B ON A.ITG_CUST_NO = B.ITG_CUST_NO
+        <include refid="sqlConditions"/>
+               ORDER BY A.REP_HSHLD_NO
+                   , A.FAMLY_REL_CD
+                   , A.USE_TYPE_CD
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingFooter"/>
+    </select>
+    <select id="select" resultType="com.ceragem.api.crm.model.CrmCustHshldBasVo">
+               SELECT /* com.ceragem.api.crm.dao.CrmCustHshldBasDao.select */ <include refid="sqlSelectCols"/>
+                 FROM CRM_CUST_HSHLD_BAS A
+                INNER JOIN CRM_CUST_BAS B ON A.ITG_CUST_NO = B.ITG_CUST_NO
+                WHERE A.ITG_CUST_NO       =       #{itgCustNo}
+    </select>
+    <insert id="insert">
+<!--     	<selectKey order="BEFORE" keyProperty="repHshldNo" resultType="String"> -->
+<!--     		SELECT FN_CRM_AUTO_SEQ('CSH') FROM DUAL -->
+<!--     	</selectKey> -->
+                INSERT /* com.ceragem.api.crm.dao.CrmCustHshldBasDao.insert */ INTO CRM_CUST_HSHLD_BAS (
+        <include refid="sqlCols"/>
+                 ) VALUES (
+                       #{repHshldNo}
+                     , #{itgCustNo}
+                     , #{useTypeCd}
+                     , #{famlyRelCd}
+                     , NVL(#{delYn},'N')
+                     , #{amdrId}
+                     , SYSDATE
+                     , #{regrId}
+                     , SYSDATE
+                     , NVL(#{regChlCd},#{amdrId})
+                 )
+    </insert>
+    <update id="update">
+               UPDATE CRM_CUST_HSHLD_BAS /* com.ceragem.api.crm.dao.CrmCustHshldBasDao.update */
+                  SET USE_TYPE_CD                             =         #{useTypeCd}
+                    , FAMLY_REL_CD                            =         #{famlyRelCd}
+                    , DEL_YN                                  =         NVL(#{delYn},'N')
+                    , AMDR_ID                                 =         #{amdrId}
+                    , AMD_DT                                  =         SYSDATE
+        <include refid="sqlPkConditions"/>
+    </update>
+    <update id="updateDelete">
+               UPDATE CRM_CUST_HSHLD_BAS /* com.ceragem.api.crm.dao.CrmCustHshldBasDao.updateDelete */
+                  SET DEL_YN                                  =         'Y'
+                    , AMDR_ID                                 =         #{amdrId}
+                    , AMD_DT                                  =         SYSDATE
+        <include refid="sqlDelConditions"/>
+    </update>
+    <delete id="updateDeleteCust">
+               UPDATE CRM_CUST_HSHLD_BAS /* com.ceragem.api.crm.dao.CrmCustHshldBasDao.updateDeleteCust */
+                  SET DEL_YN                                  =         'Y'
+                    , AMDR_ID                                 =         #{amdrId}
+                    , AMD_DT                                  =         SYSDATE
+                WHERE #{itgCustNo} IN ( REP_HSHLD_NO                    /*대표가구번호        */
+                   					  , ITG_CUST_NO                    /*통합고객번호        */)
+    </delete>
+    <delete id="delete">
+               DELETE  /* com.ceragem.api.crm.dao.CrmCustHshldBasDao.delete */
+                 FROM CRM_CUST_HSHLD_BAS
+        <include refid="sqlDelConditions"/>
+    </delete>
+    <delete id="deleteCust">
+    			DELETE  /* com.ceragem.api.crm.dao.CrmCustHshldBasDao.deleteCust */ 
+                  FROM CRM_CUST_HSHLD_BAS
+<!--                UPDATE CRM_CUST_HSHLD_BAS -->
+<!--                   SET DEL_YN                                  =         'Y' -->
+<!--                     , AMDR_ID                                 =         #{amdrId} -->
+<!--                     , AMD_DT                                  =         SYSDATE -->
+                WHERE #{itgCustNo} IN ( REP_HSHLD_NO                    /*대표가구번호        */
+                   					  , ITG_CUST_NO                    /*통합고객번호        */)
+    </delete>
+</mapper>

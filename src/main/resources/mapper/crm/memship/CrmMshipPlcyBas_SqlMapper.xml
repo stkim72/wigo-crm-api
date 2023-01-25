@@ -1,0 +1,842 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ceragem.api.crm.dao.CrmMshipPlcyBasDao">
+    <sql id="sqlPkConditions">
+                WHERE MSHIP_PLCY_BAS_NO =       #{mshipPlcyBasNo}
+    </sql>
+    <sql id="sqlCols">
+                      MSHIP_PLCY_BAS_NO                    /*멤버십정책기본번호        */
+                    , MSHIP_GRADE_CD                    /*멤버십등급코드        */
+                    , MSHP_GRADE_CD                    /*회원등급코드        */
+                    , MSHIP_PLCY_NM                    /*멤버십정책명        */
+                    , MSHIP_PLCY_CTNTS                    /*멤버십정책내용        */
+                    , CPRT_CMP_NO                    /*제휴회사번호        */
+                    , APPLY_STD_STA_YMD                    /*적용기준시작년월일        */
+                    , APPLY_STD_END_YMD                    /*적용기준종료년월일        */
+                    , EXTRC_STD_MONTH                    /*산정기준월        */
+                    , ADVNCMT_STA_SCORE                    /*승급시작점수        */
+                    , ADVNCMT_END_SCORE                    /*승급종료점수        */
+                    , EXTRC_KEEP_MONTH                    /*산정보존월        */
+                    , EXTRC_STD_2_MONTH                    /*산정기준2월        */
+                    , GRADE_KEEP_SCORE                    /*등급보존점수        */
+                    , GRADE_KEEP_2_SCORE                    /*등급보존2점수        */
+                    , GRADE_KEEP_MONTH                    /*등급보존월        */
+                    , BUY_REWARD_ADVNCMT_RATE                    /*구매보상승급율        */
+                    , BUY_RCMD_REWARD_ADVNCMT_RATE                    /*구매추천보상승급율        */
+                    , BUY_ACCUM_POINT_RATE                    /*구매적립포인트율        */
+                    , SBSC_POINT_SCORE                    /*가입포인트점수        */
+                    , SBSC_POINT_APPLY_STD_CD                    /*가입포인트적용기준코드        */
+                    , ACCUM_LMT_POINT_SCORE                    /*적립한도포인트점수        */
+                    , BUY_RCMD_POINT_RATE                    /*구매추천포인트율        */
+                    , BUY_ADVNCMT_POINT_SCORE                    /*구매승급포인트점수        */
+                    , ADVNCMT_POINT_APPLY_STD_CD                    /*승급포인트적용기준코드        */
+                    , USE_LMT_POINT_SCORE                    /*사용한도포인트점수        */
+                    , POINT_EXTNC_ALERT_YN                    /*포인트소멸알림여부        */
+                    , POINT_EXTNC_ALERT_PERD                    /*포인트소멸알림기간        */
+                    , GIFT_POINT_VALID_PERD                    /*선물포인트유효기간        */
+                    , MYCOM_MALL_FREE_DLV_YN                    /*자사몰무료배송여부        */
+                    , FREE_SVC_EXTNSN_MONS_CNT                    /*무료서비스연장개월수        */
+                    , CERAC_COUPN_PRV_MONS_CNT                    /*세라케어쿠폰제공개월수        */
+                    , STATUS_CD                    /*상태코드        */
+                    , REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS]*/
+                    , AMDR_ID                    /*수정자ID        */
+                    , AMD_DT                    /*수정일시        */
+                    , REGR_ID                    /*등록자ID        */
+                    , REG_DT                    /*등록일시        */
+    </sql>
+    <sql id="sqlSelectCols">
+                      A.MSHIP_PLCY_BAS_NO                    /*멤버십정책기본번호        */
+                    , A.MSHIP_GRADE_CD                    /*멤버십등급코드        */
+                    , A.MSHP_GRADE_CD                    /*회원등급코드        */
+                    , A.MSHIP_PLCY_NM                    /*멤버십정책명        */
+                    , A.MSHIP_PLCY_CTNTS                    /*멤버십정책내용        */
+                    , A.CPRT_CMP_NO                    /*제휴회사번호        */
+                    , A.APPLY_STD_STA_YMD                    /*적용기준시작년월일        */
+                    , A.APPLY_STD_END_YMD                    /*적용기준종료년월일        */
+                    , A.EXTRC_STD_MONTH                    /*산정기준월        */
+                    , A.ADVNCMT_STA_SCORE                    /*승급시작점수        */
+                    , A.ADVNCMT_END_SCORE                    /*승급종료점수        */
+                    , A.EXTRC_KEEP_MONTH                    /*산정보존월        */
+                    , A.EXTRC_STD_2_MONTH                    /*산정기준2월        */
+                    , A.GRADE_KEEP_SCORE                    /*등급보존점수        */
+                    , A.GRADE_KEEP_2_SCORE                    /*등급보존2점수        */
+                    , A.GRADE_KEEP_MONTH                    /*등급보존월        */
+                    , A.BUY_REWARD_ADVNCMT_RATE                    /*구매보상승급율        */
+                    , A.BUY_RCMD_REWARD_ADVNCMT_RATE                    /*구매추천보상승급율        */
+                    , A.BUY_ACCUM_POINT_RATE                    /*구매적립포인트율        */
+                    , A.SBSC_POINT_SCORE                    /*가입포인트점수        */
+                    , A.SBSC_POINT_APPLY_STD_CD                    /*가입포인트적용기준코드        */
+                    , A.ACCUM_LMT_POINT_SCORE                    /*적립한도포인트점수        */
+                    , A.BUY_RCMD_POINT_RATE                    /*구매추천포인트율        */
+                    , A.BUY_ADVNCMT_POINT_SCORE                    /*구매승급포인트점수        */
+                    , A.ADVNCMT_POINT_APPLY_STD_CD                    /*승급포인트적용기준코드        */
+                    , A.USE_LMT_POINT_SCORE                    /*사용한도포인트점수        */
+                    , A.POINT_EXTNC_ALERT_YN                    /*포인트소멸알림여부        */
+                    , A.POINT_EXTNC_ALERT_PERD                    /*포인트소멸알림기간        */
+                    , A.GIFT_POINT_VALID_PERD                    /*선물포인트유효기간        */
+                    , A.MYCOM_MALL_FREE_DLV_YN                    /*자사몰무료배송여부        */
+                    , A.FREE_SVC_EXTNSN_MONS_CNT                    /*무료서비스연장개월수        */
+                    , A.CERAC_COUPN_PRV_MONS_CNT                    /*세라케어쿠폰제공개월수        */
+                    , A.STATUS_CD                    /*상태코드        */
+                    , A.REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS]*/
+                    , A.AMDR_ID                    /*수정자ID        */
+                    , TO_CHAR(A.AMD_DT,'YYYYMMDDHH24MISS')    AMD_DT                    /*수정일시        */
+                    , A.REGR_ID                    /*등록자ID        */
+                    , TO_CHAR(A.REG_DT,'YYYYMMDDHH24MISS')    REG_DT                    /*등록일시        */
+    </sql>
+    <sql id="sqlConditions">
+    <where>
+        <if test="mshipPlcyBasNo != null and mshipPlcyBasNo != ''">
+                  AND A.MSHIP_PLCY_BAS_NO=       #{mshipPlcyBasNo}
+        </if>
+        <if test="mshipGradeCd != null and mshipGradeCd != ''">
+            <choose>
+                <when test="mshipGradeCd instanceof String">
+                    AND A.MSHIP_GRADE_CD  =       #{mshipGradeCd}
+                </when>
+                <otherwise>
+                    AND A.MSHIP_GRADE_CD  IN
+                    <foreach item="item" index="index" collection="mshipGradeCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="mshpGradeCd != null and mshpGradeCd != ''">
+            <choose>
+                <when test="mshpGradeCd instanceof String">
+                    AND A.MSHP_GRADE_CD   =       #{mshpGradeCd}
+                </when>
+                <otherwise>
+                    AND A.MSHP_GRADE_CD   IN
+                    <foreach item="item" index="index" collection="mshpGradeCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="mshipPlcyNm != null and mshipPlcyNm != ''">
+                  AND A.MSHIP_PLCY_NM   =       #{mshipPlcyNm}
+        </if>
+        <if test="mshipPlcyCtnts != null and mshipPlcyCtnts != ''">
+                  AND A.MSHIP_PLCY_CTNTS=       #{mshipPlcyCtnts}
+        </if>
+        <if test="cprtCmpNo != null and cprtCmpNo != ''">
+                  AND A.CPRT_CMP_NO     =       #{cprtCmpNo}
+        </if>
+        <if test="applyStdStaYmd != null and applyStdStaYmd != ''">
+                  AND A.APPLY_STD_STA_YMD=       #{applyStdStaYmd}
+        </if>
+        <if test="applyStdEndYmd != null and applyStdEndYmd != ''">
+                  AND A.APPLY_STD_END_YMD=       #{applyStdEndYmd}
+        </if>
+        <if test="extrcStdMonth != null and extrcStdMonth != ''">
+                  AND A.EXTRC_STD_MONTH =       #{extrcStdMonth}
+        </if>
+        <if test="advncmtStaScore != null and advncmtStaScore != ''">
+                  AND A.ADVNCMT_STA_SCORE=       #{advncmtStaScore}
+        </if>
+        <if test="advncmtEndScore != null and advncmtEndScore != ''">
+                  AND A.ADVNCMT_END_SCORE=       #{advncmtEndScore}
+        </if>
+        <if test="extrcKeepMonth != null and extrcKeepMonth != ''">
+                  AND A.EXTRC_KEEP_MONTH=       #{extrcKeepMonth}
+        </if>
+        <if test="extrcStd2Month != null and extrcStd2Month != ''">
+                  AND A.EXTRC_STD_2_MONTH=       #{extrcStd2Month}
+        </if>
+        <if test="gradeKeepScore != null and gradeKeepScore != ''">
+                  AND A.GRADE_KEEP_SCORE=       #{gradeKeepScore}
+        </if>
+        <if test="gradeKeep2Score != null and gradeKeep2Score != ''">
+                  AND A.GRADE_KEEP_2_SCORE=       #{gradeKeep2Score}
+        </if>
+        <if test="gradeKeepMonth != null and gradeKeepMonth != ''">
+                  AND A.GRADE_KEEP_MONTH=       #{gradeKeepMonth}
+        </if>
+        <if test="buyRewardAdvncmtRate != null and buyRewardAdvncmtRate != ''">
+                  AND A.BUY_REWARD_ADVNCMT_RATE=       #{buyRewardAdvncmtRate}
+        </if>
+        <if test="buyRcmdRewardAdvncmtRate != null and buyRcmdRewardAdvncmtRate != ''">
+                  AND A.BUY_RCMD_REWARD_ADVNCMT_RATE=       #{buyRcmdRewardAdvncmtRate}
+        </if>
+        <if test="buyAccumPointRate != null and buyAccumPointRate != ''">
+                  AND A.BUY_ACCUM_POINT_RATE=       #{buyAccumPointRate}
+        </if>
+        <if test="sbscPointScore != null and sbscPointScore != ''">
+                  AND A.SBSC_POINT_SCORE=       #{sbscPointScore}
+        </if>
+        <if test="sbscPointApplyStdCd != null and sbscPointApplyStdCd != ''">
+            <choose>
+                <when test="sbscPointApplyStdCd instanceof String">
+                    AND A.SBSC_POINT_APPLY_STD_CD=       #{sbscPointApplyStdCd}
+                </when>
+                <otherwise>
+                    AND A.SBSC_POINT_APPLY_STD_CDIN
+                    <foreach item="item" index="index" collection="sbscPointApplyStdCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="accumLmtPointScore != null and accumLmtPointScore != ''">
+                  AND A.ACCUM_LMT_POINT_SCORE=       #{accumLmtPointScore}
+        </if>
+        <if test="buyRcmdPointRate != null and buyRcmdPointRate != ''">
+                  AND A.BUY_RCMD_POINT_RATE=       #{buyRcmdPointRate}
+        </if>
+        <if test="buyAdvncmtPointScore != null and buyAdvncmtPointScore != ''">
+                  AND A.BUY_ADVNCMT_POINT_SCORE=       #{buyAdvncmtPointScore}
+        </if>
+        <if test="advncmtPointApplyStdCd != null and advncmtPointApplyStdCd != ''">
+            <choose>
+                <when test="advncmtPointApplyStdCd instanceof String">
+                    AND A.ADVNCMT_POINT_APPLY_STD_CD=       #{advncmtPointApplyStdCd}
+                </when>
+                <otherwise>
+                    AND A.ADVNCMT_POINT_APPLY_STD_CDIN
+                    <foreach item="item" index="index" collection="advncmtPointApplyStdCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="useLmtPointScore != null and useLmtPointScore != ''">
+                  AND A.USE_LMT_POINT_SCORE=       #{useLmtPointScore}
+        </if>
+        <if test="pointExtncAlertYn != null and pointExtncAlertYn != ''">
+                  AND A.POINT_EXTNC_ALERT_YN=       #{pointExtncAlertYn}
+        </if>
+        <if test="pointExtncAlertPerd != null and pointExtncAlertPerd != ''">
+                  AND A.POINT_EXTNC_ALERT_PERD=       #{pointExtncAlertPerd}
+        </if>
+        <if test="giftPointValidPerd != null and giftPointValidPerd != ''">
+                  AND A.GIFT_POINT_VALID_PERD=       #{giftPointValidPerd}
+        </if>
+        <if test="mycomMallFreeDlvYn != null and mycomMallFreeDlvYn != ''">
+                  AND A.MYCOM_MALL_FREE_DLV_YN=       #{mycomMallFreeDlvYn}
+        </if>
+        <if test="freeSvcExtnsnMonsCnt != null and freeSvcExtnsnMonsCnt != ''">
+                  AND A.FREE_SVC_EXTNSN_MONS_CNT=       #{freeSvcExtnsnMonsCnt}
+        </if>
+        <if test="ceracCoupnPrvMonsCnt != null and ceracCoupnPrvMonsCnt != ''">
+                  AND A.CERAC_COUPN_PRV_MONS_CNT=       #{ceracCoupnPrvMonsCnt}
+        </if>
+        <if test="statusCd != null and statusCd != ''">
+            <choose>
+                <when test="statusCd instanceof String">
+                    AND A.STATUS_CD       =       #{statusCd}
+                </when>
+                <otherwise>
+                    AND A.STATUS_CD       IN
+                    <foreach item="item" index="index" collection="statusCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="regChlCd != null and regChlCd != ''">
+            <choose>
+                <when test="regChlCd instanceof String">
+                    AND A.REG_CHL_CD      =       #{regChlCd}
+                </when>
+                <otherwise>
+                    AND A.REG_CHL_CD      IN
+                    <foreach item="item" index="index" collection="regChlCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        </where>
+    </sql>
+    <sql id="sqlOrderBy">
+        <choose>
+            <when test="colSortName ==null or colSortName == ''">
+                ORDER BY      REG_DT DESC
+            </when>
+            <when test="colSortName.equals('mshipPlcyBasNo')">
+                ORDER BY      MSHIP_PLCY_BAS_NO
+            </when>
+            <when test="colSortName.equals('mshipGradeCd')">
+                ORDER BY      MSHIP_GRADE_CD
+            </when>
+            <when test="colSortName.equals('mshpGradeCd')">
+                ORDER BY      MSHP_GRADE_CD
+            </when>
+            <when test="colSortName.equals('mshipPlcyNm')">
+                ORDER BY      MSHIP_PLCY_NM
+            </when>
+            <when test="colSortName.equals('mshipPlcyCtnts')">
+                ORDER BY      MSHIP_PLCY_CTNTS
+            </when>
+            <when test="colSortName.equals('cprtCmpNo')">
+                ORDER BY      CPRT_CMP_NO
+            </when>
+            <when test="colSortName.equals('applyStdStaYmd')">
+                ORDER BY      APPLY_STD_STA_YMD
+            </when>
+            <when test="colSortName.equals('applyStdEndYmd')">
+                ORDER BY      APPLY_STD_END_YMD
+            </when>
+            <when test="colSortName.equals('extrcStdMonth')">
+                ORDER BY      EXTRC_STD_MONTH
+            </when>
+            <when test="colSortName.equals('advncmtStaScore')">
+                ORDER BY      ADVNCMT_STA_SCORE
+            </when>
+            <when test="colSortName.equals('advncmtEndScore')">
+                ORDER BY      ADVNCMT_END_SCORE
+            </when>
+            <when test="colSortName.equals('extrcKeepMonth')">
+                ORDER BY      EXTRC_KEEP_MONTH
+            </when>
+            <when test="colSortName.equals('extrcStd2Month')">
+                ORDER BY      EXTRC_STD_2_MONTH
+            </when>
+            <when test="colSortName.equals('gradeKeepScore')">
+                ORDER BY      GRADE_KEEP_SCORE
+            </when>
+            <when test="colSortName.equals('gradeKeep2Score')">
+                ORDER BY      GRADE_KEEP_2_SCORE
+            </when>
+            <when test="colSortName.equals('gradeKeepMonth')">
+                ORDER BY      GRADE_KEEP_MONTH
+            </when>
+            <when test="colSortName.equals('buyRewardAdvncmtRate')">
+                ORDER BY      BUY_REWARD_ADVNCMT_RATE
+            </when>
+            <when test="colSortName.equals('buyRcmdRewardAdvncmtRate')">
+                ORDER BY      BUY_RCMD_REWARD_ADVNCMT_RATE
+            </when>
+            <when test="colSortName.equals('buyAccumPointRate')">
+                ORDER BY      BUY_ACCUM_POINT_RATE
+            </when>
+            <when test="colSortName.equals('sbscPointScore')">
+                ORDER BY      SBSC_POINT_SCORE
+            </when>
+            <when test="colSortName.equals('sbscPointApplyStdCd')">
+                ORDER BY      SBSC_POINT_APPLY_STD_CD
+            </when>
+            <when test="colSortName.equals('accumLmtPointScore')">
+                ORDER BY      ACCUM_LMT_POINT_SCORE
+            </when>
+            <when test="colSortName.equals('buyRcmdPointRate')">
+                ORDER BY      BUY_RCMD_POINT_RATE
+            </when>
+            <when test="colSortName.equals('buyAdvncmtPointScore')">
+                ORDER BY      BUY_ADVNCMT_POINT_SCORE
+            </when>
+            <when test="colSortName.equals('advncmtPointApplyStdCd')">
+                ORDER BY      ADVNCMT_POINT_APPLY_STD_CD
+            </when>
+            <when test="colSortName.equals('useLmtPointScore')">
+                ORDER BY      USE_LMT_POINT_SCORE
+            </when>
+            <when test="colSortName.equals('pointExtncAlertYn')">
+                ORDER BY      POINT_EXTNC_ALERT_YN
+            </when>
+            <when test="colSortName.equals('pointExtncAlertPerd')">
+                ORDER BY      POINT_EXTNC_ALERT_PERD
+            </when>
+            <when test="colSortName.equals('giftPointValidPerd')">
+                ORDER BY      GIFT_POINT_VALID_PERD
+            </when>
+            <when test="colSortName.equals('mycomMallFreeDlvYn')">
+                ORDER BY      MYCOM_MALL_FREE_DLV_YN
+            </when>
+            <when test="colSortName.equals('freeSvcExtnsnMonsCnt')">
+                ORDER BY      FREE_SVC_EXTNSN_MONS_CNT
+            </when>
+            <when test="colSortName.equals('ceracCoupnPrvMonsCnt')">
+                ORDER BY      CERAC_COUPN_PRV_MONS_CNT
+            </when>
+            <when test="colSortName.equals('statusCd')">
+                ORDER BY      STATUS_CD
+            </when>
+            <when test="colSortName.equals('regChlCd')">
+                ORDER BY      REG_CHL_CD
+            </when>
+            <when test="colSortName.equals('amdrId')">
+                ORDER BY      AMDR_ID
+            </when>
+            <when test="colSortName.equals('amdDt')">
+                ORDER BY      AMD_DT
+            </when>
+            <when test="colSortName.equals('regrId')">
+                ORDER BY      REGR_ID
+            </when>
+            <when test="colSortName.equals('regDt')">
+                ORDER BY      REG_DT
+            </when>
+            <otherwise>
+                ORDER BY      REG_DT
+            </otherwise>
+        </choose>
+        <if test="colSortName !=null and colSortDir !='' and colSortDir !=null and colSortDir !='' and colSortDir.equals('desc')">
+            DESC
+        </if>
+    </sql>
+    <select id="selectListCount" resultType="int">
+                SELECT /* com.ceragem.api.crm.dao.CrmMshipPlcyBasDao.selectListCount */ COUNT(1)
+                 FROM CRM_MSHIP_PLCY_BAS A
+        <include refid="sqlConditions"/>
+    </select>
+    <select id="selectList" resultType="com.ceragem.api.crm.model.CrmMshipPlcyBasVo">
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingHeader"/>
+               SELECT /* com.ceragem.api.crm.dao.CrmMshipPlcyBasDao.selectList */ <include refid="sqlSelectCols"/>
+                 FROM CRM_MSHIP_PLCY_BAS A
+        <include refid="sqlConditions"/>
+        <include refid="sqlOrderBy"/>
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingFooter"/>
+    </select>
+    <select id="select" resultType="com.ceragem.api.crm.model.CrmMshipPlcyBasVo">
+               SELECT /* com.ceragem.api.crm.dao.CrmMshipPlcyBasDao.select */ <include refid="sqlSelectCols"/>
+                 FROM CRM_MSHIP_PLCY_BAS A
+        <include refid="sqlPkConditions"/>
+    </select>
+    
+    
+    <select id="selectPlcyInfo" resultType="com.ceragem.api.crm.model.CrmMshipPlcyBasVo">
+               SELECT /* com.ceragem.api.crm.dao.CrmMshipPlcyBasDao.selectPlcyInfo   멤버십 정책 가져오기 */
+				        A.ITG_CUST_NO
+					  , A.CUST_NM
+					  , NVL(#{rcmdrCustNo}, NULL) RCMDR_CUST_NO
+					  , A.MPHON_NO
+					  , A.MSHIP_SBSC_YN
+					  , A.MSHIP_LOGIN_ID
+					  , A.MSHIP_TYPE_CD
+					  , A.MSHIP_GRADE_CD
+					  , B.MSHIP_PLCY_BAS_NO 
+					  , B.MSHIP_PLCY_NM
+					  , B.MSHIP_GRADE_CD
+					  , B.MSHP_GRADE_CD
+					  , B.APPLY_STD_STA_YMD
+					  , B.APPLY_STD_END_YMD
+					  , B.BUY_REWARD_ADVNCMT_RATE
+					  , B.BUY_RCMD_REWARD_ADVNCMT_RATE
+					  , B.BUY_ACCUM_POINT_RATE
+					  , B.BUY_RCMD_POINT_RATE
+					  , NVL(B.ACCUM_LMT_POINT_SCORE, 0) ACCUM_LMT_POINT_SCORE
+					  , NVL(B.USE_LMT_POINT_SCORE, 0) USE_LMT_POINT_SCORE
+					  , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS C WHERE C.TOP_COMN_CD = 'MB010' and C.COMN_CD = A.MSHIP_TYPE_CD ) MSHIP_GRADE_CD    /* 맴버십등급코드명 */
+					  , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS C WHERE C.TOP_COMN_CD = 'MB020' and C.COMN_CD = A.MSHIP_GRADE_CD ) MSHP_GRADE_CD    /* 회원등급코드명 */
+					  , (SELECT COUNT(*)  FROM CRM_MSHIP_APPLY_GODS_REL C WHERE C.MSHIP_PLCY_BAS_NO = B.MSHIP_PLCY_BAS_NO AND C.GODS_NO = #{buyGodsNo} ) MSHIP_GODS_CHK   /* 포인트제외제품여부 */
+					  , (SELECT COUNT(*)  FROM CRM_MSHIP_APPLY_STOR_REL C WHERE C.MSHIP_PLCY_BAS_NO = B.MSHIP_PLCY_BAS_NO AND C.STOR_NO = #{storNo}  ) MSHIP_STORE_CHK    /* 포인트제외매장여부 */
+					  , (SELECT MSHIP_GRADE_CD FROM CRM_CUST_BAS C WHERE C.ITG_CUST_NO = NVL(#{rcmdrCustNo}, NULL) ) RCMDR_MSHIP_GRADE_CD    /* A.RCMDR_CUST_NO 추천인 맴버십등급코드 - 08.02 추천인을 직접 받아온걸로 처리형식으로 수정 */
+				
+				 	 , NVL( (SELECT /* 고객 1일 적립 포인트 */ NVL(SUM(OCCUR_POINT_SCORE), 0) FROM CRM_POINT_HST M 
+                     		LEFT JOIN CRM_CUST_BAS C ON M.ITG_CUST_NO = C.ITG_CUST_NO 
+                     	   WHERE  M.ITG_CUST_NO = #{itgCustNo}   AND M.MSHIP_GRADE_CD = C.MSHIP_GRADE_CD AND TO_CHAR(M.REG_DT, 'YYYYMMDD') = TO_CHAR(SYSDATE, 'YYYYMMDD')  ), 0) TODAY_PBLS_PNT 
+                     	   	
+				FROM 
+				CRM_CUST_BAS A
+				
+				/*
+				 2022.06.08 멤버십등급은 체크 안하고 회원등급만 체크하기로 함
+				LEFT JOIN CRM_MSHIP_PLCY_BAS B ON A.MSHIP_TYPE_CD = B.MSHIP_GRADE_CD AND A.MSHIP_GRADE_CD = B.MSHP_GRADE_CD
+				*/
+				
+				LEFT JOIN CRM_MSHIP_PLCY_BAS B ON A.MSHIP_GRADE_CD = B.MSHP_GRADE_CD
+            
+       			WHERE A.ITG_CUST_NO = #{itgCustNo}
+       			
+       			/*
+       			AND ( A.MSHIP_GRADE_CD = B.MSHP_GRADE_CD OR  A.CPRT_CMP_NO = B.CPRT_CMP_NO )
+       			*/
+       			 
+       			AND ( B.APPLY_STD_STA_YMD  <![CDATA[<=]]>  TO_CHAR(SYSDATE, 'YYYYMMDD')  AND  B.APPLY_STD_END_YMD  <![CDATA[>=]]>  TO_CHAR(SYSDATE, 'YYYYMMDD') )
+       			AND B.STATUS_CD = 'Y'
+    </select>
+    
+    
+     <select id="selectEventPointInfo" resultType="com.ceragem.api.crm.model.CrmMshipApplyPointRelVo">
+     			SELECT /* com.ceragem.api.crm.dao.CrmMshipPlcyBas.selectEventPointInfo */  
+                       A.MSHIP_PLCY_BAS_NO
+                    ,  A.EVENT_POINT_BAS_NO                    /*이벤트포인트기본번호        */
+                    , B.COMN_CD EVENT_COMN_CD                    /*이벤트공통코드        */
+                    , A.MSHIP_PLCY_BAS_NO                    /*멤버십정책기본번호        */
+                    , NVL(A.ACCUM_POINT_SCORE , 0) ACCUM_POINT_SCORE                   /*적립포인트점수        */
+                    , NVL(D.TOT_APPNT_CNT, 0) TOT_APPNT_CNT                    /*총지정수        */
+                    , NVL(D.DAY_APPNT_CNT , 0) DAY_APPNT_CNT                    /*일지정수        */
+                    , NVL(D.MONTH_APPNT_CNT, 0) MONTH_APPNT_CNT                     /*월지정수        */
+                    , A.VALID_PERD                    /*유효기간        */
+                    , A.GIFT_POSS_YN                    /*선물가능여부        */
+                    , A.AMDR_ID                    /*수정자ID        */
+                    , TO_CHAR(A.AMD_DT,'YYYY.MM.DD')    AMD_DT                    /*수정일시        */
+                    , A.REGR_ID                    /*등록자ID        */
+                    , TO_CHAR(A.REG_DT,'YYYY.MM.DD')    REG_DT                    /*등록일시        */
+                    , B.COMN_CD_NM
+                    
+                     , (SELECT  /* 고객 1일 적립횟수 */ COUNT(*) FROM CRM_POINT_HST M 
+                     		LEFT JOIN CRM_CUST_BAS D ON M.ITG_CUST_NO = D.ITG_CUST_NO 
+                     		WHERE M.RCMDR_CUST_NO = #{rcmdrCustNo2}  AND M.PBLS_DIV_CD = A.EVENT_COMN_CD AND M.MSHIP_GRADE_CD = D.MSHIP_GRADE_CD  
+                     		AND TO_CHAR(M.REG_DT, 'YYYYMMDD') = TO_CHAR(SYSDATE, 'YYYYMMDD') ) TODAY_PNT_PLBS_CNT
+                    
+                     , (SELECT  /* 고객 이번달 적립횟수 */ COUNT(*) FROM CRM_POINT_HST M 
+							LEFT JOIN CRM_CUST_BAS D ON M.ITG_CUST_NO = D.ITG_CUST_NO 
+                     		WHERE M.RCMDR_CUST_NO = #{rcmdrCustNo2}  AND M.PBLS_DIV_CD = A.EVENT_COMN_CD  AND M.MSHIP_GRADE_CD = D.MSHIP_GRADE_CD  
+                     		AND TO_CHAR(M.REG_DT, 'YYYYMM') = TO_CHAR(SYSDATE, 'YYYYMM') ) MONTH_PNT_PLBS_CNT
+                    
+                     , (SELECT  /* 고객 전체 적립횟수 */ COUNT(*) FROM CRM_POINT_HST M 
+						LEFT JOIN CRM_CUST_BAS D ON M.ITG_CUST_NO = D.ITG_CUST_NO 
+                     		WHERE M.RCMDR_CUST_NO = #{rcmdrCustNo2}  AND M.PBLS_DIV_CD = A.EVENT_COMN_CD  AND M.MSHIP_GRADE_CD = D.MSHIP_GRADE_CD ) ALL_PNT_PLBS_CNT
+                     		
+                     , NVL( (SELECT /* 고객 1일 적립 포인트 */ SUM(OCCUR_POINT_SCORE) FROM CRM_POINT_HST M 
+                     		LEFT JOIN CRM_CUST_BAS D ON M.ITG_CUST_NO = D.ITG_CUST_NO 
+                     	   WHERE  M.ITG_CUST_NO = #{itgCustNo} AND M.MSHIP_GRADE_CD = D.MSHIP_GRADE_CD AND TO_CHAR(M.REG_DT, 'YYYYMMDD') = TO_CHAR(SYSDATE, 'YYYYMMDD')  ), 0) TODAY_PBLS_PNT 
+                     	   
+                      , NVL( C.ACCUM_LMT_POINT_SCORE, 0) ACCUM_LMT_POINT_SCORE
+                      
+                     ,  NVL( (SELECT /* 더블클릭으로 동일한 데이터 호출 시 - 분까지만 체크 */ COUNT(*) FROM CRM_POINT_HST M 
+                     	LEFT JOIN CRM_CUST_BAS D ON M.ITG_CUST_NO = D.ITG_CUST_NO 
+				  		   WHERE M.ITG_CUST_NO = #{itgCustNo}  AND M.MSHIP_GRADE_CD = D.MSHIP_GRADE_CD AND M.PBLS_DIV_CD = A.EVENT_COMN_CD  AND  TO_CHAR( M.REG_DT, 'YYYYMMDDHH24MI') = TO_CHAR( SYSDATE, 'YYYYMMDDHH24MI')  ), 0) DOUBLE_CLICK_CHK	
+			  		
+			  			   		
+                FROM CRM_COMN_CD_BAS B
+                LEFT JOIN CRM_MSHIP_APPLY_POINT_REL A ON   A.EVENT_COMN_CD = B.COMN_CD AND B.TOP_COMN_CD = 'EV100'
+                LEFT JOIN CRM_MSHIP_PLCY_BAS C ON A.MSHIP_PLCY_BAS_NO = C.MSHIP_PLCY_BAS_NO
+                LEFT JOIN CRM_MSHIP_APPLY_POINT_REL D ON D.MSHIP_PLCY_BAS_NO = #{orgMshipPlcyBasNo} and D.EVENT_COMN_CD = B.COMN_CD AND B.TOP_COMN_CD = 'EV100'
+                 
+	                WHERE  COMN_CD_2_USE_YN='Y' AND A.MSHIP_PLCY_BAS_NO=  #{mshipPlcyBasNo} AND A.EVENT_COMN_CD = #{pblsDivCd}
+	               	 AND ( C.APPLY_STD_STA_YMD  <![CDATA[<=]]>  TO_CHAR(SYSDATE, 'YYYYMMDD')  AND  C.APPLY_STD_END_YMD  <![CDATA[>=]]>  TO_CHAR(SYSDATE, 'YYYYMMDD') )
+     </select>
+     
+    
+     <select id="selectCoupnPlcyInfo" resultType="com.ceragem.api.crm.model.CrmMshipPlcyBasVo">
+    
+    		SELECT /* com.ceragem.api.crm.dao.CrmMshipApplyCoupnEventRelDao.selectCoupnPlcyInfo */  
+                      A.COUPN_EVENT_BAS_NO                    /*등급쿠폰기본번호        */
+                    , B.COMN_CD EVENT_COMN_CD                    /*이벤트공통코드        */
+                    , A.COUPN_TYPE_CD                    /*쿠폰리스트코드        */
+                    , A.MSHIP_PLCY_BAS_NO                    /*멤버십정책기본번호        */
+                    , A.MSHIP_COUPN_BAS_NO                    /*멤버십쿠폰기본번호        */
+                    , NVL(A.TOT_APPNT_CNT, 0) TOT_APPNT_CNT                   /*총지정수        */
+                    , NVL(A.DAY_APPNT_CNT, 0)  DAY_APPNT_CNT                  /*일지정수        */
+                    , NVL(A.MONTH_APPNT_CNT, 0) MONTH_APPNT_CNT                    /*월지정수        */
+                    , B.COMN_CD_NM
+                    , NVL(USE_STD_DAY_COND_CD, 'N') USE_STD_DAY_COND_CD
+                    , FROM_PBLS_STD_DAY
+                    , TO_PBLS_STD_DAY
+                    , FROM_USE_STD_DAY
+                    , TO_USE_STD_DAY
+                    , FROM_USE_HOUR
+                    , TO_USE_HOUR 
+                    , DOW_1_USE_YN
+                    , DOW_2_USE_YN
+                    , DOW_3_USE_YN
+                    , DOW_4_USE_YN
+                    , DOW_5_USE_YN
+                    , DOW_6_USE_YN
+                    , DOW_7_USE_YN
+                    , NVL(APPLY_CNT, 0) APPLY_CNT
+                    , PRSNTTN_GODS_CD
+                    , COUPN_KND_CD
+                    , APPLY_AMT
+                    , NVL(MIN_BUY_AMT, 0) MIN_BUY_AMT 
+                    , NVL(MAX_DC_AMT, 0)  MAX_DC_AMT
+                    , NVL(MAX_USE_CNT, 0) MAX_USE_CNT
+                    , NVL(MAX_ISSUE_CNT, 0)  MAX_ISSUE_CNT
+                    , COUPN_ISSUE_METH_CD 
+                    , C.ISSUE_RSTRTN_CNT                    
+                    , (SELECT COUNT(*) FROM CRM_COUPN_PBLS_HST M WHERE D.ITG_CUST_NO = M.ITG_CUST_NO AND M.MSHP_GRADE_CD = C.MSHP_GRADE_CD  
+                    		AND M.COUPN_TYPE_CD = #{coupnTypeCd} AND TO_CHAR(REG_DT, 'YYYYMMDD') = TO_CHAR(SYSDATE, 'YYYYMMDD') ) TODAY_CPN_PLBS_LMT_CNT
+                    , (SELECT COUNT(*) FROM CRM_COUPN_PBLS_HST M WHERE D.ITG_CUST_NO = M.ITG_CUST_NO AND M.MSHP_GRADE_CD = C.MSHP_GRADE_CD  
+                    		AND M.COUPN_TYPE_CD = #{coupnTypeCd} AND TO_CHAR(REG_DT, 'YYYYMM') = TO_CHAR(SYSDATE, 'YYYYMM') ) MONTH_CPN_PLBS_LMT_CNT
+                    , (SELECT COUNT(*) FROM CRM_COUPN_PBLS_HST M WHERE D.ITG_CUST_NO = M.ITG_CUST_NO AND M.MSHP_GRADE_CD = C.MSHP_GRADE_CD  
+                    		AND M.COUPN_TYPE_CD = #{coupnTypeCd} AND TO_CHAR(REG_DT, 'YYYY') = TO_CHAR(SYSDATE, 'YYYY') ) YEAR_CPN_PLBS_LMT_CNT
+                    		
+                      		
+			  		, (SELECT  /* 더블클릭으로 동일한 데이터 호출 시 - 분까지만 체크 */ 
+			  				 COUNT(*) FROM CRM_COUPN_PBLS_HST M WHERE D.ITG_CUST_NO = M.ITG_CUST_NO AND M.MSHP_GRADE_CD = C.MSHP_GRADE_CD  
+                    		AND M.COUPN_TYPE_CD = #{coupnTypeCd} AND TO_CHAR(REG_DT, 'YYYYMMDDHH24MI') = TO_CHAR(SYSDATE, 'YYYYMMDDHH24MI') )  DOUBLE_CLICK_CHK	
+			  				
+                    		
+                    		
+                 FROM CRM_COMN_CD_BAS B
+                 LEFT JOIN CRM_MSHIP_APPLY_COUPN_EVENT_REL A ON  A.EVENT_COMN_CD = B.COMN_CD
+                 LEFT JOIN CRM_MSHIP_COUPN_BAS C ON A.MSHIP_COUPN_BAS_NO = C.MSHIP_COUPN_BAS_NO
+                 LEFT JOIN CRM_CUST_BAS D ON D.MSHIP_TYPE_CD = C.MSHIP_GRADE_CD 
+                WHERE ( B.TOP_COMN_CD = 'EV100' AND B.PRNTS_COMN_CD = 'EV100' )
+                 AND ( D.MSHIP_GRADE_CD = C.MSHP_GRADE_CD OR D.CPRT_CMP_NO = C.CPRT_CMP_NO )
+                 AND  A.MSHIP_PLCY_BAS_NO= #{mshipPlcyBasNo}
+                /*  AND ( C.FROM_PBLS_STD_DAY   <![CDATA[<=]]>  TO_CHAR(SYSDATE, 'YYYYMMDD')  AND  C.TO_PBLS_STD_DAY  <![CDATA[>=]]> TO_CHAR(SYSDATE, 'YYYYMMDD') ) */
+                 AND C.COUPN_TYPE_CD = #{coupnTypeCd} 
+                 AND d.ITG_CUST_NO = #{itgCustNo} 
+                 AND C.USE_YN='Y'
+                ORDER BY EVENT_COMN_CD
+     </select>
+     
+     
+     
+      <select id="selectEventAdvnInfo" resultType="com.ceragem.api.crm.model.CrmMshipApplyAdvncmtRelVo">
+      
+      		SELECT /* com.ceragem.api.crm.dao.CrmMshipPlcyBas.selectEventAdvnInfo */  
+                       A.MSHIP_PLCY_BAS_NO
+                    ,  A.ADVNCMT_SCORE_BAS_NO                    /*이벤트포인트기본번호        */
+                    , A.ADVNCMT_COMN_CD                    /*이벤트공통코드        */
+                    , A.MSHIP_PLCY_BAS_NO                    /*멤버십정책기본번호        */     
+                    , NVL(A.ADVNCMT_POINT_SCORE,0) ADVNCMT_POINT_SCORE /* 승급지급점수 */
+                    , NVL(A.TOT_APPNT_CNT, 0) TOT_APPNT_CNT                    /*총지정수        */
+                    , NVL(A.DAY_APPNT_CNT , 0) DAY_APPNT_CNT                    /*일지정수        */
+                    , NVL(A.MONTH_APPNT_CNT, 0) MONTH_APPNT_CNT                     /*월지정수        */
+                    , A.AMDR_ID                    /*수정자ID        */
+                    , TO_CHAR(A.AMD_DT,'YYYY.MM.DD')    AMD_DT                    /*수정일시        */
+                    , A.REGR_ID                    /*등록자ID        */
+                    , TO_CHAR(A.REG_DT,'YYYY.MM.DD')    REG_DT                    /*등록일시        */
+                    , B.COMN_CD_NM
+                    
+                     , (SELECT  /* 고객 1일 적립횟수 */ COUNT(*) FROM CRM_ADVNCMT_HST M 
+                     		LEFT JOIN CRM_CUST_BAS C ON M.ITG_CUST_NO = C.ITG_CUST_NO 
+                     		WHERE M.RCMDR_CUST_NO = #{rcmdrCustNo2}  AND M.PBLS_DIV_CD = #{pblsDivCd}  AND M.MSHIP_GRADE_CD = C.MSHIP_GRADE_CD  
+                            AND TO_CHAR(M.REG_DT, 'YYYYMMDD') = TO_CHAR(SYSDATE, 'YYYYMMDD') ) TODAY_APPNT_PLBS_CNT
+                    
+                     , (SELECT  /* 고객 이번달 적립횟수 */ COUNT(*) FROM CRM_ADVNCMT_HST M 
+							LEFT JOIN CRM_CUST_BAS C ON M.ITG_CUST_NO = C.ITG_CUST_NO 
+                     		WHERE M.RCMDR_CUST_NO = #{rcmdrCustNo2}  AND M.PBLS_DIV_CD = #{pblsDivCd}  AND M.MSHIP_GRADE_CD = C.MSHIP_GRADE_CD  AND 
+                            TO_CHAR(M.REG_DT, 'YYYYMM') = TO_CHAR(SYSDATE, 'YYYYMM') ) MONTH_APPNT_PLBS_CNT
+                    
+                     , (SELECT  /* 고객 전체 적립횟수 */ COUNT(*) FROM CRM_ADVNCMT_HST M 
+						LEFT JOIN CRM_CUST_BAS C ON M.ITG_CUST_NO = C.ITG_CUST_NO 
+                     		WHERE M.RCMDR_CUST_NO = #{rcmdrCustNo2}  AND M.PBLS_DIV_CD = #{pblsDivCd}  AND M.MSHIP_GRADE_CD = C.MSHIP_GRADE_CD ) ALL_APPNT_PLBS_CNT
+                     		
+                     , NVL( (SELECT /* 고객 1일 적립 포인트 */ SUM(ADVNCMT_POINT_SCORE) FROM CRM_ADVNCMT_HST M 
+                     		LEFT JOIN CRM_CUST_BAS C ON M.ITG_CUST_NO = C.ITG_CUST_NO 
+                     	   WHERE  M.ITG_CUST_NO = #{itgCustNo}  AND M.PBLS_DIV_CD =  #{pblsDivCd} AND M.MSHIP_GRADE_CD = C.MSHIP_GRADE_CD AND
+                           TO_CHAR(M.REG_DT, 'YYYYMMDD') = TO_CHAR(SYSDATE, 'YYYYMMDD')  ), 0) TODAY_APPNT_PBLS_PNT 
+                           
+                      ,  (SELECT REMAIN_ADVNCMT_SCORE FROM (SELECT /* 고객 1일 적립 포인트 */ REMAIN_ADVNCMT_SCORE FROM CRM_ADVNCMT_HST M 
+                     		LEFT JOIN CRM_CUST_BAS C ON M.ITG_CUST_NO = C.ITG_CUST_NO 
+                     	   WHERE  M.ITG_CUST_NO = #{itgCustNo}  AND M.MSHIP_GRADE_CD = C.MSHIP_GRADE_CD 
+                           ORDER BY ADVNCMT_HST_SEQ DESC
+                          ) WHERE ROWNUM=1 ) ALL_ADVNCMT_SCORE 
+                        		
+                        		
+				  	, (SELECT  /* 더블클릭으로 동일한 데이터 호출 시 - 분까지만 체크 */  COUNT(*) FROM CRM_ADVNCMT_HST M 
+							LEFT JOIN CRM_CUST_BAS C ON M.ITG_CUST_NO = C.ITG_CUST_NO 
+                     		WHERE M.ITG_CUST_NO = #{itgCustNo} AND M.PBLS_DIV_CD = #{pblsDivCd}  AND M.MSHIP_GRADE_CD = C.MSHIP_GRADE_CD 
+                     		AND TO_CHAR( M.REG_DT, 'YYYYMMDDHH24MI') = TO_CHAR( SYSDATE, 'YYYYMMDDHH24MI') )   DOUBLE_CLICK_CHK	
+			  		
+			  		   		
+                FROM CRM_COMN_CD_BAS B
+                LEFT JOIN CRM_MSHIP_APPLY_ADVNCMT_REL A ON   A.ADVNCMT_COMN_CD = B.COMN_CD AND B.TOP_COMN_CD = 'EV100'
+                LEFT JOIN CRM_MSHIP_PLCY_BAS C ON A.MSHIP_PLCY_BAS_NO = C.MSHIP_PLCY_BAS_NO
+	                WHERE  COMN_CD_3_USE_YN='Y' AND A.MSHIP_PLCY_BAS_NO=  #{orgMshipPlcyBasNo} AND A.ADVNCMT_COMN_CD = #{pblsDivCd}
+	               	 AND ( C.APPLY_STD_STA_YMD   <![CDATA[<=]]>  TO_CHAR(SYSDATE, 'YYYYMMDD')  AND  C.APPLY_STD_END_YMD  <![CDATA[>=]]>  TO_CHAR(SYSDATE, 'YYYYMMDD') )
+      
+      </select>
+     
+     
+      <insert id="pubCoupon"> 
+    
+                
+        	  <if test="custNoList != null and custNoList != ''  and custNoList.size()  > 0 ">   
+        	
+        			  INSERT ALL /* crmMshipPlcyBas.pubCoupon */ INTO  CRM_COUPN_PBLS_HST ( 
+									  COUPN_PBLS_HST_SEQ
+									, COUPN_PBLS_BAS_NO
+									, ITG_CUST_NO
+									, MSHIP_COUPN_BAS_NO
+									, COUPN_KND_CD
+									, COUPN_TGT_CD
+									, COUPN_APPLY_DIV_CD1
+									, COUPN_APPLY_DIV_CD2
+									, FROM_PBLS_STD_DAY
+									, TO_PBLS_STD_DAY
+									, USE_STD_DAY_COND_CD
+									, FROM_USE_STD_DAY
+									, TO_USE_STD_DAY
+									, GIFT_POSS_YN
+									, COUPN_ISSUE_METH_CD
+									, ISSUE_RSTRTN_CNT
+									, MAX_ISSUE_CNT
+									, MAX_USE_CNT
+									, APPLY_AMT
+									, APPLY_RATE
+									, MIN_BUY_AMT
+									, MAX_DC_AMT
+									, APPLY_CNT
+									, PRSNTTN_GODS_CD
+									, USE_DOW
+									, FROM_USE_HOUR
+									, TO_USE_HOUR
+									, USE_CHL_CD
+									, DUP_USE_YN
+									, USE_DIV_CD
+									, USE_YN
+									, COUPN_BAS_NM
+									, COUPN_BAS_CTNTS
+									, ADMT_METH_CD
+									, ADMT_AMT
+									, COUPN_TYPE_CD
+									, COUPN_USE_POSS_DAY
+									, COUPN_USE_POSS_YN
+									, COUPN_USE_POSS_DAY_CNT
+									, COUPN_CLASS_CD
+									, DOW_1_USE_YN
+									, DOW_2_USE_YN
+									, DOW_3_USE_YN
+									, DOW_4_USE_YN
+									, DOW_5_USE_YN
+									, DOW_6_USE_YN
+									, DOW_7_USE_YN
+									, MSHP_GRADE_CD
+									, AMDR_ID
+									, AMD_DT
+									, REGR_ID
+									, REG_DT
+									, REG_CHL_CD )
+			           
+			           SELECT  /* crmMshipPlcyBas.pubCoupon */  
+			           		FN_CRM_AUTO_SEQ('CPN')
+			           		, FN_LUHN_COUPN( DECODE(MSHIP_GRADE_CD, '001', '01', '002', '51', '003', '05', NULL, '05') ) COUPN_PBLS_BAS_NO
+			           		, #{itgCustNo}
+			           		, MSHIP_COUPN_BAS_NO
+			           		, COUPN_KND_CD
+			           		, COUPN_TGT_CD
+			           		, COUPN_APPLY_DIV_CD1
+			           		,  COUPN_APPLY_DIV_CD2
+			           		, FROM_PBLS_STD_DAY
+			           		, TO_PBLS_STD_DAY
+			           		, USE_STD_DAY_COND_CD
+			           		, FROM_USE_STD_DAY
+			           		, TO_USE_STD_DAY
+			           		, GIFT_POSS_YN
+			           		, COUPN_ISSUE_METH_CD
+			           		, ISSUE_RSTRTN_CNT
+			           		,  MAX_ISSUE_CNT
+			           		, MAX_USE_CNT
+			           		, APPLY_AMT
+			           		, APPLY_RATE
+			           		, MIN_BUY_AMT
+			           		, MAX_DC_AMT
+			           		, APPLY_CNT
+			           		, PRSNTTN_GODS_CD
+			           		, USE_DOW
+			           		, FROM_USE_HOUR
+			           		, TO_USE_HOUR
+			           		, USE_CHL_CD
+			           		, DUP_USE_YN
+			           		,  USE_DIV_CD
+			           		, USE_YN
+			           		, COUPN_BAS_NM
+			           		, COUPN_BAS_CTNTS
+			           		, ADMT_METH_CD
+			           		, ADMT_AMT
+			           		, COUPN_TYPE_CD
+			           		, COUPN_USE_POSS_DAY
+			           		, COUPN_USE_POSS_YN
+			           		, COUPN_USE_POSS_DAY_CNT
+			           		,  COUPN_CLASS_CD
+			           		,  DOW_1_USE_YN
+			           		,  DOW_2_USE_YN
+			           		, DOW_3_USE_YN
+			           		, DOW_4_USE_YN
+			           		, DOW_5_USE_YN
+			           		, DOW_6_USE_YN
+			           		, DOW_7_USE_YN
+			           		,  MSHP_GRADE_CD
+			           		, AMDR_ID
+			           		, AMD_DT
+			           		, #{regrId}
+			           		, SYSDATE 
+			           		, REG_CHL_CD 
+  					  FROM CRM_MSHIP_COUPN_BAS  
+  					  WHERE MSHIP_COUPN_BAS_NO = #{mshipCoupnBasNo}
+  					 		 AND USE_YN= 'Y'
+				 
+			</if>
+			
+    </insert>  
+     
+     
+     
+    <insert id="insert">
+                INSERT /* com.ceragem.api.crm.dao.CrmMshipPlcyBasDao.insert */ INTO CRM_MSHIP_PLCY_BAS (
+        <include refid="sqlCols"/>
+                 ) VALUES (
+                       #{mshipPlcyBasNo}
+                     , #{mshipGradeCd}
+                     , #{mshpGradeCd}
+                     , #{mshipPlcyNm}
+                     , #{mshipPlcyCtnts}
+                     , #{cprtCmpNo}
+                     , #{applyStdStaYmd}
+                     , #{applyStdEndYmd}
+                     , #{extrcStdMonth}
+                     , #{advncmtStaScore}
+                     , #{advncmtEndScore}
+                     , #{extrcKeepMonth}
+                     , #{extrcStd2Month}
+                     , #{gradeKeepScore}
+                     , #{gradeKeep2Score}
+                     , #{gradeKeepMonth}
+                     , #{buyRewardAdvncmtRate}
+                     , #{buyRcmdRewardAdvncmtRate}
+                     , #{buyAccumPointRate}
+                     , #{sbscPointScore}
+                     , #{sbscPointApplyStdCd}
+                     , #{accumLmtPointScore}
+                     , #{buyRcmdPointRate}
+                     , #{buyAdvncmtPointScore}
+                     , #{advncmtPointApplyStdCd}
+                     , #{useLmtPointScore}
+                     , NVL(#{pointExtncAlertYn},'N')
+                     , #{pointExtncAlertPerd}
+                     , #{giftPointValidPerd}
+                     , NVL(#{mycomMallFreeDlvYn},'N')
+                     , #{freeSvcExtnsnMonsCnt}
+                     , #{ceracCoupnPrvMonsCnt}
+                     , #{statusCd}
+                     , #{regChlCd}
+                     , #{amdrId}
+                     , SYSDATE
+                     , #{regrId}
+                     , SYSDATE
+                 )
+    </insert>
+    <update id="update">
+               UPDATE /* com.ceragem.api.crm.dao.CrmMshipPlcyBasDao.update */ CRM_MSHIP_PLCY_BAS
+                  SET MSHIP_GRADE_CD                          =         #{mshipGradeCd}
+                    , MSHP_GRADE_CD                           =         #{mshpGradeCd}
+                    , MSHIP_PLCY_NM                           =         #{mshipPlcyNm}
+                    , MSHIP_PLCY_CTNTS                        =         #{mshipPlcyCtnts}
+                    , CPRT_CMP_NO                             =         #{cprtCmpNo}
+                    , APPLY_STD_STA_YMD                       =         #{applyStdStaYmd}
+                    , APPLY_STD_END_YMD                       =         #{applyStdEndYmd}
+                    , EXTRC_STD_MONTH                         =         #{extrcStdMonth}
+                    , ADVNCMT_STA_SCORE                       =         #{advncmtStaScore}
+                    , ADVNCMT_END_SCORE                       =         #{advncmtEndScore}
+                    , EXTRC_KEEP_MONTH                        =         #{extrcKeepMonth}
+                    , EXTRC_STD_2_MONTH                       =         #{extrcStd2Month}
+                    , GRADE_KEEP_SCORE                        =         #{gradeKeepScore}
+                    , GRADE_KEEP_2_SCORE                      =         #{gradeKeep2Score}
+                    , GRADE_KEEP_MONTH                        =         #{gradeKeepMonth}
+                    , BUY_REWARD_ADVNCMT_RATE                 =         #{buyRewardAdvncmtRate}
+                    , BUY_RCMD_REWARD_ADVNCMT_RATE            =         #{buyRcmdRewardAdvncmtRate}
+                    , BUY_ACCUM_POINT_RATE                    =         #{buyAccumPointRate}
+                    , SBSC_POINT_SCORE                        =         #{sbscPointScore}
+                    , SBSC_POINT_APPLY_STD_CD                 =         #{sbscPointApplyStdCd}
+                    , ACCUM_LMT_POINT_SCORE                   =         #{accumLmtPointScore}
+                    , BUY_RCMD_POINT_RATE                     =         #{buyRcmdPointRate}
+                    , BUY_ADVNCMT_POINT_SCORE                 =         #{buyAdvncmtPointScore}
+                    , ADVNCMT_POINT_APPLY_STD_CD              =         #{advncmtPointApplyStdCd}
+                    , USE_LMT_POINT_SCORE                     =         #{useLmtPointScore}
+                    , POINT_EXTNC_ALERT_YN                    =         NVL(#{pointExtncAlertYn},'N')
+                    , POINT_EXTNC_ALERT_PERD                  =         #{pointExtncAlertPerd}
+                    , GIFT_POINT_VALID_PERD                   =         #{giftPointValidPerd}
+                    , MYCOM_MALL_FREE_DLV_YN                  =         NVL(#{mycomMallFreeDlvYn},'N')
+                    , FREE_SVC_EXTNSN_MONS_CNT                =         #{freeSvcExtnsnMonsCnt}
+                    , CERAC_COUPN_PRV_MONS_CNT                =         #{ceracCoupnPrvMonsCnt}
+                    , STATUS_CD                               =         #{statusCd}
+                    , REG_CHL_CD                              =         #{regChlCd}
+                    , AMDR_ID                                 =         #{amdrId}
+                    , AMD_DT                                  =         SYSDATE
+        <include refid="sqlPkConditions"/>
+    </update>
+    <delete id="delete">
+               DELETE /* com.ceragem.api.crm.dao.CrmMshipPlcyBasDao.delete */
+                 FROM CRM_MSHIP_PLCY_BAS
+        <include refid="sqlPkConditions"/>
+    </delete>
+</mapper>

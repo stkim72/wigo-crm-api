@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ceragem.api.crm.dao.CrmComnCdBasDao">
+	<select id="select" resultType="com.ceragem.api.crm.model.CrmCommonCodeVo" >
+	   		  SELECT /* com.ceragem.api.crm.dao.CrmComnCdBasDao.select */ A.COMN_CD LARGE_CD
+              		 , A.COMN_CD_NM  LARGE_NM
+             		 , A.USE_YN		LARGE_USE_YN
+		             , B.COMN_CD SMALL_CD
+		             , B.COMN_CD_NM  SMALL_NM
+		             , B.USE_YN		SMALL_USE_YN
+		    	  FROM CRM_COMN_CD_BAS A
+		    	     , CRM_COMN_CD_BAS B
+		    	 WHERE A.COMN_CD_LVL_NO = 1
+		           AND A.TOP_COMN_CD = B.TOP_COMN_CD
+		           AND B.COMN_CD_LVL_NO = 2
+                   AND B.COMN_CD           =       #{comnCd}
+                   AND A.TOP_COMN_CD       =       #{topComnCd}
+	</select>
+    <select id="selectList" resultType="com.ceragem.api.crm.model.CrmCommonCodeVo">
+                SELECT  /* com.ceragem.api.crm.dao.CrmComnCdBasDao.selectList */ A.COMN_CD LARGE_CD
+              		 , A.COMN_CD_NM  LARGE_NM
+             		 , A.USE_YN		LARGE_USE_YN
+		             , B.COMN_CD SMALL_CD
+		             , B.COMN_CD_NM  SMALL_NM
+		             , B.USE_YN		SMALL_USE_YN
+		    	  FROM CRM_COMN_CD_BAS A
+		    	     , CRM_COMN_CD_BAS B
+		    	 WHERE A.COMN_CD_LVL_NO = 1
+		           AND A.TOP_COMN_CD = B.TOP_COMN_CD
+		           AND B.COMN_CD_LVL_NO = 2
+		<if test="comnCdNmLike != null and comnCdNmLike != ''">
+                   AND B.COMN_CD_NM    LIKE     '%' ||  #{comnCdNmLike} || '%'
+        </if>
+        <if test="comnCdLike != null and comnCdLike != ''">
+                   AND B.COMN_CD       LIKE      #{comnCdLike} || '%'
+        </if>
+        <if test="topComnCd != null and topComnCd != ''">
+            	   AND B.TOP_COMN_CD       =       #{topComnCd}
+        </if>
+        <if test="comnCd != null and comnCd != ''">
+                   AND B.COMN_CD       =      #{comnCd}
+        </if>
+        <if test="useYn != null and useYn != ''">
+            	   AND B.USE_YN       =       #{useYn}
+        </if>
+		         ORDER BY B.TOP_COMN_CD
+		             , B.COMN_CD_ODRG
+		             , B.COMN_CD
+    </select>
+    <select id="selectLargeList" resultType="com.ceragem.api.crm.model.CrmCommonCodeVo">
+                SELECT /* com.ceragem.api.crm.dao.CrmComnCdBasDao.selectLargeList */ A.COMN_CD LARGE_CD
+             		 , A.COMN_CD_NM  LARGE_NM
+             		 , A.USE_YN		LARGE_USE_YN
+		    	  FROM CRM_COMN_CD_BAS A
+		    	 WHERE A.COMN_CD_LVL_NO = 1
+		<if test="comnCdNmLike != null and comnCdNmLike != ''">
+                   AND A.COMN_CD_NM    LIKE     '%' ||  #{comnCdNmLike} || '%'
+        </if>
+        <if test="comnCdLike != null and comnCdLike != ''">
+                   AND A.COMN_CD       LIKE      #{comnCdLike} || '%'
+        </if>
+        <if test="topComnCd != null and topComnCd != ''">
+            	   AND A.TOP_COMN_CD       =       #{topComnCd}
+        </if>
+		         ORDER BY A.TOP_COMN_CD
+    </select>
+
+
+</mapper>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ceragem.api.ctc.dao.CtcInquiryDao">
+   
+   
+	<sql id="pagingHeader">
+	SELECT T.*
+	  FROM ( SELECT ROWNUM AS ROW_INDEX
+	              , A.*
+	           FROM (
+	</sql>
+	<sql id="pagingFooter">
+	                  ) A ) T
+	 WHERE   T.ROW_INDEX BETWEEN NVL(#{firstRecordIndex},1) AND NVL(#{lastRecordIndex},30)
+	</sql>
+	    
+	<sql id="sqlConditions">
+		WHERE MOBIL_NO = DAMO.ENCRYPT_VAR_B64('AES_256',#{mobilNo},'')
+	</sql>
+	<sql id="sqlCols">
+		     QUSTN_SEQ                                       		  /*문의번호*/
+	       , SUBMIT_DT                                                /*접수일자*/
+	       , CUST_NM                                                  /*고객명*/
+	       , DAMO.DECRYPT_VAR_B64('AES_256',MOBIL_NO,'') AS MOBIL_NO  /*고객_핸드폰번호(복호화X)*/
+	       , PROD_NM                                                  /*제품명*/
+	       , SUBMIT_CNTN                                              /*접수내용*/
+	       , UPD_DTTM                                                 /*상담접수완료일자*/
+	       , (SELECT CD_NM
+				      FROM PLT_COMN_CD B
+				     WHERE B.CD = PROC_TY
+				       AND GROUP_CD = 'PLT061') AS PROC_NM	          /*처리구분명*/
+	       , PROC_TY                                                  /*처리구분코드*/
+	    -- , CUST_NO                                                  /*통합고객번호*/
+	</sql>
+
+    
+	<select id="selectList"  resultType="com.ceragem.api.ctc.model.CtcInquiryVo">
+		<include refid="pagingHeader"/>
+			SELECT <include refid="sqlCols"/>
+			FROM PLT_QUSTN_SUBMIT 
+			<include refid="sqlConditions"/>	 
+	       <include refid="pagingFooter"/>
+	</select>
+
+	
+</mapper>

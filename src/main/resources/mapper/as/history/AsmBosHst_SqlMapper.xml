@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ceragem.api.as.dao.AsmBosHstDao">
+
+	<!-- BOS 계약내역 IF 이력 저장 -->
+	<insert id="insertContractIfHist">
+    	<selectKey order="BEFORE" keyProperty="seq" resultType="int">
+    		SELECT NVL(MAX(SEQ),0)+1 FROM AS_BOS_CONTRACT_IF_HIST
+    	</selectKey>
+                INSERT /* com.ceragem.api.as.dao.AsmBosHstDao.insertContractIfHist */ INTO AS_BOS_CONTRACT_IF_HIST (
+                	SEQ,
+                	ORDDE,
+                	SALESECD,
+                	SALESENM,
+                	SALETYCD,
+                	SALETYNM,
+                	SALEGRPCD,
+                	SALEGRPNM,
+                	ORDSECD,
+                	ORDSENM,
+                	ORDCHNCD,
+                	ORDCHNNM,
+                	ORDNO,
+                	ORDNOSN,
+                	CNTRNO,
+                	CUSTNO,
+                	CUSTNM,
+                	ITEMTYCD,
+                	ITEMTYNM,
+                	ITEMCD,
+                	ITEMNM,
+                	CNTRQY,
+                	DCRT,
+                	DCAMT,
+                	PRCPLCNO,
+                	PRCPLCNM,
+                	PRSNTDTLS,
+                	CNTRSTSCD,
+                	CNTRSTSNM,
+                	CNTRSTSDTLCD,
+                	CNTRSTSDTLNM,
+                	CNTRSTSDTLRSN,
+                	SETLSTSCD,
+                	SETLSTSNM,
+                	ISTSTSCD,
+                	ISTSTSNM,
+                	OTBNSTSCD,
+                	OTBNSTSNM,
+                	HQSECD,
+                	HQSENM,
+                	UPPERORGZCD,
+                	UPPERORGZNM,
+                	SALEORGZ,
+                	SALEORGZNM,
+                	SELLER,
+                	SELLERNM,
+                	SPONSORID,
+                	SPONSORNM,
+                	RCMDR,
+                	RCMDRNM,
+                	RCMDRMBRSHID,
+                	RCMDRMBRSHNM,
+                	CNTRCNCLYN,
+                	CNTRCNCLDE,
+                	CNTRCNCLRSN,
+                	AGRPDCD,
+                	AGRPDNM,
+                	CNTRPDVAL,
+                	CNTRPDSECD,
+                	EXPRNDMDDCPDCD,
+                	PREPAYYN,
+                	PREPAYAMT,
+                	PREPAYCYCLE,
+                	REGFEE,
+                	BASSRENTAMT,
+                	RENTAMT,
+                	BASSSALEAMT,
+                	SALEAMT,
+                	SETLAMT,
+                	BASSMBRSHAMT,
+                	MBRSHAMT,
+                	CNTCDE,
+                	ISTDUEDE,
+                	OTBNDE,
+                	ISTCUSTNM,
+                	ZIP,
+                	BASSADDR,
+                	DTLADDR,
+                	WRHCD,
+                	WRHNM,
+                	OTBNCUSTNO,
+                	ISTDUEORGZ,
+                	ISTDUEORGZNM,
+                	ISTDUEENGR,
+                	ISTDUEENGRNM,
+                	ISTDCSDE,
+                	SELNGDCSDE,
+                	TRFRSNCD,
+                	TRFRSNNM,
+                	RTGDTYCD,
+                	RTGDTYNM,
+                	RTGDREQDE,
+                	RTGDDCSYN,
+                	RTGDENDDE,
+                	PKGYN,
+                	PKGPLCNO,
+                	PKGNO,
+                	GRPYN,
+                	GRPNO,
+                	EXPRNCNTRNO,
+                	DLVTYCD,
+                	DLVTYNM,
+                	DLVTYDTLCD,
+                	DLVTYDTLNM,
+                	SHDECREYN,
+                	CNTRENDAFTERPROCMTHCD,
+                	CNTRENDAFTERPROCMTHNM,
+                	FSETLMTHCD,
+                	FSETLMTHNM,
+                	FSETLDECD,
+                	SIGNFILEYN,
+                	CTRTCFILEYN,
+                	REGUSRID,
+                	REGDT,
+                	UPDUSRID,
+                	UPDDT,
+                	ISTDE,
+                	ISTENGR,
+                	ISTENGRNM,
+                	SERIALNO,
+                	IF_REG_DT,
+                	ITG_CUST_NO,
+                	RTNCNT
+                 ) VALUES (
+                       #{seq}
+                     , #{ordDe}
+                     , #{saleSeCd}
+                     , #{saleSeNm}
+                     , #{saleTyCd}
+                     , #{saleTyNm}
+                     , #{saleGrpCd}
+                     , #{saleGrpNm}
+                     , #{ordSeCd}
+                     , #{ordSeNm}
+                     , #{ordChnCd}
+                     , #{ordChnNm}
+                     , #{ordNo}
+                     , #{ordNoSn}
+                     , #{cntrNo}
+                     , #{custNo}
+                     , #{custNm}
+                     , #{itemTyCd}
+                     , #{itemTyNm}
+                     , #{itemCd}
+                     , #{itemNm}
+                     , #{cntrQy}
+                     , #{dcrt}
+                     , #{dcAmt}
+                     , #{prcPlcNo}
+                     , #{prcPlcNm}
+                     , #{prsntDtls}
+                     , #{cntrStsCd}
+                     , #{cntrStsNm}
+                     , #{cntrStsDtlCd}
+                     , #{cntrStsDtlNm}
+                     , #{cntrStsDtlRsn}
+                     , #{setlStsCd}
+                     , #{setlStsNm}
+                     , #{istStsCd}
+                     , #{istStsNm}
+                     , #{otbnStsCd}
+                     , #{otbnStsNm}
+                     , #{hqSeCd}
+                     , #{hqSeNm}
+                     , #{upperOrgzCd}
+                     , #{upperOrgzNm}
+                     , #{saleOrgz}
+                     , #{saleOrgzNm}
+                     , #{seller}
+                     , #{sellerNm}
+                     , #{sponsorId}
+                     , #{sponsorNm}
+                     , #{rcmdr}
+                     , #{rcmdrNm}
+                     , #{rcmdrMbrshId}
+                     , #{rcmdrMbrshNm}
+                     , #{cntrCnclYn}
+                     , #{cntrCnclDe}
+                     , #{cntrCnclRsn}
+                     , #{agrPdCd}
+                     , #{agrPdNm}
+                     , #{cntrPdVal}
+                     , #{cntrPdSeCd}
+                     , #{exprnDmdDcPdCd}
+                     , #{prepayYn}
+                     , #{prepayAmt}
+                     , #{prepayCycle}
+                     , #{regfee}
+                     , #{bassRentAmt}
+                     , #{rentAmt}
+                     , #{bassSaleAmt}
+                     , #{saleAmt}
+                     , #{setlAmt}
+                     , #{bassMbrshAmt}
+                     , #{mbrshAmt}
+                     , #{cntcDe}
+                     , #{istDueDe}
+                     , #{otbnDe}
+                     , #{istCustNm}
+                     , #{zip}
+                     , #{bassAddr}
+                     , #{dtlAddr}
+                     , #{wrhCd}
+                     , #{wrhNm}
+                     , #{otbnCustNo}
+                     , #{istDueOrgz}
+                     , #{istDueOrgzNm}
+                     , #{istDueEngr}
+                     , #{istDueEngrNm}
+                     , #{istDcsDe}
+                     , #{selngDcsDe}
+                     , #{trfRsnCd}
+                     , #{trfRsnNm}
+                     , #{rtgdTyCd}
+                     , #{rtgdTyNm}
+                     , #{rtgdReqDe}
+                     , #{rtgdDcsYn}
+                     , #{rtgdEndDe}
+                     , #{pkgYn}
+                     , #{pkgPlcNo}
+                     , #{pkgNo}
+                     , #{grpYn}
+                     , #{grpNo}
+                     , #{exprnCntrNo}
+                     , #{dlvTyCd}
+                     , #{dlvTyNm}
+                     , #{dlvTyDtlCd}
+                     , #{dlvTyDtlNm}
+                     , #{shdeCreYn}
+                     , #{cntrEndAfterProcMthCd}
+                     , #{cntrEndAfterProcMthNm}
+                     , #{fsetlMthCd}
+                     , #{fsetlMthNm}
+                     , #{fsetlDeCd}
+                     , #{signFileYn}
+                     , #{ctrtcFileYn}
+                     , #{regUsrId}
+                     , #{regDt}
+                     , #{updUsrId}
+                     , #{updDt}
+                     , #{istDe}
+                     , #{istEngr}
+                     , #{istEngrNm}
+                     , #{serialNo}
+                     , SYSDATE
+                     , #{itgCustNo}
+                     , #{rtnCnt}
+                 )
+    </insert>
+
+</mapper>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ceragem.api.as.dao.AsmMoDao">
+
+    <!-- MO서비스에서 받은 정보를 저장 -->
+    <insert id="moFileInsert">
+        INSERT /* com.ceragem.api.as.dao.AsmMoDao.moFileInsert */
+          INTO AS_FILE_BAS (
+               FILE_CD			/* 파일코드 */
+             , FILE_ODRG			/* 파일순번 */
+             , FILE_NM			/* 파일명 */
+             , FILE_SIZE			/* 파일크기 */
+             , FILE_SAVE_NM	/* 파일저장명 */
+             , FILE_URL			/* 파일URL */
+             , FILE_EXT_NM      /* 파일확장자명 */
+             , MIME_TYPE_NM  /* MIME유형명 */
+             , REGR_ID			/* 등록자ID */
+             , REG_DT				/* 등록일시 */
+             , AMDR_ID			/* 수정자ID */
+             , AMD_DT           /* 수정일시 */
+             , FILE_GRP_CD		/* 파일그룹 */
+        ) VALUES (
+               #{fileCd}
+             , #{fileOdrg}
+             , #{fileNm}
+             , #{fileSize}
+             , #{fileSaveNm}
+             , #{fileUrl}
+             , #{fileExtNm}
+             , #{mimeTypeNm}
+             , #{regrId}
+             , SYSDATE
+             , #{amdrId}
+             , SYSDATE
+             , 'ASMO'
+        )
+    </insert>
+
+    <!-- AS접수기본, MO파일 정보 업데이트 -->
+    <update id="moFileUpdate">
+        UPDATE AS_SUBMIT_BAS	/* com.ceragem.api.as.dao.AsmMoDao.moFileUpdate */
+        	SET MO_FILE_ID = #{fileCd}	/* 파일코드 */
+		WHERE AS_SUBMIT_NO =
+			(SELECT MAX(TO_NUMBER(A.AS_SUBMIT_NO))
+			   FROM (
+			         SELECT
+						ROW_NUMBER() OVER(ORDER BY REG_DT DESC) AS RNUM
+						, AS_SUBMIT_NO
+					FROM AS_SUBMIT_BAS
+					WHERE USE_YN = 'Y'
+						AND  REPLACE (DAMO.DECRYPT_VAR_B64('AES_256',MPHON_NO , ''), '-', '')  = REPLACE(#{sendTelNo}, '-', '') /* 고객전화번호 */
+						<!-- /*+AND  DAMO.ENCRYPT_VAR_B64('AES_256',MPHON_NO,'') = DAMO.ENCRYPT_VAR_B64('AES_256',#{sendTelNo},'')*/	 -->
+						AND (AS_STATUS_CD IS NULL OR AS_STATUS_CD = '30')
+						ORDER BY AS_SUBMIT_NO DESC
+				) A
+				WHERE A.RNUM = 1
+			)
+    </update>
+
+</mapper>

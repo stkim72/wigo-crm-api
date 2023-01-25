@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ceragem.api.crm.dao.CrmCustInfoPtuseAgreeHstDao">
+    <sql id="sqlPkConditions">
+                WHERE INFO_PTUSE_AGREE_HST_SEQ=       #{infoPtuseAgreeHstSeq}
+    </sql>
+    <sql id="sqlCols">
+                      INFO_PTUSE_AGREE_HST_SEQ                    /*정보활용동의이력일련번호        */
+                    , ITG_CUST_NO                    /*통합고객번호        */
+                    , AGREE_TYPE_CD                    /*동의유형코드        */
+                    , STPLT_NO                    /*약관번호        */
+                    , AGREE_YN                    /*동의여부        */
+                    , RCV_RFSL_TYPE_CD                    /*수신거부유형코드        */
+                    , RCV_RFSL_YN                    /*수신거부여부        */
+                    , AMDR_ID                    /*수정자ID        */
+                    , AMD_DT                    /*수정일시        */
+                    , REGR_ID                    /*등록자ID        */
+                    , REG_DT                    /*등록일시        */
+                    , REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS]*/
+    </sql>
+    <sql id="sqlSelectCols">
+                      A.INFO_PTUSE_AGREE_HST_SEQ                    /*정보활용동의이력일련번호        */
+                    , A.ITG_CUST_NO                    /*통합고객번호        */
+                    , A.AGREE_TYPE_CD                    /*동의유형코드        */
+                    , A.STPLT_NO                    /*약관번호        */
+                    , A.AGREE_YN                    /*동의여부        */
+                    , A.RCV_RFSL_TYPE_CD                    /*수신거부유형코드        */
+                    , A.RCV_RFSL_YN                    /*수신거부여부        */
+                    , A.AMDR_ID                    /*수정자ID        */
+                    , TO_CHAR(A.AMD_DT,'YYYYMMDDHH24MISS')    AMD_DT                    /*수정일시        */
+                    , A.REGR_ID                    /*등록자ID        */
+                    , TO_CHAR(A.REG_DT,'YYYYMMDDHH24MISS')    REG_DT                    /*등록일시        */
+                    , A.REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS]*/
+    </sql>
+    <sql id="sqlConditions">
+    <where>
+        <if test="infoPtuseAgreeHstSeq != null and infoPtuseAgreeHstSeq != ''">
+                  AND A.INFO_PTUSE_AGREE_HST_SEQ=       #{infoPtuseAgreeHstSeq}
+        </if>
+        <if test="itgCustNo != null and itgCustNo != ''">
+                  AND A.ITG_CUST_NO     =       #{itgCustNo}
+        </if>
+        <if test="agreeTypeCd != null and agreeTypeCd != ''">
+            <choose>
+                <when test="agreeTypeCd instanceof String">
+                    AND A.AGREE_TYPE_CD   =       #{agreeTypeCd}
+                </when>
+                <otherwise>
+                    AND A.AGREE_TYPE_CD   IN
+                    <foreach item="item" index="index" collection="agreeTypeCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="stpltNo != null and stpltNo != ''">
+                  AND A.STPLT_NO        =       #{stpltNo}
+        </if>
+        <if test="agreeYn != null and agreeYn != ''">
+                  AND A.AGREE_YN        =       #{agreeYn}
+        </if>
+        <if test="rcvRfslTypeCd != null and rcvRfslTypeCd != ''">
+            <choose>
+                <when test="rcvRfslTypeCd instanceof String">
+                    AND A.RCV_RFSL_TYPE_CD=       #{rcvRfslTypeCd}
+                </when>
+                <otherwise>
+                    AND A.RCV_RFSL_TYPE_CDIN
+                    <foreach item="item" index="index" collection="rcvRfslTypeCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="rcvRfslYn != null and rcvRfslYn != ''">
+                  AND A.RCV_RFSL_YN     =       #{rcvRfslYn}
+        </if>
+        <if test="regChlCd != null and regChlCd != ''">
+            <choose>
+                <when test="regChlCd instanceof String">
+                    AND A.REG_CHL_CD      =       #{regChlCd}
+                </when>
+                <otherwise>
+                    AND A.REG_CHL_CD      IN
+                    <foreach item="item" index="index" collection="regChlCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        </where>
+    </sql>
+    <select id="selectListCount" resultType="int">
+                SELECT /* com.ceragem.api.crm.dao.CrmCustInfoPtuseAgreeHstDao.selectListCount */ COUNT(1)
+                 FROM CRM_CUST_INFO_PTUSE_AGREE_HST A
+        <include refid="sqlConditions"/>
+    </select>
+    <select id="selectList" resultType="com.ceragem.api.crm.model.CrmCustInfoPtuseAgreeHstVo">
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingHeader"/>
+               SELECT /* com.ceragem.api.crm.dao.CrmCustInfoPtuseAgreeHstDao.selectList */ <include refid="sqlSelectCols"/>
+                 FROM CRM_CUST_INFO_PTUSE_AGREE_HST A
+        <include refid="sqlConditions"/>
+               ORDER BY REG_DT DESC
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingFooter"/>
+    </select>
+    <select id="select" resultType="com.ceragem.api.crm.model.CrmCustInfoPtuseAgreeHstVo">
+               SELECT /* com.ceragem.api.crm.dao.CrmCustInfoPtuseAgreeHstDao.select */ <include refid="sqlSelectCols"/>
+                 FROM CRM_CUST_INFO_PTUSE_AGREE_HST A
+        <include refid="sqlPkConditions"/>
+    </select>
+    <insert id="insert">
+        <selectKey order="BEFORE" keyProperty="infoPtuseAgreeHstSeq" resultType="String">
+            SELECT FN_CRM_AUTO_SEQ('IAH') FROM DUAL
+        </selectKey>
+                INSERT /* com.ceragem.api.crm.dao.CrmCustInfoPtuseAgreeHstDao.insert */ INTO CRM_CUST_INFO_PTUSE_AGREE_HST (
+        <include refid="sqlCols"/>
+                 ) VALUES (
+                       #{infoPtuseAgreeHstSeq}
+                     , #{itgCustNo}
+                     , #{agreeTypeCd}
+                     , #{stpltNo}
+                     , NVL(#{agreeYn},'N')
+                     , #{rcvRfslTypeCd}
+                     , NVL(#{rcvRfslYn},'N')
+                     , #{amdrId}
+                     , SYSDATE
+                     , #{regrId}
+                     , SYSDATE
+                     , #{regChlCd}
+                 )
+    </insert>
+    <update id="updateCustAgreement">
+               UPDATE CRM_CUST_BAS /* com.ceragem.api.crm.dao.CrmCustBasDao.updateCustAgreement */
+                  SET SMS_RCV_AGREE_YN                      =       DECODE(#{smsRcvAgreeYn},NULL,SMS_RCV_AGREE_YN, #{smsRcvAgreeYn})
+                    , SMS_RCV_AGREE_DT                      =       DECODE(#{smsRcvAgreeYn},NULL,SMS_RCV_AGREE_DT, SYSDATE )
+                    , SMS_RCV_AGREE_CHL_CD                  =       DECODE(#{smsRcvAgreeYn},NULL,SMS_RCV_AGREE_CHL_CD, NVL(#{regChlCd},#{amdrId}))
+                    , EMAIL_RCV_AGREE_YN                    =       DECODE(#{emailRcvAgreeYn},NULL,EMAIL_RCV_AGREE_YN, #{emailRcvAgreeYn})
+                    , EMAIL_RCV_AGREE_DT                    =       DECODE(#{emailRcvAgreeYn},NULL,EMAIL_RCV_AGREE_DT, SYSDATE )
+                    , EMAIL_RCV_AGREE_CHL_CD                =       DECODE(#{emailRcvAgreeYn},NULL,EMAIL_RCV_AGREE_CHL_CD, NVL(#{regChlCd},#{amdrId}))
+                    , ALRM_TK_RCV_AGREE_YN                  =       DECODE(#{alrmTkRcvAgreeYn},NULL,ALRM_TK_RCV_AGREE_YN, #{alrmTkRcvAgreeYn})
+                    , ALRM_TK_RCV_AGREE_DT                  =       DECODE(#{alrmTkRcvAgreeYn},NULL,ALRM_TK_RCV_AGREE_DT, SYSDATE )
+                    , ALRM_TK_RCV_AGREE_CHL_CD              =       DECODE(#{alrmTkRcvAgreeYn},NULL,ALRM_TK_RCV_AGREE_CHL_CD, NVL(#{regChlCd},#{amdrId}))
+                    , PUSH_RCV_AGREE_YN                     =       DECODE(#{pushRcvAgreeYn},NULL,PUSH_RCV_AGREE_YN, #{pushRcvAgreeYn})
+                    , PUSH_RCV_AGREE_DT                     =       DECODE(#{pushRcvAgreeYn},NULL,PUSH_RCV_AGREE_DT, SYSDATE )
+                    , PUSH_RCV_AGREE_CHL_CD                 =       DECODE(#{pushRcvAgreeYn},NULL,PUSH_RCV_AGREE_CHL_CD, NVL(#{regChlCd},#{amdrId}))
+                WHERE ITG_CUST_NO = #{itgCustNo}
+    </update>
+    <update id="update">
+               UPDATE /* com.ceragem.api.crm.dao.CrmCustInfoPtuseAgreeHstDao.update */ CRM_CUST_INFO_PTUSE_AGREE_HST
+                  SET ITG_CUST_NO                             =         #{itgCustNo}
+                    , AGREE_TYPE_CD                           =         #{agreeTypeCd}
+                    , STPLT_NO                                =         #{stpltNo}
+                    , AGREE_YN                                =         NVL(#{agreeYn},'N')
+                    , RCV_RFSL_TYPE_CD                        =         #{rcvRfslTypeCd}
+                    , RCV_RFSL_YN                             =         NVL(#{rcvRfslYn},'N')
+                    , AMDR_ID                                 =         #{amdrId}
+                    , AMD_DT                                  =         SYSDATE
+                    , REG_CHL_CD                              =         #{regChlCd}
+        <include refid="sqlPkConditions"/>
+    </update>
+    <delete id="delete">
+               DELETE /* com.ceragem.api.crm.dao.CrmCustInfoPtuseAgreeHstDao.delete */
+                 FROM CRM_CUST_INFO_PTUSE_AGREE_HST
+        <include refid="sqlPkConditions"/>
+    </delete>
+    
+    
+    <select id="selectChangeInfo" resultType="com.ceragem.api.crm.model.CrmCustInfoPtuseAgreeHstVo">
+            SELECT/* com.ceragem.api.crm.dao.CrmCustInfoPtuseAgreeHstDao.select */ A.*
+                 , CD.COMN_CD_NM AGREE_TYPE_CD_NM
+              FROM ( SELECT COMN_CD,COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'CU080' AND COMN_CD = #{agreeTypeCd}  AND  COMN_CD_LVL_NO = 2) CD 
+              LEFT JOIN
+              (
+                   SELECT <include refid="sqlSelectCols"/>
+                        ,  ROW_NUMBER() OVER (ORDER BY A.REG_DT DESC) RNUM
+                     FROM CRM_CUST_INFO_PTUSE_AGREE_HST A
+                    WHERE A.ITG_CUST_NO   =   #{itgCustNo}
+                      AND A.AGREE_TYPE_CD = #{agreeTypeCd} 
+              ) A ON CD.COMN_CD = A.AGREE_TYPE_CD AND A.RNUM = 1
+                  
+                  
+    </select>
+</mapper>

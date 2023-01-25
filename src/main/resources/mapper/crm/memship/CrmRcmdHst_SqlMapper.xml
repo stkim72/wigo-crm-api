@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ceragem.api.crm.dao.CrmRcmdHstDao">
+    <sql id="sqlPkConditions">
+                WHERE RCMDR_HST_SEQ     =       #{rcmdrHstSeq}
+    </sql>
+    <sql id="sqlCols">
+                      RCMDR_HST_SEQ                    /*추천인이력일련번호        */
+                    , ITG_CUST_NO                    /*통합고객번호        */
+                    , RCMDR_CUST_NO                    /*추천인고객번호        */
+                    , RCMD_EXECVDEMP_NO                    /*추천임직원번호        */
+                    , RCMD_STOR_NO                    /*추천매장번호        */
+                    , RCMD_TYPE_CD                    /*추천유형코드        */
+                    , AMDR_ID                    /*수정자ID        */
+                    , AMD_DT                    /*수정일시        */
+                    , REGR_ID                    /*등록자ID        */
+                    , REG_DT                    /*등록일시        */
+                    , REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS , BOS : BOS , MEM : 멤버십 , CERA : 세라체크 , DNA : 세라DNA , IoT : IoT]*/
+    </sql>
+    <sql id="sqlSelectCols">
+                      A.RCMDR_HST_SEQ                    /*추천인이력일련번호        */
+                    , A.ITG_CUST_NO                    /*통합고객번호        */
+                    , A.RCMDR_CUST_NO                    /*추천인고객번호        */
+                    , A.RCMD_EXECVDEMP_NO                    /*추천임직원번호        */
+                    , A.RCMD_STOR_NO                    /*추천매장번호        */
+                    , A.RCMD_TYPE_CD                    /*추천유형코드        */
+                    , A.AMDR_ID                    /*수정자ID        */
+                    , TO_CHAR(A.AMD_DT,'YYYYMMDDHH24MISS')    AMD_DT                    /*수정일시        */
+                    , A.REGR_ID                    /*등록자ID        */
+                    , TO_CHAR(A.REG_DT,'YYYYMMDDHH24MISS')    REG_DT                    /*등록일시        */
+                    , A.REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS , BOS : BOS , MEM : 멤버십 , CERA : 세라체크 , DNA : 세라DNA , IoT : IoT]*/
+    </sql>
+    <sql id="sqlConditions">
+        <where>
+            <if test="rcmdrHstSeq != null and rcmdrHstSeq != ''">
+                      AND A.RCMDR_HST_SEQ   =       #{rcmdrHstSeq}
+            </if>
+            <if test="itgCustNo != null and itgCustNo != ''">
+                      AND A.ITG_CUST_NO     =       #{itgCustNo}
+            </if>
+            <if test="rcmdrCustNo != null and rcmdrCustNo != ''">
+                      AND A.RCMDR_CUST_NO   =       #{rcmdrCustNo}
+            </if>
+            <if test="rcmdExecvdempNo != null and rcmdExecvdempNo != ''">
+                      AND A.RCMD_EXECVDEMP_NO=       #{rcmdExecvdempNo}
+            </if>
+            <if test="rcmdStorNo != null and rcmdStorNo != ''">
+                      AND A.RCMD_STOR_NO    =       #{rcmdStorNo}
+            </if>
+            <if test="rcmdTypeCd != null and rcmdTypeCd != ''">
+                <choose>
+                    <when test="rcmdTypeCd instanceof String">
+                        AND A.RCMD_TYPE_CD    =       #{rcmdTypeCd}
+                    </when>
+                    <otherwise>
+                        AND A.RCMD_TYPE_CD    IN
+                        <foreach item="item" index="index" collection="rcmdTypeCd" open="(" separator="," close=")">
+                            #{item}
+                        </foreach>
+                    </otherwise>
+                </choose>
+            </if>
+            <if test="regChlCd != null and regChlCd != ''">
+                <choose>
+                    <when test="regChlCd instanceof String">
+                        AND A.REG_CHL_CD      =       #{regChlCd}
+                    </when>
+                    <otherwise>
+                        AND A.REG_CHL_CD      IN
+                        <foreach item="item" index="index" collection="regChlCd" open="(" separator="," close=")">
+                            #{item}
+                        </foreach>
+                    </otherwise>
+                </choose>
+            </if>
+        </where>
+    </sql>
+    <sql id="sqlOrderBy">
+        <choose>
+            <when test="colSortName ==null or colSortName == ''">
+                ORDER BY      REG_DT DESC
+            </when>
+            <when test="colSortName.equals('rcmdrHstSeq')">
+                ORDER BY      RCMDR_HST_SEQ
+            </when>
+            <when test="colSortName.equals('itgCustNo')">
+                ORDER BY      ITG_CUST_NO
+            </when>
+            <when test="colSortName.equals('rcmdrCustNo')">
+                ORDER BY      RCMDR_CUST_NO
+            </when>
+            <when test="colSortName.equals('rcmdExecvdempNo')">
+                ORDER BY      RCMD_EXECVDEMP_NO
+            </when>
+            <when test="colSortName.equals('rcmdStorNo')">
+                ORDER BY      RCMD_STOR_NO
+            </when>
+            <when test="colSortName.equals('rcmdTypeCd')">
+                ORDER BY      RCMD_TYPE_CD
+            </when>
+            <when test="colSortName.equals('amdrId')">
+                ORDER BY      AMDR_ID
+            </when>
+            <when test="colSortName.equals('amdDt')">
+                ORDER BY      AMD_DT
+            </when>
+            <when test="colSortName.equals('regrId')">
+                ORDER BY      REGR_ID
+            </when>
+            <when test="colSortName.equals('regDt')">
+                ORDER BY      REG_DT
+            </when>
+            <when test="colSortName.equals('regChlCd')">
+                ORDER BY      REG_CHL_CD
+            </when>
+            <otherwise>
+                ORDER BY      REG_DT
+            </otherwise>
+        </choose>
+        <if test="colSortName !=null and colSortDir !='' and colSortDir !=null and colSortDir !='' and colSortDir.equals('desc')">
+            DESC
+        </if>
+    </sql>
+    <select id="selectListCount" resultType="int">
+                SELECT /* com.ceragem.api.crm.dao.CrmRcmdHstDao.selectListCount */ COUNT(1)
+                 FROM CRM_RCMD_HST A
+        <include refid="sqlConditions"/>
+    </select>
+    <select id="selectList" resultType="com.ceragem.api.crm.model.CrmRcmdHstVo">
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingHeader"/>
+               SELECT /* com.ceragem.api.crm.dao.CrmRcmdHstDao.selectList */ <include refid="sqlSelectCols"/>
+                 FROM CRM_RCMD_HST A
+        <include refid="sqlConditions"/>
+        <include refid="sqlOrderBy"/>
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingFooter"/>
+    </select>
+    <select id="select" resultType="com.ceragem.api.crm.model.CrmRcmdHstVo">
+               SELECT /* com.ceragem.api.crm.dao.CrmRcmdHstDao.select */ <include refid="sqlSelectCols"/>
+                 FROM CRM_RCMD_HST A
+        <include refid="sqlPkConditions"/>
+    </select>
+    <insert id="insert">
+                INSERT /* com.ceragem.api.crm.dao.CrmRcmdHstDao.insert */ INTO CRM_RCMD_HST (
+        <include refid="sqlCols"/>
+                 ) VALUES (
+                       NVL(#{rcmdrHstSeq}, FN_CRM_AUTO_SEQ('RHS') ) 
+                     , #{itgCustNo}
+                     , #{rcmdrCustNo}
+                     , #{rcmdExecvdempNo}
+                     , #{rcmdStorNo}
+                     , #{rcmdTypeCd}
+                     , #{amdrId}
+                     , SYSDATE
+                     , #{regrId}
+                     , SYSDATE
+                     , #{regChlCd}
+                 )
+    </insert>
+    <update id="update">
+               UPDATE /* com.ceragem.api.crm.dao.CrmRcmdHstDao.update */ CRM_RCMD_HST
+                  SET ITG_CUST_NO                             =         #{itgCustNo}
+                    , RCMDR_CUST_NO                           =         #{rcmdrCustNo}
+                    , RCMD_EXECVDEMP_NO                       =         #{rcmdExecvdempNo}
+                    , RCMD_STOR_NO                            =         #{rcmdStorNo}
+                    , RCMD_TYPE_CD                            =         #{rcmdTypeCd}
+                    , AMDR_ID                                 =         #{amdrId}
+                    , AMD_DT                                  =         SYSDATE
+                    , REG_CHL_CD                              =         #{regChlCd}
+        <include refid="sqlPkConditions"/>
+    </update>
+    <delete id="delete">
+               DELETE /* com.ceragem.api.crm.dao.CrmRcmdHstDao.delete */
+                 FROM CRM_RCMD_HST
+        <include refid="sqlPkConditions"/>
+    </delete>
+</mapper>

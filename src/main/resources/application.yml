@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: ceragem-api
+  
+
+server:
+  port: 80
+  tomcat:
+    basedir: /log/sw/
+    accesslog:
+      directory: tomcat/api/
+      enabled: true
+      file-date-format: .yyyy-MM-dd
+      max-days: 30
+      pattern: '%h %l %u %t "%r" %s %b %D'
+      prefix: access
+      rotate: true
+      suffix: .log

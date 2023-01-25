@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ceragem.api.crm.dao.CrmStorBasDao">
+    <sql id="sqlPkConditions">
+                WHERE STOR_NO           =       #{storNo}
+    </sql>
+    <sql id="sqlCols">
+                      STOR_NO                    /*매장번호        */
+                    , STOR_NM                    /*매장명        */
+                    , TEL_NO                    /*전화번호        */
+                    , ZIP_CD                    /*우편번호        */
+                    , ADDR_1_CTNTS                    /*주소1내용        */
+                    , ADDR_2_CTNTS                    /*주소2내용        */
+                    , LATI                    /*위도        */
+                    , LONGI                    /*경도        */
+                    , DISTRCT_CD                    /*지역코드        */
+                    , STA_HOUR                    /*시작시간        */
+                    , END_HOUR                    /*종료시간        */
+                    , BIZ_NO                    /*사업자등록번호        */
+                    , OPEN_DATE                    /*오픈일자        */
+                    , POS_STOR_NO                    /*POS매장번호        */
+                    , STOR_CHL_CD                    /*매장채널코드        */
+                    , STOR_DIV_CD                    /*매장구분코드        */
+                    , STOR_TYPE_CD                    /*매장유형코드        */
+                    , STOR_STATUS_CD                    /*매장상태코드        */
+                    , MEMO_CTNTS                    /*메모내용        */
+                    , STATUS_CD                    /*상태코드        */
+                    , AMDR_ID                    /*수정자ID        */
+                    , AMD_DT                    /*수정일시        */
+                    , REGR_ID                    /*등록자ID        */
+                    , REG_DT                    /*등록일시        */
+                    , REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS]*/
+    </sql>
+    <sql id="sqlSelectCols">
+                      A.STOR_NO                    /*매장번호        */
+                    , A.STOR_NM                    /*매장명        */
+                    , A.TEL_NO                    /*전화번호        */
+                    , A.ZIP_CD                    /*우편번호        */
+                    , A.ADDR_1_CTNTS                    /*주소1내용        */
+                    , A.ADDR_2_CTNTS                    /*주소2내용        */
+                    , A.LATI                    /*위도        */
+                    , A.LONGI                    /*경도        */
+                    , A.DISTRCT_CD                    /*지역코드        */
+                    , A.STA_HOUR                    /*시작시간        */
+                    , A.END_HOUR                    /*종료시간        */
+                    , A.BIZ_NO                    /*사업자등록번호        */
+                    , A.OPEN_DATE                    /*오픈일자        */
+                    , A.POS_STOR_NO                    /*POS매장번호        */
+                    , A.STOR_CHL_CD                    /*매장채널코드        */
+                    , A.STOR_DIV_CD                    /*매장구분코드        */
+                    , A.STOR_TYPE_CD                    /*매장유형코드        */
+                    , A.STOR_STATUS_CD                    /*매장상태코드        */
+                    , A.MEMO_CTNTS                    /*메모내용        */
+                    , A.STATUS_CD                    /*상태코드        */
+                    , A.AMDR_ID                    /*수정자ID        */
+                    , TO_CHAR(A.AMD_DT,'YYYYMMDDHH24MISS')    AMD_DT                    /*수정일시        */
+                    , A.REGR_ID                    /*등록자ID        */
+                    , TO_CHAR(A.REG_DT,'YYYYMMDDHH24MISS')    REG_DT                    /*등록일시        */
+                    , A.REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS]*/
+    </sql>
+    <sql id="sqlConditions">
+    <where>
+        <if test="storNo != null and storNo != ''">
+                  AND A.STOR_NO         =       #{storNo}
+        </if>
+        <if test="storNm != null and storNm != ''">
+                  AND A.STOR_NM         =       #{storNm}
+        </if>
+        <if test="telNo != null and telNo != ''">
+                  AND A.TEL_NO          =       #{telNo}
+        </if>
+        <if test="zipCd != null and zipCd != ''">
+            <choose>
+                <when test="zipCd instanceof String">
+                    AND A.ZIP_CD          =       #{zipCd}
+                </when>
+                <otherwise>
+                    AND A.ZIP_CD          IN
+                    <foreach item="item" index="index" collection="zipCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="addr1Ctnts != null and addr1Ctnts != ''">
+                  AND A.ADDR_1_CTNTS    =       #{addr1Ctnts}
+        </if>
+        <if test="addr2Ctnts != null and addr2Ctnts != ''">
+                  AND A.ADDR_2_CTNTS    =       #{addr2Ctnts}
+        </if>
+        <if test="lati != null and lati != ''">
+                  AND A.LATI            =       #{lati}
+        </if>
+        <if test="longi != null and longi != ''">
+                  AND A.LONGI           =       #{longi}
+        </if>
+        <if test="distrctCd != null and distrctCd != ''">
+            <choose>
+                <when test="distrctCd instanceof String">
+                    AND A.DISTRCT_CD      =       #{distrctCd}
+                </when>
+                <otherwise>
+                    AND A.DISTRCT_CD      IN
+                    <foreach item="item" index="index" collection="distrctCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="staHour != null and staHour != ''">
+                  AND A.STA_HOUR        =       #{staHour}
+        </if>
+        <if test="endHour != null and endHour != ''">
+                  AND A.END_HOUR        =       #{endHour}
+        </if>
+        <if test="bizNo != null and bizNo != ''">
+                  AND A.BIZ_NO          =       #{bizNo}
+        </if>
+        <if test="openDate != null and openDate != ''">
+                  AND A.OPEN_DATE       =       #{openDate}
+        </if>
+        <if test="posStorNo != null and posStorNo != ''">
+                  AND A.POS_STOR_NO     =       #{posStorNo}
+        </if>
+        <if test="storChlCd != null and storChlCd != ''">
+            <choose>
+                <when test="storChlCd instanceof String">
+                    AND A.STOR_CHL_CD     =       #{storChlCd}
+                </when>
+                <otherwise>
+                    AND A.STOR_CHL_CD     IN
+                    <foreach item="item" index="index" collection="storChlCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="storDivCd != null and storDivCd != ''">
+            <choose>
+                <when test="storDivCd instanceof String">
+                    AND A.STOR_DIV_CD     =       #{storDivCd}
+                </when>
+                <otherwise>
+                    AND A.STOR_DIV_CD     IN
+                    <foreach item="item" index="index" collection="storDivCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="storTypeCd != null and storTypeCd != ''">
+            <choose>
+                <when test="storTypeCd instanceof String">
+                    AND A.STOR_TYPE_CD    =       #{storTypeCd}
+                </when>
+                <otherwise>
+                    AND A.STOR_TYPE_CD    IN
+                    <foreach item="item" index="index" collection="storTypeCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="storStatusCd != null and storStatusCd != ''">
+            <choose>
+                <when test="storStatusCd instanceof String">
+                    AND A.STOR_STATUS_CD  =       #{storStatusCd}
+                </when>
+                <otherwise>
+                    AND A.STOR_STATUS_CD  IN
+                    <foreach item="item" index="index" collection="storStatusCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="memoCtnts != null and memoCtnts != ''">
+                  AND A.MEMO_CTNTS      =       #{memoCtnts}
+        </if>
+        <if test="statusCd != null and statusCd != ''">
+            <choose>
+                <when test="statusCd instanceof String">
+                    AND A.STATUS_CD       =       #{statusCd}
+                </when>
+                <otherwise>
+                    AND A.STATUS_CD       IN
+                    <foreach item="item" index="index" collection="statusCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="regChlCd != null and regChlCd != ''">
+            <choose>
+                <when test="regChlCd instanceof String">
+                    AND A.REG_CHL_CD      =       #{regChlCd}
+                </when>
+                <otherwise>
+                    AND A.REG_CHL_CD      IN
+                    <foreach item="item" index="index" collection="regChlCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        </where>
+    </sql>
+    <select id="selectListCount" resultType="int">
+                SELECT /* com.ceragem.api.crm.dao.CrmStorBasDao.selectListCount */ COUNT(1)
+                 FROM CRM_STOR_BAS A
+        <include refid="sqlConditions"/>
+    </select>
+    <select id="selectList" resultType="com.ceragem.api.crm.model.CrmStorBasVo">
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingHeader"/>
+               SELECT /* com.ceragem.api.crm.dao.CrmStorBasDao.selectList */ <include refid="sqlSelectCols"/>
+                 FROM CRM_STOR_BAS A
+        <include refid="sqlConditions"/>
+               ORDER BY REG_DT DESC
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingFooter"/>
+    </select>
+    <select id="select" resultType="com.ceragem.api.crm.model.CrmStorBasVo">
+               SELECT /* com.ceragem.api.crm.dao.CrmStorBasDao.select */ <include refid="sqlSelectCols"/>
+                 FROM CRM_STOR_BAS A
+        <include refid="sqlPkConditions"/>
+    </select>
+    <insert id="insert">
+                INSERT /* com.ceragem.api.crm.dao.CrmStorBasDao.insert */ INTO CRM_STOR_BAS (
+        <include refid="sqlCols"/>
+                 ) VALUES (
+                       #{storNo}
+                     , #{storNm}
+                     , #{telNo}
+                     , #{zipCd}
+                     , #{addr1Ctnts}
+                     , #{addr2Ctnts}
+                     , #{lati}
+                     , #{longi}
+                     , #{distrctCd}
+                     , #{staHour}
+                     , #{endHour}
+                     , #{bizNo}
+                     , #{openDate}
+                     , #{posStorNo}
+                     , #{storChlCd}
+                     , #{storDivCd}
+                     , #{storTypeCd}
+                     , #{storStatusCd}
+                     , #{memoCtnts}
+                     , #{statusCd}
+                     , #{amdrId}
+                     , SYSDATE
+                     , #{regrId}
+                     , SYSDATE
+                     , #{regChlCd}
+                 )
+    </insert>
+    <update id="update">
+               UPDATE /* com.ceragem.api.crm.dao.CrmStorBasDao.update */ CRM_STOR_BAS
+                  SET STOR_NM                                 =         #{storNm}
+                    , TEL_NO                                  =         #{telNo}
+                    , ZIP_CD                                  =         #{zipCd}
+                    , ADDR_1_CTNTS                            =         #{addr1Ctnts}
+                    , ADDR_2_CTNTS                            =         #{addr2Ctnts}
+                    , LATI                                    =         #{lati}
+                    , LONGI                                   =         #{longi}
+                    , DISTRCT_CD                              =         #{distrctCd}
+                    , STA_HOUR                                =         #{staHour}
+                    , END_HOUR                                =         #{endHour}
+                    , BIZ_NO                                  =         #{bizNo}
+                    , OPEN_DATE                               =         #{openDate}
+                    , POS_STOR_NO                             =         #{posStorNo}
+                    , STOR_CHL_CD                             =         #{storChlCd}
+                    , STOR_DIV_CD                             =         #{storDivCd}
+                    , STOR_TYPE_CD                            =         #{storTypeCd}
+                    , STOR_STATUS_CD                          =         #{storStatusCd}
+                    , MEMO_CTNTS                              =         #{memoCtnts}
+                    , STATUS_CD                               =         #{statusCd}
+                    , AMDR_ID                                 =         #{amdrId}
+                    , AMD_DT                                  =         SYSDATE
+                    , REG_CHL_CD                              =         #{regChlCd}
+        <include refid="sqlPkConditions"/>
+    </update>
+    <delete id="delete">
+               DELETE /* com.ceragem.api.crm.dao.CrmStorBasDao.delete */
+                 FROM CRM_STOR_BAS
+        <include refid="sqlPkConditions"/>
+    </delete>
+</mapper>
