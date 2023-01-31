@@ -1,5 +1,6 @@
 package com.ceragem.api.config.web;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -24,9 +25,11 @@ public class SwaggerConfig {
 	@Bean
 	public OpenAPI openAPI(@Value("${springdoc.version}") String appVersion) {
 		Info info = new Info().title("CERAGEM API Server").version(appVersion).description("CERAGEM API 서버입니다.");
-
-		List<Server> servers = Arrays.asList(new Server().url(serverUrl).description("CERAGEM API"),
-				new Server().url(serverUrl.replace("https", "http")).description("CERAGEM API"));
+		String[] urls = serverUrl.split(",");
+		List<Server> servers = new ArrayList<>();
+		for (int i = 0; i < urls.length; i++) {
+			servers.add(new Server().url(urls[i]).description("CERAGEM API"));
+		}
 
 		SecurityScheme securityScheme = new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme("bearer")
 				.bearerFormat("JWT").in(SecurityScheme.In.HEADER).name("Authorization");
