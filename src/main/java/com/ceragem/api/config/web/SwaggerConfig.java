@@ -24,11 +24,11 @@ public class SwaggerConfig {
 
 	@Bean
 	public OpenAPI openAPI(@Value("${springdoc.version}") String appVersion) {
-		Info info = new Info().title("CERAGEM API Server").version(appVersion).description("CERAGEM API 서버입니다.");
+		Info info = new Info().title("MRCRM API Server").version(appVersion).description("MRCRM API 서버입니다.");
 		String[] urls = serverUrl.split(",");
 		List<Server> servers = new ArrayList<>();
 		for (int i = 0; i < urls.length; i++) {
-			servers.add(new Server().url(urls[i]).description("CERAGEM API"));
+			servers.add(new Server().url(urls[i]).description("MRCRM API"));
 		}
 
 		SecurityScheme securityScheme = new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme("bearer")
@@ -42,27 +42,26 @@ public class SwaggerConfig {
 
 	@Bean
 	public GroupedOpenApi allApi() {
-		return GroupedOpenApi.builder().group("all").packagesToScan("com.ceragem.api.as", "com.ceragem.api.crm",
-				"com.ceragem.api.ctc", "com.ceragem.api.sap").build();
+		return GroupedOpenApi.builder().group("all").packagesToScan("com.ceragem.api.crm").build();
 	}
 
-	@Bean
-	public GroupedOpenApi asApi() {
-		return GroupedOpenApi.builder().group("as").packagesToScan("com.ceragem.api.as").build();
-	}
+//	@Bean
+//	public GroupedOpenApi asApi() {
+//		return GroupedOpenApi.builder().group("as").packagesToScan("com.ceragem.api.as").build();
+//	}
 
 	@Bean
 	public GroupedOpenApi crmApi() {
 		return GroupedOpenApi.builder().group("crm").packagesToScan("com.ceragem.api.crm").build();
 	}
 
-	@Bean
-	public GroupedOpenApi ctcApi() {
-		return GroupedOpenApi.builder().group("ctc").packagesToScan("com.ceragem.api.ctc").build();
-	}
+//	@Bean
+//	public GroupedOpenApi ctcApi() {
+//		return GroupedOpenApi.builder().group("ctc").packagesToScan("com.ceragem.api.ctc").build();
+//	}
 
-	@Bean
-	public GroupedOpenApi sapApi() {
-		return GroupedOpenApi.builder().group("sap").packagesToScan("com.ceragem.api.sap").build();
-	}
+//	@Bean
+//	public GroupedOpenApi sapApi() {
+//		return GroupedOpenApi.builder().group("sap").packagesToScan("com.ceragem.api.sap").build();
+//	}
 }
