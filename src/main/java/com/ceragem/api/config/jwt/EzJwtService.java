@@ -156,7 +156,7 @@ public class EzJwtService {
 	}
 
 	private void validSwaggerUi(HttpServletRequest request) {
-		boolean checkToken = false;
+		boolean checkToken = true;
 		Cookie[] cookies = request.getCookies();
 		if (cookies != null) {
 			for (Cookie cookie : cookies) {
