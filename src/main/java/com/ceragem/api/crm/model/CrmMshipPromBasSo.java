@@ -1,8 +1,8 @@
 package com.ceragem.api.crm.model;
 
-import com.ceragem.api.as.validate.DateValue;
 import com.ceragem.api.base.model.ApiPagination;
 import com.ceragem.api.crm.validate.CodeValue;
+import com.ceragem.api.crm.validate.DateValue;
 import com.ceragem.api.crm.validate.YnValue;
 
 import io.swagger.v3.oas.annotations.Parameter;
