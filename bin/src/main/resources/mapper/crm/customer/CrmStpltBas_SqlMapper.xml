@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ceragem.api.crm.dao.CrmStpltBasDao">
+    <sql id="sqlPkConditions">
+                WHERE STPLT_NO          =       #{stpltNo}
+    </sql>
+    <sql id="sqlCols">
+                      STPLT_NO                    /*약관번호        */
+                    , STPLT_NM                    /*약관명        */
+                    , STPLT_TYPE_CD                    /*약관유형코드        */
+                    , STPLT_CTNTS                    /*약관내용        */
+                    , STPLT_STA_YMD                    /*약관시작년월일        */
+                    , STPLT_END_YMD                    /*약관종료년월일        */
+                    , USE_YN                    /*사용여부        */
+                    , AMDR_ID                    /*수정자ID        */
+                    , AMD_DT                    /*수정일시        */
+                    , REGR_ID                    /*등록자ID        */
+                    , REG_DT                    /*등록일시        */
+                    , REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS]*/
+    </sql>
+    <sql id="sqlSelectCols">
+                      A.STPLT_NO                    /*약관번호        */
+                    , A.STPLT_NM                    /*약관명        */
+                    , A.STPLT_TYPE_CD                    /*약관유형코드        */
+                    , A.STPLT_CTNTS                    /*약관내용        */
+                    , A.STPLT_STA_YMD                    /*약관시작년월일        */
+                    , A.STPLT_END_YMD                    /*약관종료년월일        */
+                    , A.USE_YN                    /*사용여부        */
+                    , A.AMDR_ID                    /*수정자ID        */
+                    , TO_CHAR(A.AMD_DT,'YYYYMMDDHH24MISS')    AMD_DT                    /*수정일시        */
+                    , A.REGR_ID                    /*등록자ID        */
+                    , TO_CHAR(A.REG_DT,'YYYYMMDDHH24MISS')    REG_DT                    /*등록일시        */
+                    , A.REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS]*/
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'CU310' AND COMN_CD = A.STPLT_TYPE_CD AND  COMN_CD_LVL_NO = 2) STPLT_TYPE_CD_NM
+    </sql>
+    <sql id="sqlConditions">
+    <where>
+        <if test="stpltNo != null and stpltNo != ''">
+                  AND A.STPLT_NO        =       #{stpltNo}
+        </if>
+        <if test="stpltNm != null and stpltNm != ''">
+                  AND A.STPLT_NM        =       #{stpltNm}
+        </if>
+        <if test="stpltTypeCd != null and stpltTypeCd != ''">
+            <choose>
+                <when test="stpltTypeCd instanceof String">
+                    AND A.STPLT_TYPE_CD   =       #{stpltTypeCd}
+                </when>
+                <otherwise>
+                    AND A.STPLT_TYPE_CD   IN
+                    <foreach item="item" index="index" collection="stpltTypeCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="stpltCtnts != null and stpltCtnts != ''">
+                  AND A.STPLT_CTNTS     =       #{stpltCtnts}
+        </if>
+        <if test="stpltStaYmd != null and stpltStaYmd != ''">
+                  AND A.STPLT_STA_YMD   =       #{stpltStaYmd}
+        </if>
+        <if test="stpltEndYmd != null and stpltEndYmd != ''">
+                  AND A.STPLT_END_YMD   =       #{stpltEndYmd}
+        </if>
+        <if test="useYn != null and useYn != ''">
+                  AND A.USE_YN          =       #{useYn}
+        </if>
+        <if test="regChlCd != null and regChlCd != ''">
+            <choose>
+                <when test="regChlCd instanceof String">
+                    AND A.REG_CHL_CD      =       #{regChlCd}
+                </when>
+                <otherwise>
+                    AND A.REG_CHL_CD      IN
+                    <foreach item="item" index="index" collection="regChlCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="stdYmd != null and stdYmd != ''">
+                  AND #{stdYmd} BETWEEN  A.STPLT_STA_YMD AND A.STPLT_END_YMD
+        </if>
+       </where>
+    </sql>
+    <select id="selectListCount" resultType="int">
+                SELECT /* com.ceragem.api.crm.dao.CrmStpltBasDao.selectListCount */ COUNT(1)
+                 FROM CRM_STPLT_BAS A
+        <include refid="sqlConditions"/>
+    </select>
+    <select id="selectList" resultType="com.ceragem.api.crm.model.CrmStpltBasVo">
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingHeader"/>
+               SELECT /* com.ceragem.api.crm.dao.CrmStpltBasDao.selectList */ <include refid="sqlSelectCols"/>
+                 FROM CRM_STPLT_BAS A
+        <include refid="sqlConditions"/>
+               ORDER BY REG_DT DESC
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingFooter"/>
+    </select>
+    <select id="select" resultType="com.ceragem.api.crm.model.CrmStpltBasVo">
+               SELECT /* com.ceragem.api.crm.dao.CrmStpltBasDao.select */ <include refid="sqlSelectCols"/>
+                 FROM CRM_STPLT_BAS A
+        <include refid="sqlPkConditions"/>
+    </select>
+    <insert id="insert">
+                INSERT /* com.ceragem.api.crm.dao.CrmStpltBasDao.insert */ INTO CRM_STPLT_BAS (
+        <include refid="sqlCols"/>
+                 ) VALUES (
+                       #{stpltNo}
+                     , #{stpltNm}
+                     , #{stpltTypeCd}
+                     , #{stpltCtnts}
+                     , #{stpltStaYmd}
+                     , #{stpltEndYmd}
+                     , NVL(#{useYn},'N')
+                     , #{amdrId}
+                     , SYSDATE
+                     , #{regrId}
+                     , SYSDATE
+                     , #{regChlCd}
+                 )
+    </insert>
+    <update id="update">
+               UPDATE /* com.ceragem.api.crm.dao.CrmStpltBasDao.update */ CRM_STPLT_BAS
+                  SET STPLT_NM                                =         #{stpltNm}
+                    , STPLT_TYPE_CD                           =         #{stpltTypeCd}
+                    , STPLT_CTNTS                             =         #{stpltCtnts}
+                    , STPLT_STA_YMD                           =         #{stpltStaYmd}
+                    , STPLT_END_YMD                           =         #{stpltEndYmd}
+                    , USE_YN                                  =         NVL(#{useYn},'N')
+                    , AMDR_ID                                 =         #{amdrId}
+                    , AMD_DT                                  =         SYSDATE
+                    , REG_CHL_CD                              =         #{regChlCd}
+        <include refid="sqlPkConditions"/>
+    </update>
+    <delete id="delete">
+               DELETE /* com.ceragem.api.crm.dao.CrmStpltBasDao.delete */
+                 FROM CRM_STPLT_BAS
+        <include refid="sqlPkConditions"/>
+    </delete>
+</mapper>

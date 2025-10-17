@@ -1,6 +1,5 @@
 package com.ceragem.api.config.web;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -23,13 +22,11 @@ public class SwaggerConfig {
 	String serverUrl;
 
 	@Bean
-	public OpenAPI openAPI(@Value("${springdoc.version}") String appVersion) {
-		Info info = new Info().title("MRCRM API Server").version(appVersion).description("MRCRM API 서버입니다.");
-		String[] urls = serverUrl.split(",");
-		List<Server> servers = new ArrayList<>();
-		for (int i = 0; i < urls.length; i++) {
-			servers.add(new Server().url(urls[i]).description("MRCRM API"));
-		}
+	OpenAPI openAPI(@Value("${springdoc.version}") String appVersion) {
+		Info info = new Info().title("CERAGEM API Server").version(appVersion).description("CERAGEM API 서버입니다.");
+
+		List<Server> servers = Arrays.asList(new Server().url(serverUrl).description("CERAGEM API"),
+				new Server().url(serverUrl.replace("https", "http")).description("CERAGEM API"));
 
 		SecurityScheme securityScheme = new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme("bearer")
 				.bearerFormat("JWT").in(SecurityScheme.In.HEADER).name("Authorization");
@@ -41,27 +38,45 @@ public class SwaggerConfig {
 	}
 
 	@Bean
-	public GroupedOpenApi allApi() {
-		return GroupedOpenApi.builder().group("all").packagesToScan("com.ceragem.api.crm").build();
+	GroupedOpenApi allApi() {
+		return GroupedOpenApi
+				.builder().group("all").packagesToScan("com.ceragem.api.as", "com.ceragem.api.crm",
+						"com.ceragem.api.ctc", "com.ceragem.api.sap", "com.ceragem.api.pub", "com.ceragem.api.pos")
+				.build();
 	}
 
-//	@Bean
-//	public GroupedOpenApi asApi() {
-//		return GroupedOpenApi.builder().group("as").packagesToScan("com.ceragem.api.as").build();
-//	}
+	@Bean
+	GroupedOpenApi asApi() {
+		return GroupedOpenApi.builder().group("as").packagesToScan("com.ceragem.api.as").build();
+	}
 
 	@Bean
-	public GroupedOpenApi crmApi() {
+	GroupedOpenApi crmApi() {
 		return GroupedOpenApi.builder().group("crm").packagesToScan("com.ceragem.api.crm").build();
 	}
 
-//	@Bean
-//	public GroupedOpenApi ctcApi() {
-//		return GroupedOpenApi.builder().group("ctc").packagesToScan("com.ceragem.api.ctc").build();
-//	}
+	@Bean
+	GroupedOpenApi ctcApi() {
+		return GroupedOpenApi.builder().group("ctc").packagesToScan("com.ceragem.api.ctc").build();
+	}
 
-//	@Bean
-//	public GroupedOpenApi sapApi() {
-//		return GroupedOpenApi.builder().group("sap").packagesToScan("com.ceragem.api.sap").build();
-//	}
+	@Bean
+	GroupedOpenApi sapApi() {
+		return GroupedOpenApi.builder().group("sap").packagesToScan("com.ceragem.api.sap").build();
+	}
+
+	@Bean
+	GroupedOpenApi pubApi() {
+		return GroupedOpenApi.builder().group("pub").packagesToScan("com.ceragem.api.pub").build();
+	}
+
+	@Bean
+	GroupedOpenApi comApi() {
+		return GroupedOpenApi.builder().group("com").packagesToScan("com.ceragem.api.com").build();
+	}
+
+	@Bean
+	GroupedOpenApi posApi() {
+		return GroupedOpenApi.builder().group("pos").packagesToScan("com.ceragem.api.pos").build();
+	}
 }

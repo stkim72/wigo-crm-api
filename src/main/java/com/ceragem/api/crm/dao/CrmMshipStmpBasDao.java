@@ -3,6 +3,7 @@ package com.ceragem.api.crm.dao;
 import java.util.List;
 
 import com.ceragem.api.config.annotation.CrmMapper;
+import com.ceragem.api.crm.model.CrmMshipStmpEventVo;
 import com.ceragem.api.crm.model.CrmMshipStmpIssueVo;
 import com.ceragem.crm.common.model.EzMap;
 
@@ -50,4 +51,14 @@ public interface CrmMshipStmpBasDao extends ICrmDao {
 	int checkChitNoCheck(String chitNo);
 
 	List<EzMap> getStmpCancelData(EzMap parm);
+
+	int getStmpDayHist(EzMap hisPrm);
+
+	List<EzMap> getMasterStmpByGodsList(Object parm);
+
+	int deleteStmpCancel(Object param);
+
+	List<CrmMshipStmpIssueVo> selectStmpCancelList(Object param);
+
+	CrmMshipStmpEventVo selectExpStampEvent(Object param);
 }

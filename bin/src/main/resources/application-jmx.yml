@@ -1,0 +1,84 @@
+# server(embbeded tomcat) config
+server:
+  port: 8082
+  tomcat:
+    accesslog:
+      enabled: true
+      directory: /log/sw/tomcat/api
+  
+# spring config
+spring:
+#  servlet:
+#      multipart:
+#        max-file-size: 10GB
+#        max-request-size: 10GB
+#  nas:
+#    path:   c:/nas/crm/
+#    url:    https://files.ceragem.com/crm/
+  jwt:
+    secret: 1qaz@WSX
+    auth-validation : true
+  datasource:
+    crm:
+      driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+      url: jdbc:log4jdbc:oracle:thin:@172.23.1.91:8122:DCRMDB
+      username: crmown
+      password: ENC(yapd7t/7RcUAZC56+WVcJg==)
+      # Pool
+      hikari:
+        connection-timeout: 10000
+        maximum-pool-size: 20
+    ctc:
+      driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+      url: jdbc:log4jdbc:oracle:thin:@172.23.1.91:8122:DCRMDB
+      username: CTCOWN
+      password: ENC(K7u4MmQG4WKvlJiY8dIzdQ==)
+      # Pool
+      hikari:
+        connection-timeout: 10000
+        maximum-pool-size: 20
+    as:
+      driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+      url: jdbc:log4jdbc:oracle:thin:@172.23.1.91:8122:DCRMDB
+      username: ASMOWN
+      password: ENC(D0LpgFNqrulxN9+2GUPpjA==)
+      # Pool
+      hikari:
+        connection-timeout: 10000
+        maximum-pool-size: 20
+  eon:
+    sms-sender-no:  15775570
+    sms-sender-name: 위고
+    talk-sender-key : senderkey_001
+    user: crm_1
+    mail-addr: noreply@creagem.com
+    mail-name: 위고        
+# log config
+logging:
+  #  file: logs/application.log
+  config: classpath:logback-jmx.xml
+  level:
+    com.ceragem: DEBUG
+    org.springframework.web: INFO
+
+# swagger config    
+springdoc:
+  version: '@project.version@'
+  api-docs:
+    path: /api-docs    
+  server-url : https://dev-api.ceragem.com/
+  
+# as config
+as:
+  api:
+    rest-url: http://dev-asm.ceragem.com
+    
+jasypt:
+  encryptor:
+    bean: jasyptStringEncryptor    
+    
+    
+# sap config
+sap:
+  api:
+    rest-url: http://cedev.ceragem.co.kr:8010/sap/opu/odata/sap

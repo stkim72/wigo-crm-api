@@ -95,13 +95,13 @@
                     , B.CORP_TEL_NO                    /*법인전화번호        */
                     , B.FORN_YN                    /*외국인여부        */
                     , B.REP_NM                    /*대표명        */
-                    , B.MPHON_NO MPHON_NO                     /*이동전화번호암호화값        */
+                    , DAMO.DECRYPT_VAR_B64('AES_256',B.MPHON_NO,'') MPHON_NO                     /*이동전화번호암호화값        */
                     , B.MPHON_BK_DGT_NO                    /*이동전화뒤자리번호        */
-                    , B.EMAIL_ADDR EMAIL_ADDR                    /*이메일주소        */
+                    , DAMO.DECRYPT_VAR_B64('AES_256',B.EMAIL_ADDR,'') EMAIL_ADDR                    /*이메일주소        */
                     , B.PIC_NM                    /*담당자명        */
-                    , B.PIC_MPHON_NO  PIC_MPHON_NO                    /*담당자이동전화번호        */
+                    , DAMO.DECRYPT_VAR_B64('AES_256',B.PIC_MPHON_NO,'')  PIC_MPHON_NO                    /*담당자이동전화번호        */
                     , B.PIC_MPHON_BK_DGT_NO                    /*담당자이동전화뒤자리번호        */
-                    , B.PIC_EMAIL_ADDR PIC_EMAIL_ADDR                    /*담당자이메일주소        */
+                    , DAMO.DECRYPT_VAR_B64('AES_256',B.PIC_EMAIL_ADDR,'') PIC_EMAIL_ADDR                    /*담당자이메일주소        */
                     , TO_CHAR(B.INDI_INFO_VALID_PERD_STA_DT,'YYYYMMDDHH24MISS')    INDI_INFO_VALID_PERD_STA_DT                    /*개인정보유효기간시작일시        */
                     , TO_CHAR(B.INDI_INFO_VALID_PERD_END_DT,'YYYYMMDDHH24MISS')    INDI_INFO_VALID_PERD_END_DT                    /*개인정보유효기간종료일시        */
                     , B.CUST_STATUS_CD                    /*고객상태코드        */
@@ -111,7 +111,7 @@
                     , B.CUST_DIV_CD                    /*고객구분코드        */
                     , B.ZIP_CD                    /*우편번호        */
                     , B.ADDR_1_CTNTS                    /*주소1내용        */
-                    , B.ADDR_2_CTNTS ADDR_2_CTNTS                    /*주소2내용        */
+                    , DAMO.DECRYPT_VAR_B64('AES_256',B.ADDR_2_CTNTS,'') ADDR_2_CTNTS                    /*주소2내용        */
                     , B.RCMD_STOR_NO                    /*추천매장번호        */
                     , B.RCMDR_CUST_NO                    /*추천인고객번호        */
                     , B.RCMD_EXECVDEMP_NO                    /*추천임직원번호        */
@@ -194,13 +194,13 @@
                     , B.CORP_TEL_NO                    /*법인전화번호        */
                     , B.FORN_YN                    /*외국인여부        */
                     , B.REP_NM                    /*대표명        */
-                    , B.MPHON_NO MPHON_NO                     /*이동전화번호암호화값        */
+                    , DAMO.DECRYPT_VAR_B64('AES_256',B.MPHON_NO,'') MPHON_NO                     /*이동전화번호암호화값        */
                     , B.MPHON_BK_DGT_NO                    /*이동전화뒤자리번호        */
-                    , B.EMAIL_ADDR EMAIL_ADDR                    /*이메일주소        */
+                    , DAMO.DECRYPT_VAR_B64('AES_256',B.EMAIL_ADDR,'') EMAIL_ADDR                    /*이메일주소        */
                     , B.PIC_NM                    /*담당자명        */
-                    , B.PIC_MPHON_NO  PIC_MPHON_NO                    /*담당자이동전화번호        */
+                    , DAMO.DECRYPT_VAR_B64('AES_256',B.PIC_MPHON_NO,'')  PIC_MPHON_NO                    /*담당자이동전화번호        */
                     , B.PIC_MPHON_BK_DGT_NO                    /*담당자이동전화뒤자리번호        */
-                    , B.PIC_EMAIL_ADDR PIC_EMAIL_ADDR                    /*담당자이메일주소        */
+                    , DAMO.DECRYPT_VAR_B64('AES_256',B.PIC_EMAIL_ADDR,'') PIC_EMAIL_ADDR                    /*담당자이메일주소        */
                     , TO_CHAR(B.INDI_INFO_VALID_PERD_STA_DT,'YYYYMMDDHH24MISS')    INDI_INFO_VALID_PERD_STA_DT                    /*개인정보유효기간시작일시        */
                     , TO_CHAR(B.INDI_INFO_VALID_PERD_END_DT,'YYYYMMDDHH24MISS')    INDI_INFO_VALID_PERD_END_DT                    /*개인정보유효기간종료일시        */
                     , B.CUST_STATUS_CD                    /*고객상태코드        */
@@ -210,7 +210,7 @@
                     , B.CUST_DIV_CD                    /*고객구분코드        */
                     , B.ZIP_CD                    /*우편번호        */
                     , B.ADDR_1_CTNTS                    /*주소1내용        */
-                    , B.ADDR_2_CTNTS ADDR_2_CTNTS                    /*주소2내용        */
+                    , DAMO.DECRYPT_VAR_B64('AES_256',B.ADDR_2_CTNTS,'') ADDR_2_CTNTS                    /*주소2내용        */
                     , B.RCMD_STOR_NO                    /*추천매장번호        */
                     , B.RCMDR_CUST_NO                    /*추천인고객번호        */
                     , B.RCMD_EXECVDEMP_NO                    /*추천임직원번호        */
@@ -294,11 +294,11 @@
                     , B.CORP_TEL_NO                    /*법인전화번호        */
                     , B.FORN_YN                    /*외국인여부        */
                     , B.REP_NM                    /*대표명        */
-                    , B.MPHON_NO MPHON_NO                     /*이동전화번호암호화값        */
+                    , DAMO.DECRYPT_VAR_B64('AES_256',B.MPHON_NO,'') MPHON_NO                     /*이동전화번호암호화값        */
                     , B.MPHON_BK_DGT_NO                    /*이동전화뒤자리번호        */
                     , B.EMAIL_ADDR                    /*이메일주소        */
                     , B.PIC_NM                    /*담당자명        */
-                    , B.PIC_MPHON_NO PIC_MPHON_NO                    /*담당자이동전화번호        */
+                    , DAMO.DECRYPT_VAR_B64('AES_256',B.PIC_MPHON_NO,'') PIC_MPHON_NO                    /*담당자이동전화번호        */
                     , B.PIC_MPHON_BK_DGT_NO                    /*담당자이동전화뒤자리번호        */
                     , B.PIC_EMAIL_ADDR                    /*담당자이메일주소        */
                     , TO_CHAR(B.INDI_INFO_VALID_PERD_STA_DT,'YYYYMMDDHH24MISS')    INDI_INFO_VALID_PERD_STA_DT                    /*개인정보유효기간시작일시        */

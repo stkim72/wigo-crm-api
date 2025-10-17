@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ceragem.api.pos.dao.PosMshipSelfExpDao">
+	  <!-- 존재하는 매장 검색 -->
+    <select id="selectStorcdNullchk" parameterType="com.ceragem.api.pos.model.PosExpResultVo" resultType="int">
+        <![CDATA[
+            SELECT /* com.ceragem.api.pos.model.PosExpResultVo.selectStorcdNullchk: 매장 목록 조회 */
+			       COUNT(*) AS storNo
+			  FROM PBOOWN.MST_STOR MS          /* 매장마스터 TB */
+				  
+			  LEFT OUTER JOIN 
+		           PBOOWN.VW_MST_CMM_DTL CMM1   -- (공통코드 VTB) 직가맹 형태공통코드_M0300
+		        ON CMM1.CMP_CD      = MS.CMP_CD
+		       AND CMM1.CMM_GRP_CD  = 'M0300'
+		       AND CMM1.CMM_CD      = MS.DRT_FRCS_TYPE
+		       AND CMM1.LANG_TYPE   = 'ko-KR'
+		    
+		      LEFT OUTER JOIN 
+		           PBOOWN.VW_MST_CMM_DTL CMM2   -- (공통코드 VTB) 사업자 구분M0202 법인구분 1 법인 2 개인
+		        ON CMM2.CMP_CD      = MS.CMP_CD
+		       AND CMM2.CMM_GRP_CD  = 'M0202'
+		       AND CMM2.CMM_CD      = MS.BIZ_PSN_DIV
+		       AND CMM2.LANG_TYPE   = 'ko-KR'
+		    
+		     LEFT OUTER JOIN 
+		          PBOOWN.VW_MST_CMM_DTL CMM3   -- (공통코드 VTB) 운영 유형공통코드 M0301 01:운영 02:휴업 09:폐업
+		       ON CMM3.CMP_CD      = MS.CMP_CD
+		      AND CMM3.CMM_GRP_CD  = 'M0301'
+		      AND CMM3.CMM_CD      = MS.OPER_TYPE
+		      AND CMM3.LANG_TYPE   = 'ko-KR'
+		    
+		    LEFT OUTER JOIN 
+		         PBOOWN.VW_MST_CMM_DTL CMM4   -- (공통코드 VTB) 상권 코드공통코드 M0302 01:대학가 02:백화점 03:건물입주 ...
+		      ON CMM4.CMP_CD      = MS.CMP_CD
+		     AND CMM4.CMM_GRP_CD  = 'M0302'
+		     AND CMM4.CMM_CD      = MS.BIZ_DSTRCT_CD
+		     AND CMM4.LANG_TYPE   = 'ko-KR'
+		    
+		    LEFT OUTER JOIN 
+		         PBOOWN.VW_MST_CMM_DTL CMM6   -- (공통코드 VTB) 입점 정보공통코드 M0304 01:대학가 02:백화점 03:건물입주
+		      ON CMM6.CMP_CD      = MS.CMP_CD
+		     AND CMM6.CMM_GRP_CD  = 'M0304'
+		     AND CMM6.CMM_CD      = MS.ENTR_INFO
+		     AND CMM6.LANG_TYPE   = 'ko-KR'
+		    
+		    LEFT OUTER JOIN 
+		         PBOOWN.VW_MST_CMM_DTL CMM7   -- (공통코드 VTB) 은행 공통코드 M0203
+		      ON CMM7.CMP_CD      = MS.CMP_CD
+		     AND CMM7.CMM_GRP_CD  = 'M0203'
+		     AND CMM7.CMM_CD      = MS.BANK_CD
+		     AND CMM7.LANG_TYPE   = 'ko-KR'
+		    
+		    LEFT OUTER JOIN 
+		         PBOOWN.VW_MST_CMM_DTL CMM8   -- (공통코드 VTB) 수도권 구분  공통코드 M0115 1:수도권  2:지방
+		      ON CMM8.CMP_CD      = MS.CMP_CD
+		     AND CMM8.CMM_GRP_CD  = 'M0115'
+		     AND CMM8.CMM_CD      = MS.CPTL_AREA_DIV
+		     AND CMM8.LANG_TYPE   = 'ko-KR'
+		    
+		   WHERE 1 = 1
+		     AND MS.CMP_CD        = '1000'
+		     AND MS.SALES_ORG_CD  = '9620'
+		     AND EXISTS (
+					        SELECT 1
+					          FROM PBOOWN.VW_DATA_AUTH AUTH
+					         WHERE 1 = 1
+					           AND AUTH.CMP_CD  = MS.CMP_CD 
+					           AND AUTH.STOR_CD = MS.STOR_CD
+					           AND AUTH.USER_ID = 'gaubiz'
+					           AND AUTH.AUTH_YN = '1'
+					     )
+             AND MS.DRT_FRCS_TYPE = '10'
+             AND MS.STOR_CD       = #{storNo}
+           ORDER BY MS.STOR_CD
+               , MS.STOR_NM
+        ]]>
+    </select>
+
+	<!-- 체험예상대기시간 TABLE NULL 여부 조회 2023.07.11 -->
+    <select id="selectExpWaitHourNullYn" parameterType="com.ceragem.api.pos.model.PosExpResultVo" resultType="int">
+        <![CDATA[
+            SELECT /* com.ceragem.api.pos.model.PosExpResultVo.selectExpWaitHourNullYn : 체험예상대기시간 TABLE NULL 여부 조회 */
+                   COUNT(*)
+              FROM PBOOWN.EXPECT_WAIT_HOUR
+             WHERE 1=1
+               AND CMP_CD       = #{cmpCd}
+               AND SALES_ORG_CD = #{salesOrgCd}
+               AND STOR_CD      = #{storNo}
+               AND WAITPSN_EXP_EXPECT_HOUR IS NULL
+               AND SUM_WAIT_HOUR IS NULL
+        ]]>
+    </select>
+    
+    <!-- 체험예상대기시간 TABLE NULL 0으로 update 2023.07.11 -->
+    <update id="updateExpHourNull" parameterType="com.ceragem.api.pos.model.PosExpResultVo">
+        <![CDATA[  
+          UPDATE /* com.ceragem.api.pos.model.PosExpResultVo.updateExpHourNull : 체험예상대기시간 TABLE NULL 0으로 update */
+                 PBOOWN.EXPECT_WAIT_HOUR
+             SET WAITPSN_EXP_EXPECT_HOUR = 0
+               , SUM_WAIT_HOUR           = 0
+           WHERE CMP_CD       = #{cmpCd}
+             AND SALES_ORG_CD = #{salesOrgCd}
+             AND STOR_CD      = #{storNo}
+             AND WAITPSN_EXP_EXPECT_HOUR IS NULL
+             AND SUM_WAIT_HOUR IS NULL
+        ]]>
+    </update>
+    
+
+    <!-- 체험대기예상시간 조회 -->
+    <select id="selectExpWaitHour" resultType="com.ceragem.api.pos.model.PosExpResultVo">
+        <![CDATA[
+	        SELECT /* com.ceragem.api.pos.model.PosExpResultVo.selectExpWaitHour : 체험대기예상시간 조회  */
+	                 MIN(EWH.SUM_WAIT_HOUR)          AS exprnWaitNo   /* 체험 예상 대기 시간 */
+			  FROM PBOOWN.EXPECT_WAIT_HOUR EWH /* 예상 대기 시간 table */
+			  LEFT OUTER JOIN 
+				   PBOOWN.VW_MST_CMM_DTL CMM1 /* 공통코드 table - 제품 구분(E0007) */
+			    ON CMM1.CMP_CD     = EWH.CMP_CD
+			   AND CMM1.CMM_GRP_CD = 'E0007'
+			   AND CMM1.CMM_CD     = EWH.ITEM_KIND_CD
+			   AND CMM1.LANG_TYPE   = #{langSetting}
+			 WHERE EWH.CMP_CD       = #{cmpCd}
+		       AND EWH.SALES_ORG_CD = #{salesOrgCd}
+		       AND EWH.STOR_CD      = #{storNo}
+		       AND EWH.USE_YN       = '1' /* 기기사용여부,1:사용*/
+		       AND EWH.ITEM_KIND_CD IS NOT NULL
+		   	   AND EWH.ITEM_KIND_CD = #{exprnProdCd}
+             GROUP BY EWH.CMP_CD 
+                    , EWH.SALES_ORG_CD                            
+                    , EWH.STOR_CD   
+		            , EWH.ITEM_KIND_CD  
+		            , CMM1.ENTRY_NM   
+		            , CMM1.CHAR_VAL_TITLE_VAL_01   
+             ORDER BY EWH.ITEM_KIND_CD
+        ]]>
+    </select>
+    
+    
+    <insert id="insertExpWaitList" >
+    	INSERT /* com.ceragem.api.pos.model.PosExpResultVo.insertExpWaitList : 체험대기등록 */
+              INTO PBOOWN.EXP_WAIT 
+                 ( CMP_CD
+                 , SALES_ORG_CD
+                 , STOR_CD
+                 , EXP_DT
+                 , WAIT_NO
+                 , ITEM_KIND_CD
+                 , MSHP_NO
+                 , BILL_NO
+                 , TEL_NO
+                 , AGREE_YN
+                 , WAIT_HOUR
+                 , EXP_HOUR
+                 , WAITPSN_NM
+                 , REG_DATE
+                 , REG_USER_ID
+                 , UPD_DATE
+                 , UPD_USER_ID
+                 , EXP_EXPECT_HOUR
+                 , CALL_CNT
+                 , NOTE
+                 )
+            VALUES 
+                 ( #{cmpCd}
+                 , #{salesOrgCd}
+			     , #{storNo}
+                 , #{exprnDt}
+                 , ( SELECT TRIM(LPAD(NVL(MAX(TO_NUMBER(WAIT_NO)), 0) + 1, 3))
+					   FROM PBOOWN.EXP_WAIT 
+					  WHERE CMP_CD       = #{cmpCd}
+						AND SALES_ORG_CD = #{salesOrgCd}
+						AND STOR_CD      = #{storNo}
+                        AND EXP_DT       = SUBSTR(TO_CHAR(SYSDATE,'YYYYMMDD'), 0, 10)
+                   ) 
+                 , #{exprnProdCd}
+                 , #{itgCustNo}
+                 , '' -- POS에서 저장하는 데이터 
+                 , DAMO.ENCRYPT_VAR_B64('AES_256', #{mphonNo}, '')
+                 , '1' 
+                 , '0'
+                 , '' --EXP_HOUR 체험 등록시 값이 들어감
+                 , #{custNm}
+                 , FN_GET_SYSDATE(#{cmpCd})
+                 , '체험API'
+                 , FN_GET_SYSDATE(#{cmpCd}) 
+                 , '체험API'
+                 , SUBSTR(TO_CHAR(SYSDATE + #{WAIT_HOUR}/(24*60),'YYYYMMDDHH24MI'),9,4) 
+                 , 0
+                 , #{exprnCtnts}
+                 )
+    
+    </insert>
+
+	<!-- 체험대기등록 신청 API -->
+    <select id="getMshipSelfExpList" resultType="com.ceragem.api.pos.model.PosExpResultVo">
+		SELECT /* com.ceragem.api.pos.dao.PosExpVo.getMshipSelfExpList */
+		       WAIT_NO AS exprnWaitNo
+          FROM PBOOWN.EXP_WAIT
+         WHERE CMP_CD       = #{cmpCd} 
+           AND SALES_ORG_CD = #{salesOrgCd}
+           AND STOR_CD      = #{storNo}
+           AND EXP_DT       = #{exprnDt}
+           AND WAIT_NO = ( SELECT MAX(WAIT_NO)
+							   FROM PBOOWN.EXP_WAIT
+						      WHERE CMP_CD       = #{cmpCd} 
+							    AND SALES_ORG_CD = #{salesOrgCd}
+							    AND STOR_CD      = #{storNo}
+							    AND EXP_DT       = #{exprnDt}
+							    AND MSHP_NO      = #{itgCustNo}
+							    AND WAITPSN_NM   = #{custNm}
+							)
+    </select>
+    
+    
+     <!-- 체험대기예상시간 업데이트 -->
+    <update id="saveExpWaitHourS" parameterType="com.ceragem.api.pos.model.PosExpResultVo">
+        <![CDATA[  
+            UPDATE /* com.ceragem.api.pos.model.PosExpResultVo.saveExpWaitHourS : 체험대기예상시간 업데이트 */
+                    PBOOWN.EXPECT_WAIT_HOUR  
+			   SET  WAITPSN_EXP_EXPECT_HOUR  = TO_NUMBER(#{AVG_NEED_HOUR}) + NVL(WAITPSN_EXP_EXPECT_HOUR, 0)  
+			      , SUM_WAIT_HOUR            = TO_NUMBER(#{AVG_NEED_HOUR}) + NVL(WAITPSN_EXP_EXPECT_HOUR, 0) 
+			      , UPD_DATE                 = FN_GET_SYSDATE(#{CMP_CD})
+			      , UPD_USER_ID              = #{USER_ID}
+			  WHERE CMP_CD                   = '1000'
+			    AND SALES_ORG_CD             = '9620'
+			    AND STOR_CD                  = #{storNo}
+			    AND SEAT_NO                  = ( SELECT SEAT_NO
+												   FROM (
+												          SELECT CURRENT_EXPM_HOUR + WAITPSN_EXP_EXPECT_HOUR AS EHOUR
+												               , SEAT_NO
+												            FROM PBOOWN.EXPECT_WAIT_HOUR /* 예상 대기 시간 table */
+												           WHERE CMP_CD            = #{cmpCd}
+											                 AND SALES_ORG_CD      = #{salesOrgCd}
+												             AND ITEM_KIND_CD      = #{exprnProdCd}
+													         AND STOR_CD           = #{storNo}
+													         AND USE_YN            = '1' /* 1,사용 */
+													      
+													       ORDER BY EHOUR, SEAT_NO
+													    )
+												  WHERE ROWNUM = 1
+			                                   )             
+        ]]>
+    </update>
+    
+    
+    <!-- 체험대기등록 조회 API -->
+    <select id="getCustExpList" resultType="com.ceragem.api.pos.model.PosExpCustListVo">
+		SELECT /* com.ceragem.api.pos.dao.PosExpVo.getCustExpList */
+		         A.STOR_CD                                     AS storNo
+               , A.WAIT_NO                                     AS exprnWaitNo
+               , A.WAITPSN_NM                                  AS custNm
+               , DAMO.DECRYPT_VAR_B64('AES_256', A.TEL_NO, '') AS mphonNo
+               , ROUND((TO_DATE(TO_CHAR(SYSDATE, 'YYYYMMDDHH24MI'), 'YYYYMMDDHH24MI') 
+				        - TO_DATE(TO_CHAR(A.REG_DATE, 'YYYYMMDDHH24MI'), 'YYYYMMDDHH24MI'))*24*60) AS exprnWaitTime    /* 대기 경과 시간 */                                   
+               , B.ENTRY_NM                                    AS exprnProdNm
+               , NVL(A.NOTE,'없음')                             AS exprnCtnts
+               , A.EXP_DT                                      AS exprnDt
+               , A.MSHP_NO                                     AS itgCustNo
+          FROM PBOOWN.EXP_WAIT A
+          LEFT OUTER JOIN 
+               PBOOWN.VW_MST_CMM_DTL B
+              	   ON A.CMP_CD       = B.CMP_CD
+             	  AND B.CMP_CD       = #{cmpCd}
+                  AND B.CMM_GRP_CD   = 'E0007'
+                  AND B.LANG_TYPE    = #{langSetting}
+                WHERE B.CMM_CD = ( SELECT ITEM_KIND_CD 
+									 FROM (
+									 		SELECT ITEM_KIND_CD
+										      FROM PBOOWN.EXP_WAIT
+										     WHERE CMP_CD       = #{cmpCd}
+										       AND SALES_ORG_CD = #{salesOrgCd}
+										       AND STOR_CD      = #{storNo}
+										       AND EXP_DT       = #{exprnDt}
+										       AND MSHP_NO      = #{itgCustNo}
+										       AND WAITPSN_NM   = #{custNm}
+										       AND DAMO.DECRYPT_VAR_B64('AES_256', TEL_NO, '') = #{mphonNo}
+										     ORDER BY REG_DATE DESC
+										   ) 
+								     WHERE ROWNUM = 1
+	                             ) 
+                  AND A.STOR_CD    = #{storNo}
+                  AND A.EXP_DT     = #{exprnDt}
+                  AND A.WAITPSN_NM = #{custNm}
+                  AND A.MSHP_NO    = #{itgCustNo}
+                  AND DAMO.DECRYPT_VAR_B64('AES_256', A.TEL_NO, '') = #{mphonNo}
+                  AND A.WAIT_NO    = (
+	             				       SELECT MAX(WAIT_NO)
+									     FROM PBOOWN.EXP_WAIT
+								        WHERE CMP_CD       = #{cmpCd}
+									      AND SALES_ORG_CD = #{salesOrgCd}
+									      AND STOR_CD      = #{storNo}
+									      AND EXP_DT       = #{exprnDt}
+									      AND MSHP_NO      = #{itgCustNo}
+									      AND WAITPSN_NM   = #{custNm}
+									      AND DAMO.DECRYPT_VAR_B64('AES_256', TEL_NO, '') = #{mphonNo}
+							         )
+    </select>
+
+</mapper>

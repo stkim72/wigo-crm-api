@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ceragem.api.crm.dao.CrmCardPblsHstDao">
+    <sql id="sqlPkConditions">
+                WHERE CARD_PBLS_HST_SEQ =       #{cardPblsHstSeq}
+    </sql>
+    <sql id="sqlCols">
+                      CARD_PBLS_HST_SEQ                    /*카드발행이력일련번호        */
+                    , ITG_CUST_NO                    /*통합고객번호        */
+                    , CARD_BAS_NO                    /*카드기본번호        */
+                    , CARD_TYPE_CD                    /*카드유형코드        공통코드 : CD010        [001 : 실물카드 , 002 : 모바일카드]*/
+                    , CARD_DIV_CD                    /*카드구분코드        공통코드 : CD020        [001 : 멤버십 , 002 : 제휴]*/
+                    , MSHP_NM                    /*회원명        */
+                    , MPHON_NO                    /*이동전화번호        */
+                    , MSHIP_GRADE_CD                    /*멤버십등급코드        공통코드 : MB020        [001 : 일반 , 002 : 화이트 , 003 : 브론즈 , 004 : 실버 , 005 : 골드 , 006 : VIP]*/
+                    , FROM_USE_POSS_DT                    /*FROM사용가능일시        */
+                    , TO_USE_POSS_DT                    /*TO사용가능일시        */
+                    , POINT_ACCUM_RATE                    /*포인트적립율        */
+                    , SBSC_POINT_SCORE                    /*가입포인트점수        */
+                    , SBSC_POINT_APPLY_STD_CD                    /*가입포인트적용기준코드        */
+                    , ADVNCMT_POINT_SCORE                    /*승급포인트점수        */
+                    , ADVNCMT_POINT_APPLY_STD_CD                    /*승급포인트적용기준코드        */
+                    , DRNK_DC_RATE                    /*음료할인율        */
+                    , DAY_DRNK_PRV_CNT                    /*일음료제공수        */
+                    , DRNK_PRV_CNT                    /*음료제공수        */
+                    , MYCOM_MALL_FREE_DLV_YN                    /*자사몰무료배송여부        */
+                    , DRNK_FREE_APPLY_STMP_CNT                    /*음료무료적용스탬프수        */
+                    , FREE_SVC_EXTNSN_MONS_CNT                    /*무료서비스연장개월수        */
+                    , CERAC_COUPN_PRV_MONS_CNT                    /*세라케어쿠폰제공개월수        */
+                    , CRCK_COUPN_PRV_MONS_CNT                    /*세라체크쿠폰제공개월수        */
+                    , GODS_RSTRTN_YN                    /*제품제한여부        */
+                    , STATUS_CD                    /*상태코드        */
+                    , CERTF_NO                    /*인증번호        */
+                    , CERTF_DT                    /*인증일시        */
+                    , USE_YN                    /*사용여부        */
+                    , AMDR_ID                    /*수정자ID        */
+                    , AMD_DT                    /*수정일시        */
+                    , REGR_ID                    /*등록자ID        */
+                    , REG_DT                    /*등록일시        */
+                    , REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , test : test]*/
+    </sql>
+    <sql id="sqlSelectCols">
+                      A.CARD_PBLS_HST_SEQ                    /*카드발행이력일련번호        */
+                    , A.ITG_CUST_NO                    /*통합고객번호        */
+                    , A.CARD_BAS_NO                    /*카드기본번호        */
+                    , A.CARD_TYPE_CD                    /*카드유형코드        공통코드 : CD010        [001 : 실물카드 , 002 : 모바일카드]*/
+                    , A.CARD_DIV_CD                    /*카드구분코드        공통코드 : CD020        [001 : 멤버십 , 002 : 제휴]*/
+                    , A.MSHP_NM                    /*회원명        */
+                    , A.MPHON_NO                    /*이동전화번호        */
+                    , A.MSHIP_GRADE_CD                    /*멤버십등급코드        공통코드 : MB020        [001 : 일반 , 002 : 화이트 , 003 : 브론즈 , 004 : 실버 , 005 : 골드 , 006 : VIP]*/
+                    , TO_CHAR(A.FROM_USE_POSS_DT,'YYYYMMDDHH24MISS')    FROM_USE_POSS_DT                    /*FROM사용가능일시        */
+                    , TO_CHAR(A.TO_USE_POSS_DT,'YYYYMMDDHH24MISS')    TO_USE_POSS_DT                    /*TO사용가능일시        */
+                    , A.POINT_ACCUM_RATE                    /*포인트적립율        */
+                    , A.SBSC_POINT_SCORE                    /*가입포인트점수        */
+                    , A.SBSC_POINT_APPLY_STD_CD                    /*가입포인트적용기준코드        */
+                    , A.ADVNCMT_POINT_SCORE                    /*승급포인트점수        */
+                    , A.ADVNCMT_POINT_APPLY_STD_CD                    /*승급포인트적용기준코드        */
+                    , A.DRNK_DC_RATE                    /*음료할인율        */
+                    , A.DAY_DRNK_PRV_CNT                    /*일음료제공수        */
+                    , A.DRNK_PRV_CNT                    /*음료제공수        */
+                    , A.MYCOM_MALL_FREE_DLV_YN                    /*자사몰무료배송여부        */
+                    , A.DRNK_FREE_APPLY_STMP_CNT                    /*음료무료적용스탬프수        */
+                    , A.FREE_SVC_EXTNSN_MONS_CNT                    /*무료서비스연장개월수        */
+                    , A.CERAC_COUPN_PRV_MONS_CNT                    /*세라케어쿠폰제공개월수        */
+                    , A.CRCK_COUPN_PRV_MONS_CNT                    /*세라체크쿠폰제공개월수        */
+                    , A.GODS_RSTRTN_YN                    /*제품제한여부        */
+                    , A.STATUS_CD                    /*상태코드        */
+                    , A.CERTF_NO                    /*인증번호        */
+                    , TO_CHAR(A.CERTF_DT,'YYYYMMDDHH24MISS')    CERTF_DT                    /*인증일시        */
+                    , A.USE_YN                    /*사용여부        */
+                    , A.AMDR_ID                    /*수정자ID        */
+                    , TO_CHAR(A.AMD_DT,'YYYYMMDDHH24MISS')    AMD_DT                    /*수정일시        */
+                    , A.REGR_ID                    /*등록자ID        */
+                    , TO_CHAR(A.REG_DT,'YYYYMMDDHH24MISS')    REG_DT                    /*등록일시        */
+                    , A.REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , test : test]*/
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'CD010' AND COMN_CD = A.CARD_TYPE_CD AND  COMN_CD_LVL_NO = 2) CARD_TYPE_CD_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'CD020' AND COMN_CD = A.CARD_DIV_CD AND  COMN_CD_LVL_NO = 2) CARD_DIV_CD_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'MB020' AND COMN_CD = A.MSHIP_GRADE_CD AND  COMN_CD_LVL_NO = 2) MSHIP_GRADE_CD_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = '' AND COMN_CD = A.SBSC_POINT_APPLY_STD_CD AND  COMN_CD_LVL_NO = 2) SBSC_POINT_APPLY_STD_CD_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = '' AND COMN_CD = A.SBSC_POINT_APPLY_STD_CD AND  COMN_CD_LVL_NO = 2) ADVNCMT_POINT_APPLY_STD_CD_NM
+
+                    
+    </sql>
+    <sql id="sqlConditions">
+        <where>
+        <if test="cardPblsHstSeq != null and cardPblsHstSeq != ''">
+                  AND A.CARD_PBLS_HST_SEQ=       #{cardPblsHstSeq}
+        </if>
+        <if test="itgCustNo != null and itgCustNo != ''">
+                  AND A.ITG_CUST_NO     =       #{itgCustNo}
+        </if>
+        <if test="cardBasNo != null and cardBasNo != ''">
+                  AND A.CARD_BAS_NO     =       #{cardBasNo}
+        </if>
+        <if test="cardTypeCd != null and cardTypeCd != ''">
+            <choose>
+                <when test="cardTypeCd instanceof String">
+                    AND A.CARD_TYPE_CD    =       #{cardTypeCd}
+                </when>
+                <otherwise>
+                    AND A.CARD_TYPE_CD    IN
+                    <foreach item="item" index="index" collection="cardTypeCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="cardDivCd != null and cardDivCd != ''">
+            <choose>
+                <when test="cardDivCd instanceof String">
+                    AND A.CARD_DIV_CD     =       #{cardDivCd}
+                </when>
+                <otherwise>
+                    AND A.CARD_DIV_CD     IN
+                    <foreach item="item" index="index" collection="cardDivCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="mshpNm != null and mshpNm != ''">
+                  AND A.MSHP_NM         =       #{mshpNm}
+        </if>
+        <if test="mphonNo != null and mphonNo != ''">
+                  AND A.MPHON_NO        =       #{mphonNo}
+        </if>
+        <if test="mshipGradeCd != null and mshipGradeCd != ''">
+            <choose>
+                <when test="mshipGradeCd instanceof String">
+                    AND A.MSHIP_GRADE_CD  =       #{mshipGradeCd}
+                </when>
+                <otherwise>
+                    AND A.MSHIP_GRADE_CD  IN
+                    <foreach item="item" index="index" collection="mshipGradeCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="fromUsePossDt != null and fromUsePossDt != ''">
+                  AND A.FROM_USE_POSS_DT=       TO_DATE(#{fromUsePossDt},'YYYYMMDDHH24MISS')
+        </if>
+        <if test="toUsePossDt != null and toUsePossDt != ''">
+                  AND A.TO_USE_POSS_DT  =       TO_DATE(#{toUsePossDt},'YYYYMMDDHH24MISS')
+        </if>
+        <if test="pointAccumRate != null and pointAccumRate != ''">
+                  AND A.POINT_ACCUM_RATE=       #{pointAccumRate}
+        </if>
+        <if test="sbscPointScore != null and sbscPointScore != ''">
+                  AND A.SBSC_POINT_SCORE=       #{sbscPointScore}
+        </if>
+        <if test="sbscPointApplyStdCd != null and sbscPointApplyStdCd != ''">
+            <choose>
+                <when test="sbscPointApplyStdCd instanceof String">
+                    AND A.SBSC_POINT_APPLY_STD_CD=       #{sbscPointApplyStdCd}
+                </when>
+                <otherwise>
+                    AND A.SBSC_POINT_APPLY_STD_CDIN
+                    <foreach item="item" index="index" collection="sbscPointApplyStdCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="advncmtPointScore != null and advncmtPointScore != ''">
+                  AND A.ADVNCMT_POINT_SCORE=       #{advncmtPointScore}
+        </if>
+        <if test="advncmtPointApplyStdCd != null and advncmtPointApplyStdCd != ''">
+            <choose>
+                <when test="advncmtPointApplyStdCd instanceof String">
+                    AND A.ADVNCMT_POINT_APPLY_STD_CD=       #{advncmtPointApplyStdCd}
+                </when>
+                <otherwise>
+                    AND A.ADVNCMT_POINT_APPLY_STD_CDIN
+                    <foreach item="item" index="index" collection="advncmtPointApplyStdCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="drnkDcRate != null and drnkDcRate != ''">
+                  AND A.DRNK_DC_RATE    =       #{drnkDcRate}
+        </if>
+        <if test="dayDrnkPrvCnt != null and dayDrnkPrvCnt != ''">
+                  AND A.DAY_DRNK_PRV_CNT=       #{dayDrnkPrvCnt}
+        </if>
+        <if test="drnkPrvCnt != null and drnkPrvCnt != ''">
+                  AND A.DRNK_PRV_CNT    =       #{drnkPrvCnt}
+        </if>
+        <if test="mycomMallFreeDlvYn != null and mycomMallFreeDlvYn != ''">
+                  AND A.MYCOM_MALL_FREE_DLV_YN=       #{mycomMallFreeDlvYn}
+        </if>
+        <if test="drnkFreeApplyStmpCnt != null and drnkFreeApplyStmpCnt != ''">
+                  AND A.DRNK_FREE_APPLY_STMP_CNT=       #{drnkFreeApplyStmpCnt}
+        </if>
+        <if test="freeSvcExtnsnMonsCnt != null and freeSvcExtnsnMonsCnt != ''">
+                  AND A.FREE_SVC_EXTNSN_MONS_CNT=       #{freeSvcExtnsnMonsCnt}
+        </if>
+        <if test="ceracCoupnPrvMonsCnt != null and ceracCoupnPrvMonsCnt != ''">
+                  AND A.CERAC_COUPN_PRV_MONS_CNT=       #{ceracCoupnPrvMonsCnt}
+        </if>
+        <if test="crckCoupnPrvMonsCnt != null and crckCoupnPrvMonsCnt != ''">
+                  AND A.CRCK_COUPN_PRV_MONS_CNT=       #{crckCoupnPrvMonsCnt}
+        </if>
+        <if test="godsRstrtnYn != null and godsRstrtnYn != ''">
+                  AND A.GODS_RSTRTN_YN  =       #{godsRstrtnYn}
+        </if>
+        <if test="statusCd != null and statusCd != ''">
+            <choose>
+                <when test="statusCd instanceof String">
+                    AND A.STATUS_CD       =       #{statusCd}
+                </when>
+                <otherwise>
+                    AND A.STATUS_CD       IN
+                    <foreach item="item" index="index" collection="statusCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="certfNo != null and certfNo != ''">
+                  AND A.CERTF_NO        =       #{certfNo}
+        </if>
+        <if test="certfDt != null and certfDt != ''">
+                  AND A.CERTF_DT        =       TO_DATE(#{certfDt},'YYYYMMDDHH24MISS')
+        </if>
+        <if test="useYn != null and useYn != ''">
+                  AND A.USE_YN          =       #{useYn}
+        </if>
+        <if test="regChlCd != null and regChlCd != ''">
+            <choose>
+                <when test="regChlCd instanceof String">
+                    AND A.REG_CHL_CD      =       #{regChlCd}
+                </when>
+                <otherwise>
+                    AND A.REG_CHL_CD      IN
+                    <foreach item="item" index="index" collection="regChlCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        </where>
+    </sql>
+    <select id="selectListCount" resultType="int">
+                SELECT /* com.ceragem.api.crm.dao.CrmCardPblsHstDao.selectListCount */ COUNT(1)
+                 FROM CRM_CARD_PBLS_HST A
+        <include refid="sqlConditions"/>
+    </select>
+    <select id="selectList" resultType="com.ceragem.api.crm.model.CrmCardPblsHstVo">
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingHeader"/>
+               SELECT /* com.ceragem.api.crm.dao.CrmCardPblsHstDao.selectList */ <include refid="sqlSelectCols"/>
+                 FROM CRM_CARD_PBLS_HST A
+        <include refid="sqlConditions"/>
+               ORDER BY REG_DT DESC
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingFooter"/>
+    </select>
+    <select id="select" resultType="com.ceragem.api.crm.model.CrmCardPblsHstVo">
+               SELECT /* com.ceragem.api.crm.dao.CrmCardPblsHstDao.select */ <include refid="sqlSelectCols"/>
+                 FROM CRM_CARD_PBLS_HST A
+        <include refid="sqlPkConditions"/>
+    </select>
+    <insert id="insert">
+                INSERT /* com.ceragem.api.crm.dao.CrmCardPblsHstDao.insert */ INTO CRM_CARD_PBLS_HST (
+        <include refid="sqlCols"/>
+                 ) VALUES (
+                       #{cardPblsHstSeq}
+                     , #{itgCustNo}
+                     , #{cardBasNo}
+                     , #{cardTypeCd}
+                     , #{cardDivCd}
+                     , #{mshpNm}
+                     , #{mphonNo}
+                     , #{mshipGradeCd}
+                     , TO_DATE(#{fromUsePossDt},'YYYYMMDDHH24MISS')
+                     , TO_DATE(#{toUsePossDt},'YYYYMMDDHH24MISS')
+                     , #{pointAccumRate}
+                     , #{sbscPointScore}
+                     , #{sbscPointApplyStdCd}
+                     , #{advncmtPointScore}
+                     , #{advncmtPointApplyStdCd}
+                     , #{drnkDcRate}
+                     , #{dayDrnkPrvCnt}
+                     , #{drnkPrvCnt}
+                     , NVL(#{mycomMallFreeDlvYn},'N')
+                     , #{drnkFreeApplyStmpCnt}
+                     , #{freeSvcExtnsnMonsCnt}
+                     , #{ceracCoupnPrvMonsCnt}
+                     , #{crckCoupnPrvMonsCnt}
+                     , NVL(#{godsRstrtnYn},'N')
+                     , #{statusCd}
+                     , #{certfNo}
+                     , TO_DATE(#{certfDt},'YYYYMMDDHH24MISS')
+                     , NVL(#{useYn},'N')
+                     , #{amdrId}
+                     , SYSDATE
+                     , #{regrId}
+                     , SYSDATE
+                     , #{regChlCd}
+                 )
+    </insert>
+    <update id="update">
+               UPDATE CRM_CARD_PBLS_HST /* com.ceragem.api.crm.dao.CrmCardPblsHstDao.update */ 
+                  SET ITG_CUST_NO                             =         #{itgCustNo}
+                    , CARD_BAS_NO                             =         #{cardBasNo}
+                    , CARD_TYPE_CD                            =         #{cardTypeCd}
+                    , CARD_DIV_CD                             =         #{cardDivCd}
+                    , MSHP_NM                                 =         #{mshpNm}
+                    , MPHON_NO                                =         #{mphonNo}
+                    , MSHIP_GRADE_CD                          =         #{mshipGradeCd}
+                    , FROM_USE_POSS_DT                        =         TO_DATE(#{fromUsePossDt},'YYYYMMDDHH24MISS')
+                    , TO_USE_POSS_DT                          =         TO_DATE(#{toUsePossDt},'YYYYMMDDHH24MISS')
+                    , POINT_ACCUM_RATE                        =         #{pointAccumRate}
+                    , SBSC_POINT_SCORE                        =         #{sbscPointScore}
+                    , SBSC_POINT_APPLY_STD_CD                 =         #{sbscPointApplyStdCd}
+                    , ADVNCMT_POINT_SCORE                     =         #{advncmtPointScore}
+                    , ADVNCMT_POINT_APPLY_STD_CD              =         #{advncmtPointApplyStdCd}
+                    , DRNK_DC_RATE                            =         #{drnkDcRate}
+                    , DAY_DRNK_PRV_CNT                        =         #{dayDrnkPrvCnt}
+                    , DRNK_PRV_CNT                            =         #{drnkPrvCnt}
+                    , MYCOM_MALL_FREE_DLV_YN                  =         NVL(#{mycomMallFreeDlvYn},'N')
+                    , DRNK_FREE_APPLY_STMP_CNT                =         #{drnkFreeApplyStmpCnt}
+                    , FREE_SVC_EXTNSN_MONS_CNT                =         #{freeSvcExtnsnMonsCnt}
+                    , CERAC_COUPN_PRV_MONS_CNT                =         #{ceracCoupnPrvMonsCnt}
+                    , CRCK_COUPN_PRV_MONS_CNT                 =         #{crckCoupnPrvMonsCnt}
+                    , GODS_RSTRTN_YN                          =         NVL(#{godsRstrtnYn},'N')
+                    , STATUS_CD                               =         #{statusCd}
+                    , CERTF_NO                                =         #{certfNo}
+                    , CERTF_DT                                =         TO_DATE(#{certfDt},'YYYYMMDDHH24MISS')
+                    , USE_YN                                  =         NVL(#{useYn},'N')
+                    , AMDR_ID                                 =         #{amdrId}
+                    , AMD_DT                                  =         SYSDATE
+                    , REG_CHL_CD                              =         #{regChlCd}
+        <include refid="sqlPkConditions"/>
+    </update>
+    <delete id="delete">
+               DELETE /* com.ceragem.api.crm.dao.CrmCardPblsHstDao.delete */ 
+                 FROM CRM_CARD_PBLS_HST
+        <include refid="sqlPkConditions"/>
+    </delete>
+</mapper>

@@ -72,14 +72,14 @@
                     , A.REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CTC : 상담 , AS : AS , SAP : SAP , test : test]*/
                     , ( SELECT COMN_CD_NM 
                          FROM CRM_COMN_CD_BAS
-                        WHERE TOP_COMN_CD = 'PO020' 
+                        WHERE TOP_COMN_CD = 'EV100' 
                           AND COMN_CD  = A.PBLS_DIV_CD
-                          AND COMN_CD_LVL_NO = 2 ) PBLS_DIV_NM
+                          AND COMN_CD_LVL_NO = 2 ) PBLS_DIV_NM	/*PO020*/
                     , ( SELECT COMN_CD_NM 
                          FROM CRM_COMN_CD_BAS
-                        WHERE TOP_COMN_CD = 'PO020' 
+                        WHERE TOP_COMN_CD = 'PO010' 
                           AND COMN_CD  = A.USE_TYPE_CD
-                          AND COMN_CD_LVL_NO = 2 ) USE_TYPE_NM
+                          AND COMN_CD_LVL_NO = 2 ) USE_TYPE_NM /*PO020*/
                     , ACCUM_YN
     </sql>
     <sql id="sqlConditions">
@@ -233,7 +233,7 @@
                SELECT /* com.ceragem.api.crm.dao.CrmPointHstDao.selectList */ <include refid="sqlSelectCols"/>
                  FROM CRM_POINT_HST A
         <include refid="sqlConditions"/>
-               ORDER BY REG_DT DESC
+               ORDER BY REG_DT DESC, POINT_HST_SEQ DESC
         <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingFooter"/>
     </select>
     <select id="select" resultType="com.ceragem.api.crm.model.CrmPointHstVo">
@@ -241,6 +241,7 @@
                  FROM CRM_POINT_HST A
         <include refid="sqlPkConditions"/>
     </select>
+     
     <insert id="insert">
     	<selectKey order="BEFORE" keyProperty="pointHstSeq" resultType="String">
     		SELECT FN_CRM_AUTO_SEQ('PNT') FROM DUAL
@@ -260,8 +261,9 @@
                      , #{pblsDivCd}
                      , #{occurPointScore}
                      , #{remainPointScore}
-                     , NVL(#{validPerdStaYmd},TO_CHAR(SYSDATE,'YYYYMMDD'))
-                     , CASE WHEN #{pblsDivCd} = '940' THEN NULL ELSE NVL(#{validPerdEndYmd},TO_CHAR(ADD_MONTHS(SYSDATE,DECODE(#{pblsDivCd},'101',12,24)),'YYYYMMDD')) END  
+                     , CASE WHEN #{occurPointScore} > 0 THEN NVL(#{validPerdStaYmd},TO_CHAR(SYSDATE,'YYYYMMDD')) ELSE NULL END
+                     <!-- , CASE WHEN #{pblsDivCd} = '940' THEN NULL ELSE NVL(#{validPerdEndYmd},TO_CHAR(ADD_MONTHS(SYSDATE,DECODE(#{pblsDivCd},'101',12,12)),'YYYYMMDD')) END --> 
+                     , CASE WHEN #{occurPointScore} > 0 THEN  NVL(#{temValidPerdYmd},CASE WHEN #{pblsDivCd} = '940' THEN NULL ELSE NVL(#{validPerdEndYmd},TO_CHAR(ADD_MONTHS(SYSDATE,DECODE(#{pblsDivCd},'101',12,12)),'YYYYMMDD')) END) ELSE NULL END
                      , SYSDATE
                      , NULL
 <!--                      , TO_DATE(#{extncDt},'YYYYMMDDHH24MISS') -->
@@ -320,59 +322,144 @@
         <include refid="sqlPkConditions"/>
         		  AND EXTNC_DT IS NULL
     </update>
+    <update id="updatePerdExtncDt">
+              UPDATE/* com.ceragem.api.crm.dao.CrmPointHstDao.updatePerdExtncDt */  CRM_POINT_PERD_HST
+                  SET EXTNC_DT                                =         SYSDATE
+       	        WHERE POINT_PERD_HST_SEQ = #{pointPerdHstSeq}
+                  AND EXTNC_DT IS NULL
+    </update>
     <delete id="delete">
                DELETE /* com.ceragem.api.crm.dao.CrmPointHstDao.delete */ 
                  FROM CRM_POINT_HST
         <include refid="sqlPkConditions"/>
     </delete>
+    <select id="selectPerdPointRemain" resultType="int">
+    /* com.ceragem.api.crm.dao.CrmPointHstDao.selectPerdPointRemain */ 
+                SELECT NVL(MAX(A.OCCUR_POINT_SCORE),0) - NVL(SUM(C.USE_POINT_SCORE),0) REMAIN_POINT_SCORE
+                  FROM CRM_POINT_HST A
+                  LEFT JOIN CRM_POINT_PERD_HST B ON A.POINT_HST_SEQ = B.POINT_HST_SEQ
+                  LEFT JOIN CRM_POINT_USE_REL C ON C.OCCUR_POINT_HST_SEQ = B.POINT_PERD_HST_SEQ
+                 WHERE A.POINT_HST_SEQ = #{pointHstSeq}
     
+    </select>
     <select id="selectPointInfo" resultType="com.ceragem.api.crm.model.CrmPointInfoVo">
-    	       SELECT /* com.ceragem.api.crm.dao.CrmPointHstDao.selectPointInfo */  #{itgCustNo} ITG_CUST_NO
-                    , NVL(SUM(
-			                    CASE WHEN 0 >= OCCUR_POINT_SCORE THEN OCCUR_POINT_SCORE
-			                    	 WHEN EXTNC_DT IS NOT NULL THEN OCCUR_POINT_SCORE
-			                         WHEN TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN VALID_PERD_STA_YMD AND VALID_PERD_END_YMD THEN OCCUR_POINT_SCORE
-			                         WHEN VALID_PERD_STA_YMD > TO_CHAR(SYSDATE,'YYYYMMDD') THEN OCCUR_POINT_SCORE
-			                         WHEN TO_CHAR(SYSDATE,'YYYYMMDD') > VALID_PERD_END_YMD THEN
-			                         	  NVL((SELECT NVL(SUM(USE_POINT_SCORE),0) FROM CRM_POINT_USE_REL WHERE OCCUR_POINT_HST_SEQ = A.POINT_HST_SEQ ),0) 
-			                         ELSE 0 END
-                    ),0) TOTAL_POINT
-                    , NVL(SUM(
-			                    CASE WHEN 0 >= OCCUR_POINT_SCORE THEN OCCUR_POINT_SCORE
-			                    	 WHEN EXTNC_DT IS NOT NULL THEN OCCUR_POINT_SCORE
-			                         WHEN TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN VALID_PERD_STA_YMD AND VALID_PERD_END_YMD THEN OCCUR_POINT_SCORE
-			                         WHEN TO_CHAR(SYSDATE,'YYYYMMDD') NOT BETWEEN VALID_PERD_STA_YMD AND VALID_PERD_END_YMD THEN
-			                         	  NVL((SELECT NVL(SUM(USE_POINT_SCORE),0) FROM CRM_POINT_USE_REL WHERE OCCUR_POINT_HST_SEQ = A.POINT_HST_SEQ ),0) 
-			                         ELSE 0 END
-                    ),0) AVAILABLE_POINT
-					, NVL(SUM(
-			                    CASE WHEN TO_CHAR(SYSDATE,'YYYYMMDD') > VALID_PERD_END_YMD AND OCCUR_POINT_SCORE > 0 THEN
-			                    		OCCUR_POINT_SCORE - NVL((SELECT NVL(SUM(USE_POINT_SCORE),0) FROM CRM_POINT_USE_REL WHERE OCCUR_POINT_HST_SEQ = A.POINT_HST_SEQ ),0) 
-			                        ELSE 0 END
-                    ),0) EXPIRED_POINT
-                    , NVL(SUM(
-                    			CASE WHEN USE_TYPE_CD != '001' OR CHIT_NO IN (SELECT CHIT_NO FROM CRM_POINT_HST WHERE ITG_CUST_NO = #{itgCustNo} AND USE_TYPE_CD = '003') THEN 0
-                    			ELSE OCCUR_POINT_SCORE END
-                    ),0) * -1 TOTAL_WITHDRAWAL
-                    , NVL(SUM(
-                    			CASE WHEN USE_TYPE_CD != '002' OR CHIT_NO IN (SELECT CHIT_NO FROM CRM_POINT_HST WHERE ITG_CUST_NO = #{itgCustNo} AND USE_TYPE_CD = '003') THEN 0
-                    			ELSE OCCUR_POINT_SCORE END
-                    ),0) TOTAL_DEPOSIT
-                 FROM CRM_POINT_HST A
-        		WHERE ITG_CUST_NO = #{itgCustNo}
+<!--     	       SELECT /* com.ceragem.api.crm.dao.CrmPointHstDao.selectPointInfo */  #{itgCustNo} ITG_CUST_NO -->
+<!--                     , NVL(SUM( -->
+<!-- 			                    CASE WHEN 0 >= OCCUR_POINT_SCORE THEN OCCUR_POINT_SCORE -->
+<!-- 			                    	 WHEN EXTNC_DT IS NOT NULL THEN OCCUR_POINT_SCORE -->
+<!-- 			                         WHEN TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN VALID_PERD_STA_YMD AND VALID_PERD_END_YMD THEN OCCUR_POINT_SCORE -->
+<!-- 			                         WHEN VALID_PERD_STA_YMD > TO_CHAR(SYSDATE,'YYYYMMDD') THEN OCCUR_POINT_SCORE -->
+<!-- 			                         WHEN TO_CHAR(SYSDATE,'YYYYMMDD') > VALID_PERD_END_YMD THEN -->
+<!-- 			                         	  NVL((SELECT NVL(SUM(USE_POINT_SCORE),0) FROM CRM_POINT_USE_REL WHERE OCCUR_POINT_HST_SEQ = A.POINT_HST_SEQ ),0)  -->
+<!-- 			                         ELSE 0 END -->
+<!--                     ),0) TOTAL_POINT -->
+<!--                     , NVL(SUM( -->
+<!-- 			                    CASE WHEN 0 >= OCCUR_POINT_SCORE THEN OCCUR_POINT_SCORE -->
+<!-- 			                    	 WHEN EXTNC_DT IS NOT NULL THEN OCCUR_POINT_SCORE -->
+<!-- 			                         WHEN TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN VALID_PERD_STA_YMD AND VALID_PERD_END_YMD THEN OCCUR_POINT_SCORE -->
+<!-- 			                         WHEN TO_CHAR(SYSDATE,'YYYYMMDD') NOT BETWEEN VALID_PERD_STA_YMD AND VALID_PERD_END_YMD THEN -->
+<!-- 			                         	  NVL((SELECT NVL(SUM(USE_POINT_SCORE),0) FROM CRM_POINT_USE_REL WHERE OCCUR_POINT_HST_SEQ = A.POINT_HST_SEQ ),0)  -->
+<!-- 			                         ELSE 0 END -->
+<!--                     ),0) AVAILABLE_POINT -->
+<!-- 					, NVL(SUM( -->
+<!-- 			                    CASE WHEN TO_CHAR(SYSDATE,'YYYYMMDD') > VALID_PERD_END_YMD AND OCCUR_POINT_SCORE > 0 THEN -->
+<!-- 			                    		OCCUR_POINT_SCORE - NVL((SELECT NVL(SUM(USE_POINT_SCORE),0) FROM CRM_POINT_USE_REL WHERE OCCUR_POINT_HST_SEQ = A.POINT_HST_SEQ ),0)  -->
+<!-- 			                        ELSE 0 END -->
+<!--                     ),0) EXPIRED_POINT -->
+<!--                     , NVL(SUM( -->
+<!--                     			CASE WHEN USE_TYPE_CD != '001' OR CHIT_NO IN (SELECT CHIT_NO FROM CRM_POINT_HST WHERE ITG_CUST_NO = #{itgCustNo} AND USE_TYPE_CD = '003') THEN 0 -->
+<!--                     			ELSE OCCUR_POINT_SCORE END -->
+<!--                     ),0) * -1 TOTAL_WITHDRAWAL -->
+<!--                     , NVL(SUM( -->
+<!--                     			CASE WHEN USE_TYPE_CD != '002' OR CHIT_NO IN (SELECT CHIT_NO FROM CRM_POINT_HST WHERE ITG_CUST_NO = #{itgCustNo} AND USE_TYPE_CD = '003') THEN 0 -->
+<!--                     			ELSE OCCUR_POINT_SCORE END -->
+<!--                     ),0) TOTAL_DEPOSIT -->
+<!--                  FROM CRM_POINT_HST A -->
+<!--         		WHERE ITG_CUST_NO = #{itgCustNo} -->
+                
+                  SELECT A.*
+	                   , A.REMAIN_POINT_SCORE - A.NOT_AVAILABLE_POINT AVAILABLE_POINT 
+                       , A.REMAIN_POINT_SCORE TOTAL_POINT
+                       , #{itgCustNo} ITG_CUST_NO
+                    FROM ( SELECT ( SELECT SUM(OCCUR_POINT_SCORE) FROM CRM_POINT_HST WHERE ITG_CUST_NO = #{itgCustNo}) REMAIN_POINT_SCORE
+                                , 0 NOT_AVAILABLE_POINT    
+                                , ( SELECT NVL(SUM(OCCUR_POINT_SCORE),0)* -1 EXPIRED_POINT 
+                                      FROM CRM_POINT_HST 
+                                     WHERE ITG_CUST_NO = #{itgCustNo}
+                                       AND 0 > OCCUR_POINT_SCORE
+                                       AND PBLS_DIV_CD = '998' ) EXPIRED_POINT
+                                , ( SELECT NVL(SUM(OCCUR_POINT_SCORE),0) TOTAL_WITHDRAWAL 
+                                      FROM CRM_POINT_HST 
+                                     WHERE ITG_CUST_NO = #{itgCustNo}
+                                       AND 0 > OCCUR_POINT_SCORE 
+                                       AND USE_TYPE_CD = '001'
+                                       AND PBLS_DIV_CD != '998' 
+                                       AND CHIT_NO NOT IN (SELECT CHIT_NO 
+                                                             FROM CRM_POINT_HST 
+                                                            WHERE ITG_CUST_NO = #{itgCustNo} 
+                                                              AND USE_TYPE_CD = '003') ) TOTAL_WITHDRAWAL
+                                , ( SELECT NVL(SUM(OCCUR_POINT_SCORE),0) TOTAL_DEPOSIT 
+                                      FROM CRM_POINT_HST 
+                                     WHERE ITG_CUST_NO = #{itgCustNo}
+                                      AND OCCUR_POINT_SCORE > 0
+                                      AND USE_TYPE_CD != '001'
+                                      AND CHIT_NO NOT IN (SELECT CHIT_NO FROM CRM_POINT_HST WHERE ITG_CUST_NO = #{itgCustNo} AND USE_TYPE_CD = '003') ) TOTAL_DEPOSIT
+                            FROM DUAL ) A
     </select>
     
      <select id="selectAvailableList" resultType="com.ceragem.api.crm.model.CrmPointHstVo">
-               SELECT /* com.ceragem.api.crm.dao.CrmPointHstDao.selectAvailableList */ <include refid="sqlSelectCols"/>
-                    , NVL((SELECT SUM(USE_POINT_SCORE) FROM CRM_POINT_USE_REL WHERE OCCUR_POINT_HST_SEQ = A.POINT_HST_SEQ),0) USE_POINT_SCORE
+     /* com.ceragem.api.crm.dao.CrmPointHstDao.selectAvailableList */
+     
+<!--                SELECT /* com.ceragem.api.crm.dao.CrmPointHstDao.selectAvailableList */ <include refid="sqlSelectCols"/> -->
+<!--                     , NVL((SELECT SUM(USE_POINT_SCORE) FROM CRM_POINT_USE_REL WHERE OCCUR_POINT_HST_SEQ = A.POINT_HST_SEQ),0) USE_POINT_SCORE -->
+<!--                  FROM CRM_POINT_HST A -->
+<!--         		WHERE ITG_CUST_NO = #{itgCustNo} -->
+<!--         		  AND EXTNC_DT IS NULL -->
+<!--         		  AND OCCUR_POINT_SCORE > 0 -->
+<!--         		  AND TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN VALID_PERD_STA_YMD AND VALID_PERD_END_YMD  -->
+<!--                 ORDER BY VALID_PERD_END_YMD -->
+<!--                     , POINT_HST_SEQ -->
+               SELECT A.POINT_HST_SEQ                    /*포인트이력일련번호        */
+                    , A.ITG_CUST_NO                    /*통합고객번호        */
+                    , A.MSHIP_GRADE_CD                    /*멤버십등급코드        공통코드 : MB020        [001 : 일반 , 002 : 화이트 , 003 : 브론즈 , 004 : 실버 , 005 : 골드 , 006 : VIP]*/
+                    , A.STOR_NO                    /*매장번호        */
+                    , A.CHIT_NO                    /*전표번호        */
+                    , A.BUY_GODS_NO                    /*구매제품번호        */
+                    , A.ORDR_AMT                    /*주문금액        */
+                    , A.APPLY_AMT                    /*적용금액        */
+                    , A.PAY_AMT                    /*결제금액        */
+                    , A.PBLS_DIV_CD                      /*발행구분코드        공통코드 : PO020        [001 : 구매포인트 , 002 : 구매추천포인트 , 003 : 웰카페체험추천포인트 , 004 : 홈체험추천포인트 , 005 : 웰카페체험포인트 , 006 : 홈카페체험포인트 , 007 : 구매등급포인트 , 008 : 승급포인트 , 009 : 쿠폰포인트 , 010 : 출석체크포인트 , 011 : 세라체크포인트 , 012 : 서베이포인트 , 013 : 후기포인트 , 014 : iot포인트 , 101 : 선물 , 999 : 기타]*/
+                    , NVL(B.OCCUR_POINT_SCORE, A.OCCUR_POINT_SCORE) OCCUR_POINT_SCORE                    /*발생포인트점수        */
+                    , A.REMAIN_POINT_SCORE           /*잔여포인트점수*/
+                    , NVL(B.VALID_PERD_STA_YMD , A.VALID_PERD_STA_YMD )   VALID_PERD_STA_YMD                /*유효기간시작년월일        */
+                    , NVL(B.VALID_PERD_END_YMD , A.VALID_PERD_END_YMD) VALID_PERD_END_YMD                   /*유효기간종료년월일        */
+                    , TO_CHAR(A.PBLS_DT,'YYYYMMDDHH24MISS')    PBLS_DT                    /*발행일시        */
+                    , TO_CHAR(NVL(B.EXTNC_DT,A.EXTNC_DT),'YYYYMMDDHH24MISS')    EXTNC_DT                    /*소멸일시        */
+                    , A.TXN                    /*내역        */
+                    , A.PBLS_CHL_CD                    /*발행채널코드        공통코드 : S000        [CTC : 상담 , AS : AS , SAP : SAP , test : test]*/
+                    , A.CARD_PBLS_HST_SEQ                    /*카드발행이력일련번호        */
+                    , A.USE_TYPE_CD                    /*사용유형코드        공통코드 : PO010        [001 : 사용 , 002 : 적립 , 003 : 취소]*/
+                    , A.DEAL_NO                    /*거래번호        */
+                    , A.PROM_NO                    /*프로모션번호        */
+                    , A.CAMP_NO                    /*캠페인번호        */
+                    , A.COUPN_NO                    /*쿠폰번호        */
+                    , TO_CHAR(A.USE_DT,'YYYYMMDDHH24MISS')    USE_DT                    /*사용일시        */
+                    , A.AMDR_ID                    /*수정자ID        */
+                    , TO_CHAR(A.AMD_DT,'YYYYMMDDHH24MISS')    AMD_DT                    /*수정일시        */
+                    , A.REGR_ID                    /*등록자ID        */
+                    , TO_CHAR(A.REG_DT,'YYYYMMDDHH24MISS')    REG_DT                    /*등록일시        */
+                    , A.REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CTC : 상담 , AS : AS , SAP : SAP , test : test]*/
+                    , NVL((SELECT SUM(USE_POINT_SCORE) FROM CRM_POINT_USE_REL WHERE OCCUR_POINT_HST_SEQ = NVL(b.POINT_PERD_HST_SEQ,A.POINT_HST_SEQ)),0) USE_POINT_SCORE
+                    , B.POINT_PERD_HST_SEQ
+                    , NVL(B.POINT_PERD_HST_SEQ,A.POINT_HST_SEQ) POINT_SEQ
                  FROM CRM_POINT_HST A
-        		WHERE ITG_CUST_NO = #{itgCustNo}
-        		  AND EXTNC_DT IS NULL
-<!--                   AND OCCUR_POINT_SCORE - NVL((SELECT SUM(USE_POINT_SCORE) FROM CRM_POINT_USE_REL WHERE OCCUR_POINT_HST_SEQ = A.POINT_HST_SEQ),0) > 0  -->
-        		  AND OCCUR_POINT_SCORE > 0
-        		  AND TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN VALID_PERD_STA_YMD AND VALID_PERD_END_YMD 
-                ORDER BY VALID_PERD_END_YMD
-                    , POINT_HST_SEQ
+                 LEFT JOIN CRM_POINT_PERD_HST B ON A.POINT_HST_SEQ = B.POINT_HST_SEQ
+                WHERE A.ITG_CUST_NO = #{itgCustNo}
+                  AND NVL(B.EXTNC_DT,A.EXTNC_DT) IS NULL
+                  AND NVL(B.OCCUR_POINT_SCORE, A.OCCUR_POINT_SCORE) > 0
+                ORDER BY NVL(B.VALID_PERD_END_YMD , A.VALID_PERD_END_YMD )
+                    , A.POINT_HST_SEQ
+                    , B.POINT_PERD_HST_SEQ
     </select>
     
     <select id="selectDebtList" resultType="com.ceragem.api.crm.model.CrmPointHstVo">
@@ -391,7 +478,7 @@
     </select>
     
     
-     <select id="selectChitNoChk" resultType="com.ceragem.api.crm.model.CrmPointHstVo">
+     <select id="selectChitNoChk" resultType="EzMap">
        SELECT /* com.ceragem.api.crm.dao.CrmPointHstDao.selectChitNoChk */ A.* 
          FROM ( 
 			SELECT 
@@ -403,5 +490,400 @@
 		WHERE PNT_CNT > 0 OR CPN_CNT  > 0 OR ADVN_CNT > 0
     </select>
     
-    
+    <select id="selectUseRelList" resultType="com.ceragem.api.crm.model.CrmPointHstVo" >
+     /* com.ceragem.api.crm.dao.CrmPointHstDao.selectUseRelList */
+        SELECT SUM(A.USE_POINT_SCORE) OCCUR_POINT_SCORE
+             , TO_CHAR(SYSDATE,'YYYYMMDD') VALID_PERD_STA_YMD
+             , B.VALID_PERD_END_YMD 
+             , #{pointHstSeq} POINT_HST_SEQ
+             , LISTAGG(A.OCCUR_POINT_HST_SEQ || '#' || A.USE_POINT_HST_SEQ ,',') within group (ORDER BY A.OCCUR_POINT_HST_SEQ , A.USE_POINT_HST_SEQ ) POINT_SEQ
+          FROM CRM_POINT_USE_REL A
+         INNER JOIN ( SELECT A.POINT_HST_SEQ                    /*포인트이력일련번호        */
+                           , A.ITG_CUST_NO                    /*통합고객번호        */
+                           
+                           , NVL(B.OCCUR_POINT_SCORE, A.OCCUR_POINT_SCORE) OCCUR_POINT_SCORE                    /*발생포인트점수        */
+                           
+                           , CASE WHEN #{useExtendYn} = 'N' THEN
+                                        NVL(B.VALID_PERD_END_YMD , A.VALID_PERD_END_YMD)
+                                  ELSE
+                                        CASE WHEN TO_CHAR(SYSDATE + 7,'YYYYMMDD') >= NVL(B.VALID_PERD_END_YMD , A.VALID_PERD_END_YMD) THEN TO_CHAR(SYSDATE + 30,'YYYYMMDD') ELSE  NVL(B.VALID_PERD_END_YMD , A.VALID_PERD_END_YMD) END                    /*유효기간종료년월일        */ 
+                                  END VALID_PERD_END_YMD
+                           , NVL(B.POINT_PERD_HST_SEQ,A.POINT_HST_SEQ) POINT_SEQ FROM  CRM_POINT_HST A
+                        LEFT JOIN CRM_POINT_PERD_HST B ON A.POINT_HST_SEQ = B.POINT_HST_SEQ
+                     ) B ON A.OCCUR_POINT_HST_SEQ = B.POINT_SEQ 
+        WHERE USE_POINT_HST_SEQ = #{pointHstSeq}
+        GROUP BY B.VALID_PERD_END_YMD
+        ORDER BY VALID_PERD_END_YMD DESC
+    </select>
+    <insert id="insertPerdHst">
+     /* com.ceragem.api.crm.dao.CrmPointHstDao.insertPerdHst */
+        <selectKey order="BEFORE" keyProperty="pointPerdHstSeq" resultType="String">
+            SELECT FN_CRM_AUTO_SEQ('PH') FROM DUAL
+        </selectKey>
+                INSERT INTO CRM_POINT_PERD_HST (
+                      POINT_PERD_HST_SEQ                    /*포인트기간이력일련번호        */
+                    , POINT_HST_SEQ                    /*포인트이력일련번호        */
+                    , OCCUR_POINT_SCORE                    /*발생포인트점수        */
+                    , VALID_PERD_STA_YMD                    /*유효기간시작년월일        */
+                    , VALID_PERD_END_YMD                    /*유효기간종료년월일        */
+                    , EXTNC_DT                    /*소멸일시        */
+                    , AMDR_ID                    /*수정자ID        */
+                    , AMD_DT                    /*수정일시        */
+                    , REGR_ID                    /*등록자ID        */
+                    , REG_DT                    /*등록일시        */
+                 ) VALUES (
+                       #{pointPerdHstSeq}
+                     , #{pointHstSeq}
+                     , #{occurPointScore}
+                     , NVL(#{validPerdStaYmd},TO_CHAR(SYSDATE,'YYYYMMDD'))
+                     , NVL(#{validPerdEndYmd},TO_CHAR(SYSDATE+30,'YYYYMMDD')) 
+                     , TO_DATE(#{extncDt},'YYYYMMDDHH24MISS')
+                     , #{amdrId}
+                     , SYSDATE
+                     , #{regrId}
+                     , SYSDATE
+                 )
+    </insert>
+    <insert id="insertRestoreHst">
+    /* com.ceragem.api.crm.dao.CrmPointHstDao.insertRestoreHst */
+              INSERT INTO CRM_POINT_RESTORE_HST (
+                      POINT_PERD_HST_SEQ                    /*포인트기간이력일련번호        */
+                    , OCCUR_POINT_HST_SEQ                    /*발생포인트이력일련번호        */
+                    , USE_POINT_HST_SEQ                       /*사용포인트이력일련번호        */
+                    , AMDR_ID                    /*수정자ID        */
+                    , AMD_DT                    /*수정일시        */
+                    , REGR_ID                    /*등록자ID        */
+                    , REG_DT                    /*등록일시        */
+                 ) VALUES (
+                       #{pointPerdHstSeq}
+                     , #{occurPointHstSeq}
+                     , #{usePointHstSeq}
+                     , #{amdrId}
+                     , SYSDATE
+                     , #{regrId}
+                     , SYSDATE
+                 )
+    </insert>
+    <update id="updatePerdDt">
+               UPDATE CRM_POINT_HST  /* com.ceragem.api.crm.dao.CrmPointHstDao.updatePerdDt */ 
+                  SET VALID_PERD_STA_YMD = (SELECT MIN(VALID_PERD_STA_YMD) FROM CRM_POINT_PERD_HST WHERE POINT_HST_SEQ = #{pointHstSeq} )
+                    , VALID_PERD_END_YMD = (SELECT MAX(VALID_PERD_END_YMD) FROM CRM_POINT_PERD_HST WHERE POINT_HST_SEQ = #{pointHstSeq} )
+        <include refid="sqlPkConditions"/>
+    </update>
+    <select id="selectValidPerd" resultType="com.ceragem.api.crm.model.CrmPointHstVo">
+    /* com.ceragem.api.crm.dao.CrmPointHstDao.selectValidPerd */ 
+                 SELECT A.* 
+                  FROM (
+                              SELECT A.MSHIP_PLCY_BAS_NO 
+                                   , NVL(A.MSHIP_GRADE_CD,'003') MSHIP_TYPE_CD
+                                   , NVL(A.MSHP_GRADE_CD,'001') MSHIP_GRADE_CD 
+                                   , B.EVENT_COMN_CD EVENT_CD
+                                   , NVL(B.VALID_PERD_CD,'001') VALID_PERD_CD
+                                   , B.VALID_PERD_YMD VALID_PERD_YMD
+                                   , B.VALID_PERD
+                                   , TO_CHAR(SYSDATE,'YYYYMMDD') VALID_PERD_STA_YMD
+                                   , CASE WHEN NVL(B.VALID_PERD_CD,'001') = '001' THEN TO_CHAR(ADD_MONTHS(SYSDATE,NVL(B.VALID_PERD,1) * 12),'YYYYMMDD')
+                                          WHEN NVL(B.VALID_PERD_CD,'001') = '002' THEN TO_CHAR(ADD_MONTHS(SYSDATE,NVL(B.VALID_PERD,1) ) ,'YYYYMMDD')
+                                          WHEN NVL(B.VALID_PERD_CD,'001') = '003' THEN TO_CHAR(SYSDATE +  NVL(B.VALID_PERD,30),'YYYYMMDD')
+                                          WHEN NVL(B.VALID_PERD_CD,'001') = '999' THEN NVL(B.VALID_PERD_YMD,TO_CHAR(ADD_MONTHS(SYSDATE,12 ) ,'YYYYMMDD'))
+                                      END VALID_PERD_END_YMD
+                                   , ROW_NUMBER() OVER (PARTITION BY NVL(A.MSHIP_GRADE_CD,'003') ,NVL(A.MSHP_GRADE_CD,'001'), B.EVENT_COMN_CD  ORDER BY B.AMD_DT DESC) RNUM
+                                FROM CRM_MSHIP_PLCY_BAS  A
+                               INNER JOIN  CRM_MSHIP_APPLY_POINT_REL B ON A.MSHIP_PLCY_BAS_NO = B.MSHIP_PLCY_BAS_NO
+                               WHERE TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN APPLY_STD_STA_YMD AND APPLY_STD_END_YMD
+                                 AND A.STATUS_CD = 'Y'
+                     ) A
+                     INNER JOIN CRM_CUST_BAS B ON A.MSHIP_TYPE_CD = DECODE(NVL(B.MSHIP_TYPE_CD,'003'),'003',A.MSHIP_TYPE_CD,B.MSHIP_TYPE_CD) AND A.MSHIP_GRADE_CD = DECODE(NVL(B.MSHIP_TYPE_CD,'003'),'003',B.MSHIP_GRADE_CD,A.MSHIP_GRADE_CD) 
+                     WHERE RNUM = 1 
+                     AND B.ITG_CUST_NO = #{itgCustNo}
+                     AND A.EVENT_CD = #{pblsDivCd}
+                
+    </select>
+    <select id="selectExpireList" resultType="com.ceragem.api.crm.model.CrmPointHstVo">
+    /* com.ceragem.api.crm.dao.CrmPointHstDao.selectExpireList */
+                SELECT A.POINT_HST_SEQ
+                     , A.ITG_CUST_NO
+                     , (SELECT MSHIP_GRADE_CD FROM CRM_CUST_BAS WHERE ITG_CUST_NO = A.ITG_CUST_NO) MSHIP_GRADE_CD
+                     , A.STOR_NO
+                     , A.CHIT_NO
+                     , A.BUY_GODS_NO
+                     , A.ORDR_AMT
+                     , A.APPLY_AMT
+                     , A.PAY_AMT
+                     , A.PBLS_DIV_CD
+                     , A.OCCUR_POINT_SCORE
+                     , NVL(B.OCCUR_POINT_SCORE,A.OCCUR_POINT_SCORE) POINT_SCORE
+                     , A.REMAIN_POINT_SCORE
+                     , NVL(B.VALID_PERD_STA_YMD,A.VALID_PERD_STA_YMD) VALID_PERD_STA_YMD
+                     , NVL(B.VALID_PERD_END_YMD,A.VALID_PERD_END_YMD) VALID_PERD_END_YMD 
+                     , A.PBLS_DT
+                     , NVL(B.EXTNC_DT,A.EXTNC_DT) EXTNC_DT
+                     , A.TXN
+                     , A.PBLS_CHL_CD
+                     , A.CARD_PBLS_HST_SEQ
+                     , A.USE_TYPE_CD
+                     , A.DEAL_NO
+                     , A.PROM_NO
+                     , A.CAMP_NO
+                     , A.COUPN_NO
+                     , A.USE_DT
+                     , A.ACCUM_YN
+                     , A.ADMT_DT
+                     , A.AMDR_ID
+                     , A.AMD_DT
+                     , A.REGR_ID
+                     , A.REG_DT
+                     , A.REG_CHL_CD
+                     , A.RCMDR_CUST_NO
+                     , A.ORG_CHIT_NO
+                     , NVL(B.POINT_PERD_HST_SEQ , A.POINT_HST_SEQ) POINT_SEQ
+                     , B.POINT_PERD_HST_SEQ
+                     , NVL((SELECT SUM(USE_POINT_SCORE) FROM CRM_POINT_USE_REL WHERE NVL(B.POINT_PERD_HST_SEQ,A.POINT_HST_SEQ) = OCCUR_POINT_HST_SEQ),0) USE_POINT_SCORE
+                  FROM CRM_POINT_HST A
+                  LEFT JOIN CRM_POINT_PERD_HST B ON A.POINT_HST_SEQ = B.POINT_HST_SEQ AND B.EXTNC_DT IS NULL
+                 WHERE A.OCCUR_POINT_SCORE > 0
+                   AND A.EXTNC_DT IS NULL
+                   AND TO_CHAR(SYSDATE,'YYYYMMDD') > NVL(B.VALID_PERD_END_YMD,A.VALID_PERD_END_YMD)
+                   AND A.POINT_HST_SEQ = #{pointHstSeq}
+                 ORDER BY A.ITG_CUST_NO
+                     , A.POINT_HST_SEQ
+                     , NVL(B.VALID_PERD_END_YMD,A.VALID_PERD_END_YMD)
+                     , NVL(B.VALID_PERD_STA_YMD,A.VALID_PERD_STA_YMD)
+                     , B.POINT_PERD_HST_SEQ
+    </select>
+    <select id="selectLastPoint" resultType="com.ceragem.api.crm.model.CrmPointHstVo">
+    /* com.ceragem.api.crm.dao.CrmPointHstDao.selectLastPoint */
+            SELECT A.*
+                 , DAMO.DECRYPT_VAR_B64('AES_256',B.MPHON_NO,'') MPHON_NO
+              FROM ( SELECT A.POINT_HST_SEQ                    /*포인트이력일련번호        */
+                            , A.ITG_CUST_NO                    /*통합고객번호        */
+                            , A.MSHIP_GRADE_CD                    /*멤버십등급코드        */
+                            , A.STOR_NO                    /*매장번호        */
+                            , A.CHIT_NO                    /*전표번호        */
+                            , A.BUY_GODS_NO                    /*구매제품번호        */
+                            , A.ORDR_AMT                    /*주문금액        */
+                            , A.APPLY_AMT                    /*적용금액        */
+                            , A.PAY_AMT                    /*결제금액        */
+                            , A.PBLS_DIV_CD                    /*발행구분코드        */
+                            , A.OCCUR_POINT_SCORE                    /*발생포인트점수        */
+                            , A.REMAIN_POINT_SCORE                    /*잔여포인트점수        */
+                            , A.VALID_PERD_STA_YMD                    /*유효기간시작년월일        */
+                            , A.VALID_PERD_END_YMD                    /*유효기간종료년월일        */
+                            , TO_CHAR(A.PBLS_DT,'YYYYMMDDHH24MISS')    PBLS_DT                    /*발행일시        */
+                            , TO_CHAR(A.EXTNC_DT,'YYYYMMDDHH24MISS')    EXTNC_DT                    /*소멸일시        */
+                            , A.TXN                    /*내역        */
+                            , A.PBLS_CHL_CD                    /*발행채널코드        */
+                            , A.CARD_PBLS_HST_SEQ                    /*카드발행이력일련번호        */
+                            , A.USE_TYPE_CD                    /*사용유형코드        */
+                            , A.DEAL_NO                    /*거래번호        */
+                            , A.PROM_NO                    /*프로모션번호        */
+                            , A.CAMP_NO                    /*캠페인번호        */
+                            , A.COUPN_NO                    /*쿠폰번호        */
+                            , TO_CHAR(A.USE_DT,'YYYYMMDDHH24MISS')    USE_DT                    /*사용일시        */
+                            , A.ACCUM_YN                    /*적립여부        */
+                            , TO_CHAR(A.ADMT_DT,'YYYYMMDDHH24MISS')    ADMT_DT                    /*정산일시        */
+                            , A.AMDR_ID                    /*수정자ID        */
+                            , TO_CHAR(A.AMD_DT,'YYYYMMDDHH24MISS')    AMD_DT                    /*수정일시        */
+                            , A.REGR_ID                    /*등록자ID        */
+                            , TO_CHAR(A.REG_DT,'YYYYMMDDHH24MISS')    REG_DT                    /*등록일시        */
+                            , A.REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS , BOS : BOS , MEM : 멤버십 , CRA : 세라체크 , DNA : 세라DNA , IoT : IoT , PRC : 부모님연구소 , EON : 발송]*/
+                            , A.RCMDR_CUST_NO                    /*추천인통합고객번호        */
+                            , A.ORG_CHIT_NO                    /*원본 전표번호(추천일 경우만 저장)        */
+                            , ROW_NUMBER() OVER (ORDER BY POINT_HST_SEQ DESC) RNUM
+                       FROM CRM_POINT_HST A
+                       WHERE ITG_CUST_NO = #{itgCustNo}) A
+              INNER JOIN CRM_CUST_BAS B ON A.ITG_CUST_NO = B.ITG_CUST_NO
+             WHERE RNUM = 1                      
+    </select>
+     <insert id="insertUseRel">
+     /* com.ceragem.api.crm.dao.CrmPointHstDao.insertUseRel */ 
+              INSERT INTO CRM_POINT_USE_REL (
+                      OCCUR_POINT_HST_SEQ                    /*발생포인트이력일련번호        */
+                    , USE_POINT_HST_SEQ                    /*사용포인트이력일련번호        */
+                    , ITG_CUST_NO                    /*통합고객번호        */
+                    , PBLS_DIV_CD                    /*발행구분코드        */
+                    , TXN                    /*내역        */
+                    , USE_AMT                    /*사용금액        */
+                    , USE_POINT_SCORE                    /*사용포인트점수        */
+                    , STOR_NO                    /*매장번호        */
+                    , USE_CHL_CD                    /*사용채널코드        */
+                    , USE_DT                    /*사용일시        */
+                    , AMDR_ID                    /*수정자ID        */
+                    , AMD_DT                    /*수정일시        */
+                    , REGR_ID                    /*등록자ID        */
+                    , REG_DT                    /*등록일시        */
+                    , REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS , BOS : BOS , MEM : 멤버십 , CRA : 세라체크 , DNA : 세라DNA , IoT : IoT , PRC : 부모님연구소 , EON : 발송]*/
+                 ) VALUES (
+                       #{occurPointHstSeq}
+                     , #{usePointHstSeq}
+                     , NULL
+                     , NULL
+                     , NULL
+                     , #{useAmt}
+                     , #{usePointScore}
+                     , NULL
+                     , 'CRM'
+                     , SYSDATE
+                     , 'CRM'
+                     , SYSDATE
+                     , 'CRM'
+                     , SYSDATE
+                     , 'CRM'
+                 )
+        
+    </insert>
+    <update id="updateExpire">
+               UPDATE /* com.ceragem.api.crm.dao.CrmPointHstDao.updateExpire */ CRM_POINT_HST
+                  SET EXTNC_DT                                =         SYSDATE
+                WHERE POINT_HST_SEQ     =       #{pointHstSeq}
+                  AND EXTNC_DT IS NULL
+    </update>
+     <update id="updateExpirePerd">
+               UPDATE /* com.ceragem.api.crm.dao.CrmPointHstDao.updateExpirePerd */ CRM_POINT_PERD_HST
+                  SET EXTNC_DT                                =         SYSDATE
+                WHERE POINT_PERD_HST_SEQ = #{pointPerdHstSeq}
+                  AND EXTNC_DT IS NULL
+    </update>
+    <update id="updatePointSum">
+    </update>
+    <select id="selectPointExceptList" resultType="com.ceragem.api.crm.model.CrmPointExceptVo">
+      SELECT A.*
+        FROM ( SELECT A.*
+                 , ROW_NUMBER() OVER (PARTITION BY A.CHL_CD,MSHIP_PLCY_BAS_NO,GODS_NO ORDER BY CLSS_LVL DESC) RNUM
+              FROM (
+                      SELECT A.PLCY_GODS_REL_ID
+                           , A.MSHIP_PLCY_BAS_NO
+                           , NULL GODS_CLASS_CD
+                           , A.GODS_NO
+                           , A.BUY_ACCUM_TYPE_CD
+                           , DECODE(A.BUY_ACCUM_TYPE_CD,'001', NVL(A.BUY_ACCUM_POINT_RATE,0),0) BUY_ACCUM_POINT_RATE
+                           , DECODE(A.BUY_ACCUM_TYPE_CD,'002', NVL(A.BUY_ACCUM_POINT_SCORE,0),0) BUY_ACCUM_POINT_SCORE
+                           , A.CHL_CD
+                           , B.MSHIP_GRADE_CD /*001임직원, 002제휴, 003회원*/
+                           , B.MSHP_GRADE_CD  /*멤버십등급*/
+                           , B.MSHIP_PLCY_NM
+                           , 4 CLSS_LVL
+                           , C.GODS_NM
+                        FROM CRM_MSHIP_PLCY_GODS_REL A
+                       INNER JOIN CRM_MSHIP_PLCY_BAS B ON A.MSHIP_PLCY_BAS_NO = B.MSHIP_PLCY_BAS_NO AND TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN B.APPLY_STD_STA_YMD AND B.APPLY_STD_END_YMD
+                       INNER JOIN CRM_GODS_BAS C ON A.GODS_NO = C.GODS_NO
+                       WHERE A.GODS_TYPE_CD = '001'
+                        UNION ALL                      
+                      SELECT A.PLCY_GODS_REL_ID
+                           , A.MSHIP_PLCY_BAS_NO
+                           , A.GODS_CLASS_CD
+                           , D.GODS_NO
+                           , A.BUY_ACCUM_TYPE_CD
+                           , DECODE(A.BUY_ACCUM_TYPE_CD,'001', NVL(A.BUY_ACCUM_POINT_RATE,0),0) BUY_ACCUM_POINT_RATE
+                           , DECODE(A.BUY_ACCUM_TYPE_CD,'002', NVL(A.BUY_ACCUM_POINT_SCORE,0),0) BUY_ACCUM_POINT_SCORE
+                           , A.CHL_CD
+                           , B.MSHIP_GRADE_CD /*001임직원, 002제휴, 003회원*/
+                           , B.MSHP_GRADE_CD  /*멤버십등급*/
+                           , B.MSHIP_PLCY_NM
+                           , C.CLSS_LVL
+                           , D.GODS_NM
+                        FROM CRM_MSHIP_PLCY_GODS_REL A
+                       INNER JOIN CRM_MSHIP_PLCY_BAS B ON A.MSHIP_PLCY_BAS_NO = B.MSHIP_PLCY_BAS_NO AND TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN B.APPLY_STD_STA_YMD AND B.APPLY_STD_END_YMD
+                       INNER JOIN (SELECT GODS_CLASS_CD
+                            , GODS_CLASS_CD_NM
+                            , GODS_CLASS_SORT_NO
+                            , GODS_LCLSS_CD
+                            , GODS_LCLSS_CD_NM
+                            , GODS_LCLSS_SORT_NO
+                            , GODS_MCLSS_CD
+                            , GODS_MCLSS_CD_NM
+                            , GODS_MCLSS_SORT_NO
+                            , GODS_CLASS_CD GODS_SCLSS_CD
+                            , GODS_CLASS_CD_NM GODS_SCLSS_CD_NM
+                            , GODS_CLASS_SORT_NO GODS_SCLSS_SORT_NO
+                            , 3 CLSS_LVL 
+                         FROM CRM_GODS_CLASS_BAS
+                        WHERE USE_YN = 'Y'
+                        UNION ALL
+                       SELECT DISTINCT GODS_LCLSS_CD GODS_CLASS_CD
+                            , GODS_LCLSS_CD_NM GODS_CLASS_CD_NM
+                            , GODS_LCLSS_SORT_NO GODS_CLASS_SORT_NO 
+                            , GODS_LCLSS_CD
+                            , GODS_LCLSS_CD_NM
+                            , GODS_LCLSS_SORT_NO
+                            , NULL GODS_MCLSS_CD
+                            , NULL GODS_MCLSS_CD_NM
+                            , 0 GODS_MCLSS_SORT_NO
+                            , NULL GODS_SCLSS_CD
+                            , NULL  GODS_SCLSS_CD_NM
+                            , 0  GODS_SCLSS_SORT_NO
+                            , 1 CLSS_LVL 
+                         FROM CRM_GODS_CLASS_BAS
+                        WHERE USE_YN = 'Y' 
+                        UNION ALL
+                       SELECT DISTINCT GODS_MCLSS_CD GODS_CLASS_CD
+                            , GODS_MCLSS_CD_NM GODS_CLASS_CD_NM
+                            , GODS_MCLSS_SORT_NO GODS_CLASS_SORT_NO 
+                            , GODS_LCLSS_CD
+                            , GODS_LCLSS_CD_NM
+                            , GODS_LCLSS_SORT_NO
+                            , GODS_MCLSS_CD
+                            , GODS_MCLSS_CD_NM
+                            , GODS_MCLSS_SORT_NO
+                            , NULL GODS_SCLSS_CD
+                            , NULL  GODS_SCLSS_CD_NM
+                            , 0  GODS_SCLSS_SORT_NO
+                            , 2 CLSS_LVL 
+                         FROM CRM_GODS_CLASS_BAS
+                        WHERE USE_YN = 'Y' ) C ON A.GODS_CLASS_CD = C.GODS_CLASS_CD
+                       INNER JOIN CRM_GODS_BAS D ON D.GODS_CLASS_CD LIKE A.GODS_CLASS_CD || '%'
+                       WHERE A.GODS_TYPE_CD = '002'
+                       ) A
+                 )A WHERE RNUM = 1
+                 ORDER BY GODS_NO        
+    </select>
+    <select id="selectPointExpireList" resultType="com.ceragem.api.crm.model.CrmPointExpireVo">
+    /* com.ceragem.batch.crm.dao.CrmPointHstDao.selectPointExpireList */
+          SELECT ITG_CUST_NO
+               , TO_CHAR(PBLS_DT,'YYYYMMDDHH24MISS') PBLS_DT
+               , TO_CHAR(PBLS_DT,'YYYYMMDDHH') PBLS_YMD
+               , VALID_PERD_END_YMD EXPIRE_YMD
+               , POINT_SCORE PBLS_POINT
+               , USE_POINT_SCORE USE_POINT
+               , POINT_SCORE-USE_POINT_SCORE EXPIRE_POINT 
+               , USE_TYPE_CD
+               , PBLS_DIV_CD
+               , PBLS_CHL_CD
+               , ( SELECT COMN_CD_NM 
+                         FROM CRM_COMN_CD_BAS
+                        WHERE TOP_COMN_CD = 'EV100' 
+                          AND COMN_CD  = A.PBLS_DIV_CD
+                          AND COMN_CD_LVL_NO = 2 ) PBLS_DIV_CD_NM  /*EV100*/
+               , ( SELECT COMN_CD_NM 
+                         FROM CRM_COMN_CD_BAS
+                        WHERE TOP_COMN_CD = 'PO010' 
+                          AND COMN_CD  = A.USE_TYPE_CD
+                          AND COMN_CD_LVL_NO = 2 ) USE_TYPE_CD_NM /*PO010*/
+               , ( SELECT COMN_CD_NM 
+                         FROM CRM_COMN_CD_BAS
+                        WHERE TOP_COMN_CD = 'S000' 
+                          AND COMN_CD  = A.PBLS_CHL_CD
+                          AND COMN_CD_LVL_NO = 2 ) PBLS_CHL_CD_NM /*S000*/
+            FROM  ( SELECT  A.POINT_HST_SEQ
+                         , A.ITG_CUST_NO
+                         , A.STOR_NO
+                         , A.PBLS_DIV_CD
+                         , A.USE_TYPE_CD
+                         , A.PBLS_DT
+                         , A.PBLS_CHL_CD
+                         , NVL(B.OCCUR_POINT_SCORE,A.OCCUR_POINT_SCORE) POINT_SCORE
+                         , NVL(B.VALID_PERD_STA_YMD,A.VALID_PERD_STA_YMD) VALID_PERD_STA_YMD
+                         , NVL(B.VALID_PERD_END_YMD,A.VALID_PERD_END_YMD) VALID_PERD_END_YMD 
+                         , NVL(B.POINT_PERD_HST_SEQ , A.POINT_HST_SEQ) POINT_SEQ
+                         , NVL((SELECT SUM(USE_POINT_SCORE) FROM CRM_POINT_USE_REL WHERE NVL(B.POINT_PERD_HST_SEQ,A.POINT_HST_SEQ) = OCCUR_POINT_HST_SEQ),0) USE_POINT_SCORE
+                      FROM CRM_POINT_HST A
+                      LEFT JOIN CRM_POINT_PERD_HST B ON A.POINT_HST_SEQ = B.POINT_HST_SEQ AND B.EXTNC_DT IS NULL
+                     WHERE A.OCCUR_POINT_SCORE > 0
+                       AND A.EXTNC_DT IS NULL
+                       AND A.ITG_CUST_NO = #{itgCustNo}
+                       AND NVL(#{expireYmd} , TO_CHAR(SYSDATE + 90,'YYYYMMDD')) >= NVL(B.VALID_PERD_END_YMD,A.VALID_PERD_END_YMD) ) A
+             ORDER BY ITG_CUST_NO
+                 , VALID_PERD_END_YMD
+                 , PBLS_DT
+    </select>
 </mapper>

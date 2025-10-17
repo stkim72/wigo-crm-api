@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ceragem.api.crm.dao.CrmHomeExprnDao">
+    <sql id="sqlDormCols">
+                EXPRN_NO            /*체험일련번호*/
+                , CUST_NM           /*고객명*/
+                , MPHON_NO          /*이동전화번호*/
+                , ADDR_1_CTNTS      /*지역*/
+                , ADDR_2_CTNTS      /*구시군*/
+                , RMARK             /*내용*/
+                , AGREE_YN          /*마케팅 수신동의 여부*/
+                , ITEM_NM           /*서비스명*/
+                , STATUS_CD_NM      /*상태코드*/
+                , TGT_APP_ID        /*채널코드*/
+                , IP_ADDR           /*IP주소*/
+                , POINT_SCORE       /*reCaptcha점수*/
+    </sql>
+    <sql id="sqlCols">
+                <include refid="sqlDormCols"/>
+                , REG_DT            /*등록일시*/
+    </sql>
+
+    <insert id="insert">
+            INSERT /* com.ceragem.api.crm.dao.CrmHomeExprnDao.insert */ INTO CRM_HOME_EXPRN_HST (
+        <include refid="sqlCols"/>
+            ) VALUES (
+            FN_CRM_AUTO_SEQ('EXP')
+            , #{custNm}
+            , DAMO.ENCRYPT_VAR_B64('AES_256', #{mphonNo}, '[^0-9]')
+            , #{addr1Ctnts}
+            , #{addr2Ctnts}
+            , #{rmark}
+            , #{agreeYn}
+            , 'HOMESERVICE'
+            , '상담대기'
+            , #{tgtAppId}
+            , #{ipAddr}
+            , #{pointScore}
+            , sysdate
+            )
+    </insert>
+
+</mapper>

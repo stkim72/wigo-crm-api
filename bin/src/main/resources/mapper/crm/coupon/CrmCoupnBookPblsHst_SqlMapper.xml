@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ceragem.api.crm.dao.CrmCoupnBookPblsHstDao">
+    <sql id="sqlPkConditions">
+                WHERE COUPN_BOOK_HST_SEQ=       #{coupnBookHstSeq}
+    </sql>
+    <sql id="sqlCols">
+                      COUPN_BOOK_HST_SEQ                    /*쿠폰북이력일련번호        */
+                    , COUPN_BOOK_NM                         /*쿠폰북명*/
+                    , MSHIP_COUPN_BAS_NO                    /*멤버십쿠폰기본번호        */
+                    , ITG_CUST_NO                 /*통합고객번호*/
+                    , CHIT_NO                    /*전표번호        */
+                    , STOR_NO                    /*매장번호        */
+                    , PAY_AMT                    /*결제금액        */
+                    , BUY_DT                    /*구매일시        */
+                    , BUY_QNTY                    /*구매수량        */
+                    , USE_STA_YMD                    /*사용시작년월일        */
+                    , USE_END_YMD                    /*사용종료년월일        */
+                    , DEL_YN                    /*삭제여부        */
+                    , REGR_ID                    /*등록자ID        */
+                    , REG_DT                    /*등록일시        */
+                    , AMDR_ID                    /*수정자ID        */
+                    , AMD_DT                    /*수정일시        */
+                    , REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS]*/
+    </sql>
+    <sql id="sqlSelectCols">
+                      A.COUPN_BOOK_HST_SEQ                    /*쿠폰북이력일련번호        */
+                    , A.COUPN_BOOK_NM                         /*쿠폰북명*/
+                    , A.MSHIP_COUPN_BAS_NO                    /*멤버십쿠폰기본번호        */
+                    , A.ITG_CUST_NO                 /*통합고객번호*/
+                    , A.CHIT_NO                    /*전표번호        */
+                    , A.STOR_NO                    /*매장번호        */
+                    , A.PAY_AMT                    /*결제금액        */
+                    , TO_CHAR(A.BUY_DT,'YYYYMMDDHH24MISS')    BUY_DT                    /*구매일시        */
+                    , A.BUY_QNTY                    /*구매수량        */
+                    , A.USE_STA_YMD                    /*사용시작년월일        */
+                    , A.USE_END_YMD                    /*사용종료년월일        */
+                    , A.DEL_YN                    /*삭제여부        */
+                    , A.REGR_ID                    /*등록자ID        */
+                    , TO_CHAR(A.REG_DT,'YYYYMMDDHH24MISS')    REG_DT                    /*등록일시        */
+                    , A.AMDR_ID                    /*수정자ID        */
+                    , TO_CHAR(A.AMD_DT,'YYYYMMDDHH24MISS')    AMD_DT                    /*수정일시        */
+                    , A.REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS]*/
+                    , (SELECT STOR_NM FROM CRM_STOR_BAS WHERE STOR_NO = A.STOR_NO AND ROWNUM = 1)  STOR_NO_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'S000' AND COMN_CD = A.REG_CHL_CD AND  COMN_CD_LVL_NO = 2) REG_CHL_CD_NM
+    </sql>
+    <sql id="sqlConditions">
+    <where>
+        <if test="coupnBookHstSeq != null and coupnBookHstSeq != ''">
+                  AND A.COUPN_BOOK_HST_SEQ=       #{coupnBookHstSeq}
+        </if>
+        <if test="coupnBookNm != null and coupnBookNm != ''">
+                  AND A.COUPN_BOOK_NM=       #{coupnBookNm}
+        </if>
+        <if test="mshipCoupnBasNo != null and mshipCoupnBasNo != ''">
+                  AND A.MSHIP_COUPN_BAS_NO=       #{mshipCoupnBasNo}
+        </if>
+        <if test="chitNo != null and chitNo != ''">
+                  AND A.CHIT_NO         =       #{chitNo}
+        </if>
+        <if test="itgCustNo != null and itgCustNo != ''">
+                  AND A.ITG_CUST_NO=       #{itgCustNo}
+        </if>
+        <if test="storNo != null and storNo != ''">
+                  AND A.STOR_NO         =       #{storNo}
+        </if>
+        <if test="payAmt != null and payAmt != ''">
+                  AND A.PAY_AMT         =       #{payAmt}
+        </if>
+        <if test="buyDt != null and buyDt != ''">
+                  AND A.BUY_DT          =       TO_DATE(#{buyDt},'YYYYMMDDHH24MISS')
+        </if>
+        <if test="buyQnty != null and buyQnty != ''">
+                  AND A.BUY_QNTY        =       #{buyQnty}
+        </if>
+        <if test="useStaYmd != null and useStaYmd != ''">
+                  AND A.USE_STA_YMD     =       #{useStaYmd}
+        </if>
+        <if test="useEndYmd != null and useEndYmd != ''">
+                  AND A.USE_END_YMD     =       #{useEndYmd}
+        </if>
+        <if test="useStdYmd != null and useStdYmd != ''">
+                  AND #{useStdYmd} BETWEEN  NVL(A.USE_STA_YMD,'20000101') AND  NVL(A.USE_END_YMD,'20991231') 
+        </if>
+        
+        <if test="delYn != null and delYn != ''">
+                  AND A.DEL_YN          =       #{delYn}
+        </if>
+        <if test="regChlCd != null and regChlCd != ''">
+            <choose>
+                <when test="regChlCd instanceof String">
+                    AND A.REG_CHL_CD      =       #{regChlCd}
+                </when>
+                <otherwise>
+                    AND A.REG_CHL_CD      IN
+                    <foreach item="item" index="index" collection="regChlCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        </where>
+    </sql>
+    <select id="selectListCount" resultType="int">
+                SELECT COUNT(1) /* com.ceragem.api.crm.dao.CrmCoupnBookPblsHstDao.selectListCount */
+                 FROM CRM_COUPN_BOOK_PBLS_HST A
+        <include refid="sqlConditions"/>
+    </select>
+    <select id="selectList" resultType="com.ceragem.api.crm.model.CrmCouponBookVo">
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingHeader"/>
+               SELECT /* com.ceragem.api.crm.dao.CrmCoupnBookPblsHstDao.selectList */ <include refid="sqlSelectCols"/>
+                    , (SELECT COUNT(1) FROM CRM_COUPN_PBLS_HST WHERE  COUPN_BOOK_HST_SEQ = A.COUPN_BOOK_HST_SEQ AND USE_YN='N') REMAIN_CNT
+                    , (SELECT COUNT(1) FROM CRM_COUPN_PBLS_HST WHERE  COUPN_BOOK_HST_SEQ = A.COUPN_BOOK_HST_SEQ AND USE_YN='Y') USE_CNT
+                 FROM CRM_COUPN_BOOK_PBLS_HST A
+        <include refid="sqlConditions"/>
+               ORDER BY REG_DT DESC
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingFooter"/>
+    </select>
+    <select id="select" resultType="com.ceragem.api.crm.model.CrmCouponBookVo">
+               SELECT /* com.ceragem.api.crm.dao.CrmCoupnBookPblsHstDao.select */ <include refid="sqlSelectCols"/>
+               		, (SELECT COUNT(1) FROM CRM_COUPN_PBLS_HST WHERE  COUPN_BOOK_HST_SEQ = A.COUPN_BOOK_HST_SEQ AND USE_YN='N') REMAIN_CNT
+                    , (SELECT COUNT(1) FROM CRM_COUPN_PBLS_HST WHERE  COUPN_BOOK_HST_SEQ = A.COUPN_BOOK_HST_SEQ AND USE_YN='Y') USE_CNT
+                 FROM CRM_COUPN_BOOK_PBLS_HST A
+        <include refid="sqlPkConditions"/>
+    </select>
+    <insert id="insert">
+    	<selectKey order="BEFORE" keyProperty="coupnBookHstSeq" resultType="String">
+    		SELECT FN_CRM_AUTO_SEQ('8888') 
+    		  FROM DUAL
+    	</selectKey>
+    	
+                INSERT /* com.ceragem.api.crm.dao.CrmCoupnBookPblsHstDao.insert */ INTO CRM_COUPN_BOOK_PBLS_HST (
+        <include refid="sqlCols"/>
+                 ) VALUES (
+                       #{coupnBookHstSeq}
+                     , #{coupnBookNm}
+                     , #{mshipCoupnBasNo}
+                     , #{itgCustNo}
+                     , #{chitNo}
+                     , #{storNo}
+                     , #{payAmt}
+                     , NVL(TO_DATE(#{buyDt},'YYYYMMDDHH24MISS'),SYSDATE)
+                     , #{buyQnty}
+                     , #{useStaYmd}
+                     , #{useEndYmd}
+                     , NVL(#{delYn},'N')
+                     , #{regrId}
+                     , SYSDATE
+                     , #{amdrId}
+                     , SYSDATE
+                     , NVL(#{regChlCd},#{regrId})
+                 )
+    </insert>
+    <update id="update">
+               UPDATE /* com.ceragem.api.crm.dao.CrmCoupnBookPblsHstDao.update */ CRM_COUPN_BOOK_PBLS_HST 
+                  SET COUPN_BOOK_NM                           =         NVL(#{coupnBookNm},COUPN_BOOK_NM)
+                    , STOR_NO                                 =         NVL(#{storNo},STOR_NO)
+                    , PAY_AMT                                 =         NVL(#{payAmt},PAY_AMT)
+                    , BUY_DT                                  =         NVL(TO_DATE(#{buyDt},'YYYYMMDDHH24MISS'),BUY_DT )
+                    , BUY_QNTY                                =         NVL(#{buyQnty},BUY_QNTY)
+                    , USE_STA_YMD                             =         NVL(#{useStaYmd},USE_STA_YMD)
+                    , USE_END_YMD                             =         NVL(#{useEndYmd},USE_END_YMD)
+                    , DEL_YN                                  =         NVL(#{delYn},DEL_YN)
+                    , AMDR_ID                                 =         #{amdrId}
+                    , AMD_DT                                  =         SYSDATE
+        <include refid="sqlPkConditions"/>
+    </update>
+    <delete id="delete">
+               DELETE /* com.ceragem.api.crm.dao.CrmCoupnBookPblsHstDao.delete */ 
+                 FROM CRM_COUPN_BOOK_PBLS_HST
+        <include refid="sqlPkConditions"/>
+    </delete>
+</mapper>

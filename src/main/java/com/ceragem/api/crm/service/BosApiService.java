@@ -10,6 +10,8 @@ import java.util.Map;
 
 import javax.annotation.Resource;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.ceragem.api.base.util.Utilities;
@@ -22,15 +24,19 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class BosApiService {
-//	@Value("${bos.api.rest-url}/crm/CRM_API_0001Ctl/getRandomKey.do")
+	
+	static public boolean useRental = true;
+	
+	@Value("${bos.api.rest-url}/crm/CRM_API_0001Ctl/getRandomKey.do")
 	String randomKeyUrl;
-//	@Value("${bos.api.rest-url}/crm/CRM_API_0056Ctl/saveCrmCustInfo.do")
+	@Value("${bos.api.rest-url}/crm/CRM_API_0056Ctl/saveCrmCustInfo.do")
 	String bosEventUrl;
 	String enc = "UTF-8";
 
 	@Resource(name = "jacksonObjectMapper")
 	ObjectMapper objectMapper;
-
+	@Autowired
+	RentalApiService retalApiService;
 	static final String[] LARGE_CD_AREA = { "AM", "CM", "CR", "FI", "OG", "SD", "SV", "WM" };
 
 	/**
@@ -61,6 +67,7 @@ public class BosApiService {
 				return null;
 			conn.setDoOutput(true);
 			conn.setConnectTimeout(2000);
+			conn.setReadTimeout(60000);
 			conn.setUseCaches(false);
 			conn.setRequestMethod(method);
 			conn.setRequestProperty("Content-Type", "application/json;charset=" + enc);
@@ -208,6 +215,8 @@ public class BosApiService {
 	}
 
 	public boolean sendCustEvent(String itgCustNo) throws Exception {
+		if(useRental)
+			return retalApiService.sendCustEvent(itgCustNo);
 		BosApiParamVo param = new BosApiParamVo(getRandomKey());
 		param.setParam("crmCustNo", itgCustNo);
 		Map<String, Object> result = getResultMap(bosEventUrl, param);

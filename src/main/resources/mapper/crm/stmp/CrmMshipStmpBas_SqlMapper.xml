@@ -372,6 +372,7 @@
 		    , APPLY_MSHP_GRADE_CTNTS
 		    , MSHIP_TYPE_CDS
 		    , COND_CNT
+		    , DAY_RSTRTN_CNT
 		FROM CRM_MSHIP_STMP_BAS
 		    WHERE MSHIP_STMP_BAS_NO IN 
 		    <foreach item="item" index="index" collection="stmpList" open="(" separator="," close=")">
@@ -507,38 +508,42 @@
 	</delete>
 	
 	<select id="getStmpMarstListForEvent" resultType="EzMap">
-		
-		SELECT DISTINCT /*com.ceragem.api.crm.dao.CrmMshipStmpBasDao.getStmpMarstListForEvent*/
-		    A.MSHIP_STMP_BAS_NO
-		    ,A.STMP_BAS_NM
-		    ,A.STMP_TYPE_CD
-		    ,A.STMP_EVENT_CD
-		    ,A.FROM_USE_POSS_DT
-		    ,A.TO_USE_POSS_DT
-		    ,A.VALID_YN
-		    ,A.VALID_PERD
-		    ,A.STMP_MAX_YN
-		    ,A.STMP_MAX_CNT
-		    ,A.STMP_QNTY
-		    ,A.USE_YN
-		    ,A.MSHIP_GRADE_CD
-		    ,A.MSHP_GRADE_CD
-		    ,A.CPRT_CMP_NO
-		    ,A.COND_YN
-		    ,A.COND_AMT
-		    ,A.COUPN_ACCUM_DC_YN
-		    ,A.ACCUM_CNT
-		    ,A.ORDR_YN
-		    ,A.ORDR_AMT
-		    ,A.ACCUM_CHL_TXN
-		    ,A.BNFIT_CD
-		    ,A.POINT_SCORE
-		    ,A.COUPN_NO 
+		/*com.ceragem.api.crm.dao.CrmMshipStmpBasDao.getStmpMarstListForEvent*/
+		   SELECT DISTINCT 
+    		      A.MSHIP_STMP_BAS_NO
+    		    , A.STMP_BAS_NM
+    		    , A.STMP_TYPE_CD
+    		    , A.STMP_EVENT_CD
+    		    , A.FROM_USE_POSS_DT
+    		    , A.TO_USE_POSS_DT
+    		    , A.VALID_YN
+    		    , A.VALID_PERD
+    		    , A.STMP_MAX_YN
+    		    , A.STMP_MAX_CNT
+    		    , A.STMP_QNTY
+    		    , A.USE_YN
+    		    , A.MSHIP_GRADE_CD
+    		    , A.MSHP_GRADE_CD
+    		    , A.CPRT_CMP_NO
+    		    , A.COND_YN
+    		    , A.COND_AMT
+    		    , A.COUPN_ACCUM_DC_YN
+    		    , A.ACCUM_CNT
+    		    , A.ORDR_YN
+    		    , A.ORDR_AMT
+    		    , A.ACCUM_CHL_TXN
+    		    , A.BNFIT_CD
+    		    , A.POINT_SCORE
+    		    , A.COUPN_NO 
+                , A.DAY_RSTRTN_CNT
 		    FROM CRM_MSHIP_STMP_BAS A JOIN CRM_MSHIP_APPLY_STOR_REL B
 		            ON A.MSHIP_STMP_BAS_NO = B.MSHIP_STMP_BAS_NO
 		            AND A.STMP_TYPE_CD = 1
 		            AND A.USE_YN = 'Y'
 					AND A.ACCUM_CHL_TXN LIKE '%'||  #{chlCd} ||'%'
+<!--                     AND TRUNC(SYSDATE) BETWEEN DECODE(A.VALID_YN,'Y',TRUNC(NVL(A.FROM_USE_POSS_DT,SYSDATE)),SYSDATE-1) AND DECODE(A.VALID_YN,'Y',TRUNC(NVL(A.TO_USE_POSS_DT,SYSDATE)),SYSDATE+1) -->
+                    AND TRUNC(SYSDATE) BETWEEN NVL(FROM_USE_POSS_DT,SYSDATE-1) AND NVL(TO_USE_POSS_DT,SYSDATE+1)
+                    AND A.STMP_QNTY > 0
 		            <if test="stmpEventCd != null and stmpEventCd != ''">
 						AND A.STMP_EVENT_CD = #{stmpEventCd}
 			        </if>
@@ -548,6 +553,10 @@
 		            <if test="mshpGradeCd != null and mshpGradeCd != ''">
 						AND A.APPLY_MSHP_GRADE_CTNTS LIKE '%'||  #{mshpGradeCd} ||'%'
 			        </if>
+                    <if test="mshipStmpBasNo != null and mshipStmpBasNo != ''">
+                        AND A.MSHIP_STMP_BAS_NO = #{mshipStmpBasNo}
+                    </if>
+                    
 		            
 	</select>
 	
@@ -564,63 +573,67 @@
 	</select>
 	
 	<select id="getStmpIssueList" resultType="com.ceragem.api.crm.model.CrmMshipStmpIssueVo">
-		SELECT C.*,D.STMP_ACCUM_QNTY FROM (
-		    SELECT 
-		        A.MSHIP_STMP_BAS_NO
-		        , A.STMP_TYPE_CD
-		        , A.STMP_BAS_NM 
-		        , A.FROM_USE_POSS_DT AS FROM_USE_STD_DAY
-		        , A.TO_USE_POSS_DT AS TO_USE_STD_DAY
-		        , A.STMP_MAX_CNT AS STMP_BOARD_CNT
-		        , A.STMP_QNTY
-		        , MAX(B.STMP_HST_SEQ) AS STMP_HST_SEQ
-		        , CASE
-		            WHEN COUNT(B.COUPN_NO) > 0 THEN '쿠폰'
-		            WHEN COUNT(B.POINT_SCORE) > 0 THEN '포인트'
-		        END AS ACCUM_TYPE
-		        , CASE
-		            WHEN COUNT(B.COUPN_NO) > 0 THEN COUNT(B.COUPN_NO)
-		            WHEN COUNT(B.POINT_SCORE) > 0 THEN COUNT(B.POINT_SCORE)
-		            ELSE 0
-		        END AS ACCUM_CNT
-		    FROM CRM_MSHIP_STMP_BAS A JOIN CRM_STMP_HST B ON A.MSHIP_STMP_BAS_NO = B.MSHIP_STMP_BAS_NO
-		        AND B.ITG_CUST_NO = #{itgCustNo}
-		        <if test="storNo != null and storNo != ''">
-			        AND B.STOR_NO = #{storNo}
-		        </if>
-		        <if test="mshipStmpBasNo != null and mshipStmpBasNo != ''">
-		            <choose>
-		                <when test="mshipStmpBasNo instanceof String">
-		                    AND B.MSHIP_STMP_BAS_NO = #{mshipStmpBasNo}
-		                </when>
-		                <otherwise>
-		                    AND B.MSHIP_STMP_BAS_NO    IN
-		                    <foreach item="item" index="index" collection="mshipStmpBasNo" open="(" separator="," close=")">
-		                        #{item}
-		                    </foreach>
-		                </otherwise>
-		            </choose>
-		        </if>
-		        <if test="availableYn != null and availableYn != ''">
-		        	<choose>
-		        		<when test="'Y'.toString().equals(availableYn)">
-		        			AND A.USE_YN = 'Y'
-		        			AND (A.TO_USE_POSS_DT <![CDATA[ >= ]]> SYSDATE)
-		        		</when>
-		        		<otherwise>
-		        			AND ((A.TO_USE_POSS_DT <![CDATA[ < ]]> SYSDATE) OR A.USE_YN = 'N')
-		        		</otherwise>
-		        	</choose>
-		        </if>
-		        GROUP BY A.MSHIP_STMP_BAS_NO 
-		            , A.STMP_BAS_NM 
-		            , A.FROM_USE_POSS_DT 
-		            , A.TO_USE_POSS_DT
-		            , A.STMP_QNTY
-		            , A.STMP_TYPE_CD
-		            , A.STMP_MAX_CNT
-		) C JOIN CRM_STMP_HST D
-		ON C.STMP_HST_SEQ = D.STMP_HST_SEQ  
+    /* com.ceragem.api.crm.dao.CrmMshipStmpBasDao.getStmpIssueList */
+           SELECT #{itgCustNo} ITG_CUST_NO
+                , B.MSHIP_STMP_BAS_NO 
+                , NVL(A.ISSUE_CNT, NVL( (SELECT MAX(ISSUE_CNT) FROM CRM_STMP_HST HST WHERE HST.ITG_CUST_NO=#{itgCustNo} AND HST.MSHIP_STMP_BAS_NO=B.MSHIP_STMP_BAS_NO ) + 1,0) ) ACCUM_CNT
+                , B.STMP_TYPE_CD
+                , B.STMP_BAS_NM 
+                , GREATEST(TO_CHAR(TRUNC(NVL(ACCUM_DT,SYSDATE)),'YYYYMMDD'),NVL(TO_CHAR(B.FROM_USE_POSS_DT,'YYYYMMDD'),'20000101')) FROM_USE_STD_DAY
+                , LEAST(CASE WHEN B.VALID_YN= 'Y' AND B.VALID_PERD > 0 THEN TO_CHAR(TRUNC(NVL(A.ACCUM_DT,SYSDATE)) + B.VALID_PERD -1 ,'YYYYMMDD')  ELSE '20991231' END,NVL(TO_CHAR(TO_USE_POSS_DT,'YYYYMMDD'),'20991231')) TO_USE_STD_DAY
+                , B.STMP_MAX_CNT AS STMP_BOARD_CNT
+                , B.STMP_QNTY
+                , CASE WHEN B.COUPN_NO IS NOT NULL THEN '쿠폰' WHEN B.POINT_SCORE IS NOT NULL THEN '포인트' ELSE '-' END ACCUM_TYPE
+                , NVL(STMP_ACCUM_QNTY,0) STMP_ACCUM_QNTY
+             FROM CRM_MSHIP_STMP_BAS B 
+             LEFT JOIN ( SELECT A.ISSUE_CNT
+                              , A.MSHIP_STMP_BAS_NO
+                              , A.ITG_CUST_NO
+                              , MIN(ACCUM_DT) ACCUM_DT
+                              , MAX(STMP_ACCUM_QNTY) STMP_ACCUM_QNTY
+                           FROM CRM_STMP_HST A 
+                           WHERE A.ITG_CUST_NO = #{itgCustNo}
+                           GROUP BY A.ITG_CUST_NO , A.ISSUE_CNT, A.MSHIP_STMP_BAS_NO
+                          HAVING MAX(NVL(A.COUPN_NO,A.POINT_SCORE)) IS NULL 
+                       ) A ON A.MSHIP_STMP_BAS_NO = B.MSHIP_STMP_BAS_NO AND A.ITG_CUST_NO = #{itgCustNo}
+            WHERE TRUNC(SYSDATE) BETWEEN GREATEST(TRUNC(NVL(ACCUM_DT,SYSDATE)),NVL(B.FROM_USE_POSS_DT,TO_DATE('20000101','YYYYMMDD'))) AND LEAST(CASE WHEN B.VALID_YN= 'Y' AND B.VALID_PERD > 0 THEN TRUNC(NVL(A.ACCUM_DT,SYSDATE)) + B.VALID_PERD -1  ELSE TO_DATE('20991231','YYYYMMDD') END,NVL(B.TO_USE_POSS_DT,TO_DATE('20991231','YYYYMMDD')))
+    <if test="storNo != null and storNo != ''">
+              AND B.MSHIP_STMP_BAS_NO IN ( SELECT MSHIP_STMP_BAS_NO 
+                                             FROM CRM_MSHIP_APPLY_STOR_REL
+                                            WHERE STOR_NO = #{storNo} )
+    </if>
+    <choose>
+        <when test="mshipStmpBasNo != null and mshipStmpBasNo != ''">
+            <choose>
+                <when test="mshipStmpBasNo instanceof String">
+                  AND B.MSHIP_STMP_BAS_NO = #{mshipStmpBasNo}
+                </when>
+                <otherwise>
+                  AND B.MSHIP_STMP_BAS_NO    IN
+                    <foreach item="item" index="index" collection="mshipStmpBasNo" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </when>
+        <otherwise>
+           AND  A.ITG_CUST_NO = #{itgCustNo}
+        </otherwise>
+    </choose>
+    
+    <if test="availableYn != null and availableYn != ''">
+        <choose>
+            <when test="'Y'.toString().equals(availableYn)">
+               AND B.USE_YN = 'Y'
+               AND (TRUNC(SYSDATE) BETWEEN B.FROM_USE_POSS_DT AND B.TO_USE_POSS_DT)
+            </when>
+            <otherwise>
+               AND ((TRUNC(SYSDATE) NOT BETWEEN B.FROM_USE_POSS_DT AND B.TO_USE_POSS_DT) OR B.USE_YN = 'N')
+            </otherwise>
+        </choose>
+    </if>              
+               AND B.SHOW_YN = 'Y'
+             ORDER BY A.ITG_CUST_NO , B.MSHIP_STMP_BAS_NO
 	</select>
 	
 	<select id="getStmpIssueLast" resultType="EzMap">
@@ -657,4 +670,71 @@
 				ORDER BY ISSUE_CNT DESC, STMP_ACCUM_QNTY DESC
 			)  WHERE ROWNUM <![CDATA[ <= ]]> #{cancelCnt} 
 	</select>
+	
+	<select id="getStmpDayHist" resultType="int">
+    /* com.ceragem.api.crm.dao.CrmMshipStmpBasDao.getStmpDayHist */
+    	  SELECT COUNT(1)
+    		FROM CRM_STMP_HST A
+           INNER JOIN CRM_MSHIP_STMP_BAS B ON A.MSHIP_STMP_BAS_NO = B.MSHIP_STMP_BAS_NO
+    	   WHERE A.MSHIP_STMP_BAS_NO = #{mshipStmpBasNo}
+    		 AND A.ITG_CUST_NO = #{itgCustNo}
+    		 AND ACCUM_DT BETWEEN TRUNC(SYSDATE) AND TRUNC(SYSDATE+1)
+    </select>
+    
+    <select id="getMasterStmpByGodsList" resultType = "EzMap">
+    /* com.ceragem.api.crm.dao.CrmMshipStmpBasDao.getMasterStmpByGodsList */
+        SELECT A.MSHIP_STMP_BAS_NO
+             , NVL(B.STMP_ACCUM_QNTY,0) AVAILABLE_CNT  
+             , B.ITG_CUST_NO
+             , (SELECT LISTAGG(DISTINCT GODS_NO, ',') WITHIN GROUP(ORDER BY GODS_NO) FROM CRM_MSHIP_APPLY_GODS_REL REL WHERE MSHIP_STMP_BAS_NO = A.MSHIP_STMP_BAS_NO AND GODS_NO IN ('XXXXX' <foreach item="item" index="index" collection="itemList" > , #{item.buyGodsNo}</foreach> ) ) GODS_NO
+          FROM CRM_MSHIP_STMP_BAS A
+         INNER JOIN (SELECT *  
+                       FROM ( SELECT A.*
+                                   , ROW_NUMBER() OVER (PARTITION BY ITG_CUST_NO , MSHIP_STMP_BAS_NO ORDER BY STMP_HST_SEQ DESC) RNUM
+                                FROM CRM_STMP_HST A
+                               WHERE ITG_CUST_NO = #{itgCustNo} ) A 
+                      WHERE RNUM = 1 ) B ON A.MSHIP_STMP_BAS_NO = B.MSHIP_STMP_BAS_NO AND A.STMP_QNTY > B.STMP_ACCUM_QNTY 
+         WHERE TRUNC(SYSDATE) BETWEEN A.FROM_USE_POSS_DT AND A.TO_USE_POSS_DT
+           AND A.USE_YN = 'Y'
+           AND A.MSHIP_STMP_BAS_NO IN ( SELECT MSHIP_STMP_BAS_NO 
+                                          FROM CRM_MSHIP_APPLY_GODS_REL 
+                                         WHERE GODS_NO IN ('XXXXX' <foreach item="item" index="index" collection="itemList" > , #{item.buyGodsNo}</foreach> ))
+           AND A.MSHIP_STMP_BAS_NO IN ( SELECT MSHIP_STMP_BAS_NO
+                                          FROM CRM_MSHIP_APPLY_STOR_REL 
+                                         WHERE STOR_NO = #{storNo} 
+                                           AND MSHIP_STMP_BAS_NO IS NOT NULL )
+    </select>
+    <select id="selectStmpCancelList" resultType="com.ceragem.api.crm.model.CrmMshipStmpIssueVo">
+        SELECT A.* 
+          FROM ( SELECT A.*
+                      , ROW_NUMBER() OVER (PARTITION BY ITG_CUST_NO ORDER BY STMP_HST_SEQ DESC) RNUM
+                   FROM CRM_STMP_HST A
+                  WHERE ITG_CUST_NO = #{itgCustNo}
+                    AND MSHIP_STMP_BAS_NO = #{mshipStmpBasNo} ) A
+          WHERE #{cancelCnt} >= RNUM
+    </select>
+    <delete id="deleteStmpCancel">
+    /* com.ceragem.api.crm.dao.CrmMshipStmpBasDao.deleteStmpCancel */
+        DELETE FROM CRM_STMP_HST 
+         WHERE STMP_HST_SEQ IN ( SELECT STMP_HST_SEQ 
+                                   FROM ( SELECT A.*
+                                               , ROW_NUMBER() OVER (PARTITION BY ITG_CUST_NO ORDER BY STMP_HST_SEQ DESC) RNUM
+                                            FROM CRM_STMP_HST A
+                                           WHERE ITG_CUST_NO = #{itgCustNo}
+                                             AND MSHIP_STMP_BAS_NO = #{mshipStmpBasNo} )
+                                  WHERE  #{cancelCnt} >= RNUM )
+    </delete>
+    
+    <select id="selectExpStampEvent" resultType="com.ceragem.api.crm.model.CrmMshipStmpEventVo">
+        SELECT STOR_CHL_CD CHL_CD
+             , STOR_NO 
+             , ITG_CUST_NO 
+             , '020' STMP_EVENT_CD 
+             , 1 STMP_QNTY
+          FROM CRM_CUST_BAS A 
+         INNER JOIN CRM_STOR_BAS B ON A.MSHIP_LAST_VISIT_STOR_NO = B.STOR_NO
+         WHERE A.MSHIP_SBSC_YN = 'Y'
+           AND A.CUST_STATUS_CD = '001'
+           AND A.ITG_CUST_NO = #{itgCustNo}
+    </select>
 </mapper>

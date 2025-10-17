@@ -47,8 +47,8 @@
 					           , A.ITG_CUST_NO		/*통합고객번호*/
 					           , A.CSAG_EMP_ID		/*AS접수자사원ID*/
 					           , A.CNSLG_PRSN_EMP_NM				/*AS접수자*/
-					           , A.CNSLG_YMDHMS AS SUBMIT_DATE		/*접수일자*/
-					           , CASE WHEN A.ASG_CHNG_USER_ID IS NOT NULL THEN A.ASG_CHNG_USER_ID
+                               , NVL(TO_CHAR(A.FIRST_CNSL_YMDHMS,'YYYY-MM-DD HH24:MI:SS'), TO_CHAR(A.CNSLG_YMDHMS,'YYYY-MM-DD HH24:MI:SS'))  || ' / ' || TO_CHAR(A.CNSLG_YMDHMS, 'YYYY-MM-DD HH24:MI:SS') AS SUBMIT_DATE   				           
+                               , CASE WHEN A.ASG_CHNG_USER_ID IS NOT NULL THEN A.ASG_CHNG_USER_ID
 					                  WHEN A.ASG_CHNG_USER_ID IS NULL AND A.TRT_PIC_EMP_ID IS NOT NULL THEN A.TRT_PIC_EMP_ID
 					                  WHEN A.ASG_CHNG_USER_ID IS NULL AND A.TRT_PIC_EMP_ID IS NULL THEN ''
 					                  ELSE A.TRT_PIC_EMP_ID	/*AS처리담당자사원ID*/
@@ -101,10 +101,10 @@
 			  , A.ITG_CUST_NO				/*통합고객번호*/
 			  , A.BOS_CUST_NO				/*BOS고객번호*/
 			  , A.CUST_NM					/*고객명*/
-			  ,  A.MPHON_NO AS MPHON_NO	/*이동전화번호*/
+			  , DAMO.DECRYPT_VAR_B64('AES_256', A.MPHON_NO, '') AS MPHON_NO	/*이동전화번호*/
 			  , A.ZIP_CD					/*우편번호*/
 			  , A.ADDR_1_CTNTS			/*주소1내용*/
-			  ,  A.ADDR_2_CTNTS AS ADDR_2_CTNTS	/*주소2내용*/
+			  , DAMO.DECRYPT_VAR_B64('AES_256', A.ADDR_2_CTNTS, '') AS ADDR_2_CTNTS	/*주소2내용*/
 			  , A.GODS_SRIAL_NO				/*제품일련번호*/
 			  , A.GODS_EXPLN_NM				/*제품명*/
 			  , A.AS_STATUS_CD				/*AS상태코드*/
@@ -132,7 +132,7 @@
 			  , A.TRT_RMARK					/*처리비고(조치사항)*/
 			  , A.INSTLL_ZIP_CD				/*설치우편번호*/
 			  , A.INSTLL_ADDR_1_CTNTS			/*설치주소1내용*/
-			  , A.INSTLL_ADDR_2_CTNTS AS INSTLL_ADDR_2_CTNTS	/*설치주소2내용*/
+			  , DAMO.DECRYPT_VAR_B64('AES_256', A.INSTLL_ADDR_2_CTNTS,     '') AS INSTLL_ADDR_2_CTNTS	/*설치주소2내용*/
 		  FROM  AS_SUBMIT_BAS A
 	     WHERE  A.AS_SUBMIT_NO = #{asSubmitNo}
 		   AND  A.ITG_CUST_NO = #{itgCustNo}

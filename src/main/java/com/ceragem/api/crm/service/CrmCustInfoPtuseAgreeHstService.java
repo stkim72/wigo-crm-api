@@ -8,12 +8,14 @@ import com.ceragem.api.base.service.AbstractCrmService;
 import com.ceragem.api.base.util.Utilities;
 import com.ceragem.api.crm.dao.CrmCustBasDao;
 import com.ceragem.api.crm.dao.CrmCustInfoPtuseAgreeHstDao;
+import com.ceragem.api.crm.dao.CrmMshipAppToknBasDao;
 import com.ceragem.api.crm.dao.ICrmDao;
 import com.ceragem.api.crm.model.CrmAgreementVo;
 import com.ceragem.api.crm.model.CrmCustInfoChngHstVo;
 import com.ceragem.api.crm.model.CrmCustInfoPtuseAgreeHstVo;
 import com.ceragem.api.crm.model.CrmCustSo;
 import com.ceragem.api.crm.model.CrmCustVo;
+import com.ceragem.api.crm.model.CrmMshipAppToknBasVo;
 import com.ceragem.crm.common.model.EzApiException;
 
 /**
@@ -41,6 +43,9 @@ public class CrmCustInfoPtuseAgreeHstService extends AbstractCrmService {
 
 	@Autowired
 	CrmCustInfoChngHstService infoService;
+
+	@Autowired
+	CrmMshipAppToknBasDao tokenDao;
 
 	@Override
 	public ICrmDao getDao() {
@@ -90,14 +95,16 @@ public class CrmCustInfoPtuseAgreeHstService extends AbstractCrmService {
 			agree.setRegChlCd(vo.getRegChlCd());
 			agree.setRegrId(vo.getRegrId());
 			agree.setAmdrId(vo.getAmdrId());
+			addChangeLog(agree);
 			updated += insert(agree);
 			boolean sendTalk = false;
 			if ("N".equals(vo.getMarketingYn())) {
 				sendTalk = "Y".equals(yn);
 			} else {
-				String dt = cust.getMarketingAgreeDt();
-				sendTalk = !("Y".equals(yn) && ch.equals(cust.getMarketingAgreeChlCd()) && Utilities.isNotEmpty(dt)
-						&& Utilities.getDateString().equals(dt.substring(0, 8)));
+				sendTalk = "N".equals(yn);
+//				String dt = cust.getMarketingAgreeDt();
+//				sendTalk = !("Y".equals(yn) && ch.equals(cust.getMarketingAgreeChlCd()) && Utilities.isNotEmpty(dt)
+//						&& Utilities.getDateString().equals(dt.substring(0, 8)));
 
 			}
 			String codeCd = "Y".equals(vo.getMarketingYn()) ? "320" : "310";
@@ -149,19 +156,54 @@ public class CrmCustInfoPtuseAgreeHstService extends AbstractCrmService {
 			addChangeLog(agree);
 			updated += insert(agree);
 		}
-
-		if (Utilities.isNotEmpty(vo.getPushRcvAgreeYn())) {
+		if (Utilities.isNotEmpty(vo.getExprnInfoAgreeYn())) {
 			CrmCustInfoPtuseAgreeHstVo agree = new CrmCustInfoPtuseAgreeHstVo();
 			agree.setItgCustNo(vo.getItgCustNo());
-			agree.setAgreeYn(vo.getPushRcvAgreeYn());
-			agree.setAgreeTypeCd("008");
+			agree.setAgreeYn(vo.getEmailRcvAgreeYn());
+			agree.setAgreeTypeCd("009");
 			agree.setRegChlCd(vo.getRegChlCd());
 			agree.setRegrId(vo.getRegrId());
 			agree.setAmdrId(vo.getAmdrId());
 			addChangeLog(agree);
 			updated += insert(agree);
 		}
-		if(updated>0)
+
+		if (Utilities.isNotEmpty(vo.getPushRcvAgreeYn())) {
+			if (Utilities.isEmpty(vo.getAppPushOsCd()) && Utilities.isEmpty(vo.getAppPushTokn())) {
+				vo.setAppPushTokn(cust.getAppPushTokn());
+				vo.setAppPushOsCd(cust.getAppPushOsCd());
+			}
+			if (Utilities.isNotEmpty(vo.getAppPushOsCd()) && Utilities.isNotEmpty(vo.getAppPushTokn())) {
+				CrmMshipAppToknBasVo v = new CrmMshipAppToknBasVo();
+				v.setItgCustNo(vo.getItgCustNo());
+				v.setAppPushTokn(vo.getAppPushTokn());
+				v.setAppPushOsCd(vo.getAppPushOsCd());
+				v.setAgreeYn(vo.getPushRcvAgreeYn());
+				v.setRegChlCd(vo.getRegChlCd());
+				CrmMshipAppToknBasVo t = tokenDao.select(v);
+				if ("Y".equals(v.getAgreeYn()) && Utilities.isEmpty(v.getAgreeDt()))
+					v.setAgreeDt(Utilities.getDateTimeString());
+				if ("N".equals(v.getAgreeYn()) && Utilities.isEmpty(v.getRfslDt()))
+					v.setRfslDt(Utilities.getDateTimeString());
+				tokenDao.updateTokenUseYn(v);
+				if (t == null) {
+					tokenDao.insert(v);
+				} else
+					tokenDao.update(v);
+
+				CrmCustInfoPtuseAgreeHstVo agree = new CrmCustInfoPtuseAgreeHstVo();
+				agree.setItgCustNo(vo.getItgCustNo());
+				agree.setAgreeYn(vo.getPushRcvAgreeYn());
+				agree.setAgreeTypeCd("008");
+				agree.setRegChlCd(vo.getRegChlCd());
+				agree.setRegrId(vo.getRegrId());
+				agree.setAmdrId(vo.getAmdrId());
+				addChangeLog(agree);
+				updated += insert(agree);
+			}
+
+		}
+		if (updated > 0)
 			dao.updateCustAgreement(vo);
 		return custDao.select(so);
 	}

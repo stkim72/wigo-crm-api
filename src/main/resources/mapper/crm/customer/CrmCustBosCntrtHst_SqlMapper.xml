@@ -303,7 +303,11 @@
                     , A.RENT_AMT                    /*렌탈금액        */
                     , A.BASS_SALE_AMT                    /*기본판매금액        */
                     , A.SALES_AMT                    /*판매금액        */
-                    , A.SETL_AMT                    /*결제금액        */
+<!--                     , ( CASE WHEN A.SETL_AMT = '0' THEN (A.RENT_AMT*A.CNTR_PD_VAL) WHEN A.SETL_AMT != '0' THEN A.SETL_AMT END)   AS   SETL_AMT                    /*결제금액        */ -->
+                    ,   CASE WHEN A.SALE_TY_CD IN ('2101','2102','2103','2104','1202') THEN A.SETL_AMT
+                           WHEN A.SALE_TY_CD IN ('1401','1402','1403','1404','1405') THEN A.SETL_AMT + A.RENT_AMT * A.CNTR_PD_VAL
+                           WHEN A.SALE_TY_CD IN ('2401') AND A.SETL_AMT > 0 AND A.HQ_SE_CD != '5000' THEN A.BASS_SALE_AMT
+                           ELSE A.SETL_AMT END AS   SETL_AMT  
                     , A.ORD_AMT                    /*주문금액        */
                     , A.ORD_VAT_EXCL_AMT                    /*주문부가세제외금액        */
                     , A.ORD_VAT_AMT                    /*주문부가세금액        */
@@ -427,6 +431,8 @@
                     , A.COUPN_DC_AMT                    /*쿠폰할인금액        */
                     , A.ITEM_PR_CD                    /*제품상품구분코드        */
                     , A.ITEM_PR_CD_NM                    /*제품상품구분코드        */
+                    , A.PSN_INFO_ARGE_YN                 /* 개인정보필수동의여부*/
+                    , A.PSN_INFO_ARGE_YN2                 /* 개인정보선택동의여부*/
     </sql>
     <sql id="sqlConditions">
         <where>
@@ -1507,23 +1513,39 @@
             <if test="itemPrCdNm != null and itemPrCdNm != ''">
                       AND A.ITEM_PR_CD_NM   =       #{itemPrCdNm}
             </if>
+            <if test="fromCancelYmd != null and fromCancelYmd != ''">
+                      AND A.CNTR_CNCL_DE           >=       #{fromCancelYmd}
+            </if>
+            <if test="toCancelYmd != null and toCancelYmd != ''">
+                      AND #{toCancelYmd}          >=       A.CNTR_CNCL_DE 
+            </if>
+             <if test="fromInstallYmd != null and fromInstallYmd != ''">
+                      AND A.IST_DE           >=       #{fromInstallYmd}
+            </if>
+            <if test="toInstallYmd != null and toInstallYmd != ''">
+                      AND #{toInstallYmd}          >=       A.IST_DE 
+            </if>
+            
         </where>
     </sql>
     <select id="selectListCount" resultType="int">
-                SELECT /* com.ceragem.batch.crm.dao.CrmCustBosCntrtHstDao.selectListCount */ COUNT(1)
+    /* com.ceragem.api.crm.dao.CrmCustBosCntrtHstDao.selectListCount */
+                SELECT COUNT(1)
                  FROM CRM_CUST_BOS_CNTRT_HST A
         <include refid="sqlConditions"/>
     </select>
     <select id="selectList" resultType="com.ceragem.api.crm.model.CrmCustBosCntrtHstVo">
         <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingHeader"/>
-               SELECT /* com.ceragem.batch.crm.dao.CrmCustBosCntrtHstDao.selectList */ <include refid="sqlSelectCols"/>
+        /* com.ceragem.api.crm.dao.CrmCustBosCntrtHstDao.selectList */
+               SELECT <include refid="sqlSelectCols"/>
                  FROM CRM_CUST_BOS_CNTRT_HST A
         <include refid="sqlConditions"/>
                ORDER BY ORD_DE DESC
         <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingFooter"/>
     </select>
     <select id="select" resultType="com.ceragem.api.crm.model.CrmCustBosCntrtHstVo">
-               SELECT /* com.ceragem.batch.crm.dao.CrmCustBosCntrtHstDao.select */ <include refid="sqlSelectCols"/>
+    /* com.ceragem.api.crm.dao.CrmCustBosCntrtHstDao.select */ 
+               SELECT <include refid="sqlSelectCols"/>
                  FROM CRM_CUST_BOS_CNTRT_HST A
         <include refid="sqlPkConditions"/>
     </select>
@@ -1531,30 +1553,29 @@
     <sql id="sqlContractList">
 <!--             SELECT <include refid="sqlSelectCols"/> -->
 <!--               FROM CRM_CUST_BOS_CNTRT_HST A -->
-<!--              WHERE A.SALE_TY_CD IN ( '2101','2102','2103','2104', '1401','1402','1403','1404') -->
+<!--              INNER JOIN CRM_CUST_BAS B ON A.ITG_CUST_NO = B.ITG_CUST_NO AND  B.CUST_STATUS_CD != '003' -->
+<!--              WHERE A.SALE_TY_CD IN ( '2101','2102','2103','2104', '1401','1402','1403','1404','1405') -->
 <!--                AND A.CUST_TY_CD != '2' -->
+<!--                AND A.SALE_TY_CD !='2401' -->
 <!--                AND A.ITG_CUST_NO = #{itgCustNo} -->
 <!--              UNION ALL -->
-<!--             SELECT <include refid="sqlSelectCols"/> -->
-<!--               FROM CRM_CUST_BOS_CNTRT_HST A -->
-<!--              INNER JOIN CRM_CUST_BAS B ON A.IST_CUST_NM = B.CUST_NM AND A.MOB_NO = B.MPHON_NO  AND B.CUST_STATUS_CD != '003' AND A.CUST_TY_CD = '2' -->
-<!--              WHERE A.SALE_TY_CD IN ( '2101','2102','2103','2104', '1401','1402','1403','1404') -->
-<!--                AND B.ITG_CUST_NO = #{itgCustNo} -->
-<!--                UNION ALL -->
+
             SELECT <include refid="sqlSelectCols"/>
               FROM CRM_CUST_BOS_CNTRT_HST A
              INNER JOIN CRM_CUST_BAS B ON A.IST_CUST_NM = B.CUST_NM AND A.MOB_NO = B.MPHON_NO  AND B.CUST_STATUS_CD != '003'
-             WHERE A.SALE_TY_CD IN ( '2401')
-              AND B.ITG_CUST_NO = #{itgCustNo}
+             WHERE ( ( A.SALE_TY_CD ='2401' ) OR (A.CUST_TY_CD = '2' AND A.SALE_TY_CD IN ( '2101','2102','2103','2104', '1401','1402','1403','1404','1405') ) )
+               AND B.ITG_CUST_NO = #{itgCustNo}
     </sql>
     
     <select id="selectCustContractListCount" resultType="int">
-               SELECT /* com.ceragem.batch.crm.dao.CrmCustBosCntrtHstDao.selectCustContractListCount */ COUNT(1)
+    /* com.ceragem.api.crm.dao.CrmCustBosCntrtHstDao.selectCustContractListCount */ 
+               SELECT COUNT(1)
                  FROM (<include refid="sqlContractList"/>)
     </select>
     <select id="selectCustContractList" resultType="com.ceragem.api.crm.model.CrmCustBosCntrtHstVo">
+    /* com.ceragem.api.crm.dao.CrmCustBosCntrtHstDao.selectCustContractList */ 
         <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingHeader"/>
-               SELECT /* com.ceragem.batch.crm.dao.CrmCustBosCntrtHstDao.selectCustContractList */ A.*
+               SELECT A.*
                  FROM (<include refid="sqlContractList"/>) A
                 ORDER BY A.ORD_DE DESC
         <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingFooter"/>
@@ -1562,7 +1583,8 @@
     
     
     <insert id="insert">
-                INSERT /* com.ceragem.batch.crm.dao.CrmCustBosCntrtHstDao.insert */ INTO CRM_CUST_BOS_CNTRT_HST (
+    /* com.ceragem.api.crm.dao.CrmCustBosCntrtHstDao.insert */
+                INSERT  INTO CRM_CUST_BOS_CNTRT_HST (
         <include refid="sqlCols"/>
                  ) VALUES (
                        #{cntrNo}
@@ -1778,7 +1800,8 @@
                  )
     </insert>
     <update id="update">
-               UPDATE /* com.ceragem.batch.crm.dao.CrmCustBosCntrtHstDao.update */ CRM_CUST_BOS_CNTRT_HST
+    /* com.ceragem.api.crm.dao.CrmCustBosCntrtHstDao.update */
+               UPDATE CRM_CUST_BOS_CNTRT_HST
                   SET CUST_NO                                 =         #{custNo}
                     , CUST_NM                                 =         #{custNm}
                     , ITG_CUST_NO                             =         #{itgCustNo}
@@ -1990,7 +2013,8 @@
         <include refid="sqlPkConditions"/>
     </update>
     <delete id="delete">
-               DELETE /* com.ceragem.batch.crm.dao.CrmCustBosCntrtHstDao.delete */
+     /* com.ceragem.api.crm.dao.CrmCustBosCntrtHstDao.delete */
+               DELETE
                  FROM CRM_CUST_BOS_CNTRT_HST
         <include refid="sqlPkConditions"/>
     </delete>

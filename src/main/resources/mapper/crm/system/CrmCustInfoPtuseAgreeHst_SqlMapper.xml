@@ -143,6 +143,11 @@
                     , PUSH_RCV_AGREE_YN                     =       DECODE(#{pushRcvAgreeYn},NULL,PUSH_RCV_AGREE_YN, #{pushRcvAgreeYn})
                     , PUSH_RCV_AGREE_DT                     =       DECODE(#{pushRcvAgreeYn},NULL,PUSH_RCV_AGREE_DT, SYSDATE )
                     , PUSH_RCV_AGREE_CHL_CD                 =       DECODE(#{pushRcvAgreeYn},NULL,PUSH_RCV_AGREE_CHL_CD, NVL(#{regChlCd},#{amdrId}))
+                    , APP_PUSH_OS_CD                        =       NVL(#{appPushOsCd},APP_PUSH_OS_CD)
+                    , APP_PUSH_TOKN                         =       NVL(#{appPushTokn},APP_PUSH_TOKN)
+                    , EXPRN_INFO_AGREE_YN                   =       DECODE(#{exprnInfoAgreeYn},NULL,EXPRN_INFO_AGREE_YN, #{exprnInfoAgreeYn})
+                    , EXPRN_INFO_AGREE_DT                   =       DECODE(#{exprnInfoAgreeYn},NULL,EXPRN_INFO_AGREE_DT, SYSDATE )
+                    , EXPRN_INFO_AGREE_CHL_CD               =       DECODE(#{exprnInfoAgreeYn},NULL,EXPRN_INFO_AGREE_CHL_CD, NVL(#{regChlCd},#{amdrId}))
                 WHERE ITG_CUST_NO = #{itgCustNo}
     </update>
     <update id="update">

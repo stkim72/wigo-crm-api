@@ -91,6 +91,8 @@
                     , APP_PUSH_TOKN
 					, EXPRN_YN
                     , SALE_AGGR_AMT
+                    , MSHIP_EXPT_GRADE_CD       /*멤버십예정등급코드*/
+                    , MSHIP_ORI_GRADE_CD /*멤버십원등급코드*/
     </sql>
     <sql id="sqlCols">
                       <include refid="sqlDormCols"/>
@@ -134,10 +136,16 @@
                     , A.ALRM_TK_RCV_AGREE_CHL_CD                    /*알람톡수신동의채널코드        */
                     , A.PUSH_RCV_AGREE_YN                    /*PUSH수신동의여부        */
                     , A.PUSH_RCV_AGREE_CHL_CD                    /*PUSH수신동의채널코드        */
-                    , A.CI_CERTF_YN                    /*CI인증여부        */
+         <choose>
+            <when test="'Y'.toString().equals(decryptYn) ">
                     , A.CI                    /*CI        */
+                    , A.DI                    /*DI        */</when>
+            <otherwise>
+                    , '' CI                    /*CI        */
+                    , '' DI                    /*DI        */</otherwise>
+        </choose>
+                    , A.CI_CERTF_YN                    /*CI인증여부        */
                     , A.DI_CERTF_YN                    /*DI인증여부        */
-                    , A.DI                    /*DI        */
                     , A.RCV_RFSL_YN                    /*수신거부여부        */
                     , A.MSHIP_SBSC_YN                    /*멤버십가입여부        */
                     , A.MSHIP_LOGIN_ID                    /*멤버십로그인ID        */
@@ -163,13 +171,15 @@
                     , A.REG_CHL_CD                    /*등록채널코드        */
                     , A.DORM_PERD_CD    /*휴면기간코드*/
                     , A.APP_PUSH_TOKN
+                    , A.APP_PUSH_OS_CD
 					, A.EXPRN_YN
                     , A.SALE_AGGR_AMT
                     , A.AMDR_ID                    /*수정자ID        */
                     , A.REGR_ID                    /*등록자ID        */
                     , A.MPHON_NO  MPHON_NO_ENC_VAL
-                    
-                    
+                    , A.EXPRN_INFO_AGREE_YN /* 체험정보동의여부*/
+                    , A.EXPRN_INFO_AGREE_DT /* 체험정보동의일 */
+                    , A.EXPRN_INFO_AGREE_CHL_CD /* 체험정보동의채널코드*/
                     
 <!--                     ,  <choose> -->
 <!--                         <when test="purchaseStartYmd != null and purchaseStartYmd != '' and purchaseEndYmd !=null and purchaseEndYmd !=''"> -->
@@ -190,7 +200,7 @@
                     , A.MPHON_BK_DGT_NO                    /*이동전화뒤자리번호        */
     </sql>
     <sql id="sqlSelectDecCols">
-                    , A.MPHON_NO  MPHON_NO                    /*이동전화번호        */
+                    , DAMO.DECRYPT_VAR_B64('AES_256',A.MPHON_NO,'')  MPHON_NO                    /*이동전화번호        */
                     , A.MPHON_BK_DGT_NO                    /*이동전화뒤자리번호        */
                     
                     
@@ -236,21 +246,35 @@
                     , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'S000' AND COMN_CD = A.REG_CHL_CD AND  COMN_CD_LVL_NO = 2) REG_CHL_CD_NM
                     , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'CU100' AND COMN_CD = A.DISTRCT_CD AND  COMN_CD_LVL_NO = 2) DISTRCT_CD_NM
                     , (SELECT COUNT(1) FROM CRM_BLLK_CUST_HST WHERE ITG_CUST_NO = A.ITG_CUST_NO AND DEL_YN = 'N') BLACK_CNT
-                    , (SELECT CARD_BAS_NO FROM  (SELECT CARD_BAS_NO, ROW_NUMBER() OVER (ORDER BY REG_DT DESC) RNUM FROM CRM_CARD_PBLS_HST WHERE ITG_CUST_NO = A.ITG_CUST_NO  ) WHERE RNUM =1 ) CARD_NO
                     , (SELECT COUNT(1) FROM CRM_COUPN_PBLS_HST WHERE ITG_CUST_NO = A.ITG_CUST_NO AND COUPN_BOOK_HST_SEQ IS NULL AND USE_DT IS NULL AND TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN NVL(FROM_USE_STD_DAY,'20000101') AND NVL(TO_USE_STD_DAY,'99991231')  ) COUPON_CNT
                     , (SELECT COUNT(1) FROM CRM_COUPN_BOOK_PBLS_HST BK WHERE BK.ITG_CUST_NO = A.ITG_CUST_NO AND BK.DEL_YN ='N' AND BK.COUPN_BOOK_HST_SEQ IN ( SELECT COUPN_BOOK_HST_SEQ FROM CRM_COUPN_PBLS_HST WHERE ITG_CUST_NO =  BK.ITG_CUST_NO AND USE_DT IS NULL AND TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN NVL(FROM_USE_STD_DAY,'20000101') AND NVL(TO_USE_STD_DAY,'99991231')   ) ) COUPON_BOOK_CNT
-                    , A.EMAIL_ADDR EMAIL_ADDR                    /*이메일주소        */
-                    , A.CORP_TEL_NO CORP_TEL_NO                    /*법인전화번호        */
-                    , A.PIC_MPHON_NO  PIC_MPHON_NO                    /*담당자이동전화번호        */
-                    , A.PIC_EMAIL_ADDR  PIC_EMAIL_ADDR                    /*담당자이메일주소        */
-                    , A.ADDR_2_CTNTS ADDR_2_CTNTS                    /*주소2내용        */
-                    , NVL((SELECT AGREE_YN INFO_AGREE_YN FROM (SELECT AGREE_YN,REG_DT,ROW_NUMBER() OVER (PARTITION BY ITG_CUST_NO,AGREE_TYPE_CD ORDER BY REG_DT DESC) RNUM FROM CRM_CUST_INFO_PTUSE_AGREE_HST WHERE  AGREE_TYPE_CD = '005' AND ITG_CUST_NO = A.ITG_CUST_NO) A WHERE RNUM = 1),'N')  INFO_AGREE_YN
-                    , (SELECT TO_CHAR(REG_DT,'YYYYMMDDHH24MISS') INFO_AGREE_DT FROM (SELECT AGREE_YN,REG_DT,ROW_NUMBER() OVER (PARTITION BY ITG_CUST_NO,AGREE_TYPE_CD ORDER BY REG_DT DESC) RNUM FROM CRM_CUST_INFO_PTUSE_AGREE_HST WHERE  AGREE_TYPE_CD = '005' AND ITG_CUST_NO = A.ITG_CUST_NO) A WHERE RNUM = 1)  INFO_AGREE_DT
+                    , DAMO.DECRYPT_VAR_B64('AES_256',A.EMAIL_ADDR,'') EMAIL_ADDR                    /*이메일주소        */
+                    , DAMO.DECRYPT_VAR_B64('AES_256',A.CORP_TEL_NO,'') CORP_TEL_NO                    /*법인전화번호        */
+                    , DAMO.DECRYPT_VAR_B64('AES_256',A.PIC_MPHON_NO,'')  PIC_MPHON_NO                    /*담당자이동전화번호        */
+                    , DAMO.DECRYPT_VAR_B64('AES_256',A.PIC_EMAIL_ADDR,'')  PIC_EMAIL_ADDR                    /*담당자이메일주소        */
+                    <choose>
+            <when test="'Y'.toString().equals(decryptYn) ">
+                    , DAMO.DECRYPT_VAR_B64('AES_256',A.ADDR_2_CTNTS,'') ADDR_2_CTNTS                    /*주소2내용        */
+                    , (SELECT CARD_BAS_NO FROM  (SELECT CARD_BAS_NO, ROW_NUMBER() OVER (ORDER BY REG_DT DESC) RNUM FROM CRM_CARD_PBLS_HST WHERE ITG_CUST_NO = A.ITG_CUST_NO  ) WHERE RNUM =1 ) CARD_NO
+               </when>
+            <otherwise>
+                    , A.ADDR_2_CTNTS                    /*주소2내용        */
+<!--                     , '' CARD_NO -->
+                    , (SELECT CARD_BAS_NO FROM  (SELECT CARD_BAS_NO, ROW_NUMBER() OVER (ORDER BY REG_DT DESC) RNUM FROM CRM_CARD_PBLS_HST WHERE ITG_CUST_NO = A.ITG_CUST_NO  ) WHERE RNUM =1 ) CARD_NO
+          </otherwise>
+        </choose>
+                    
+                    , NVL((SELECT AGREE_YN FROM (SELECT AGREE_YN,REG_DT,ROW_NUMBER() OVER (PARTITION BY ITG_CUST_NO,AGREE_TYPE_CD ORDER BY REG_DT DESC) RNUM FROM CRM_CUST_INFO_PTUSE_AGREE_HST WHERE  AGREE_TYPE_CD = '002' AND ITG_CUST_NO = A.ITG_CUST_NO) A WHERE RNUM = 1),'N')  COLLECT_AGREE_YN
+                    , (SELECT TO_CHAR(REG_DT,'YYYYMMDDHH24MISS') INFO_AGREE_DT FROM (SELECT AGREE_YN,REG_DT,ROW_NUMBER() OVER (PARTITION BY ITG_CUST_NO,AGREE_TYPE_CD ORDER BY REG_DT DESC) RNUM FROM CRM_CUST_INFO_PTUSE_AGREE_HST WHERE  AGREE_TYPE_CD = '002' AND ITG_CUST_NO = A.ITG_CUST_NO) A WHERE RNUM = 1)  COLLECT_AGREE_DT
+                    , (SELECT CHL_CD FROM (SELECT AGREE_YN,REG_DT,REG_CHL_CD CHL_CD,ROW_NUMBER() OVER (PARTITION BY ITG_CUST_NO,AGREE_TYPE_CD ORDER BY REG_DT DESC) RNUM FROM CRM_CUST_INFO_PTUSE_AGREE_HST WHERE  AGREE_TYPE_CD = '002' AND ITG_CUST_NO = A.ITG_CUST_NO) A WHERE RNUM = 1)  COLLECT_AGREE_CHL_CD
+                    , (SELECT COMN_CD_NM FROM (SELECT AGREE_YN,REG_DT,REG_CHL_CD CHL_CD ,ROW_NUMBER() OVER (PARTITION BY ITG_CUST_NO,AGREE_TYPE_CD ORDER BY REG_DT DESC) RNUM FROM CRM_CUST_INFO_PTUSE_AGREE_HST WHERE  AGREE_TYPE_CD = '002' AND ITG_CUST_NO = A.ITG_CUST_NO) M,CRM_COMN_CD_BAS B WHERE RNUM = 1 AND B.TOP_COMN_CD = 'S000' AND B.COMN_CD = M.CHL_CD AND  B.COMN_CD_LVL_NO = 2 )  COLLECT_AGREE_CHL_CD_NM
+                    , NVL((SELECT AGREE_YN FROM (SELECT AGREE_YN,REG_DT,ROW_NUMBER() OVER (PARTITION BY ITG_CUST_NO,AGREE_TYPE_CD ORDER BY REG_DT DESC) RNUM FROM CRM_CUST_INFO_PTUSE_AGREE_HST WHERE  AGREE_TYPE_CD = '005' AND ITG_CUST_NO = A.ITG_CUST_NO) A WHERE RNUM = 1),'N')  INFO_AGREE_YN
+                    , (SELECT TO_CHAR(REG_DT,'YYYYMMDDHH24MISS') AGREE_DT FROM (SELECT AGREE_YN,REG_DT,ROW_NUMBER() OVER (PARTITION BY ITG_CUST_NO,AGREE_TYPE_CD ORDER BY REG_DT DESC) RNUM FROM CRM_CUST_INFO_PTUSE_AGREE_HST WHERE  AGREE_TYPE_CD = '005' AND ITG_CUST_NO = A.ITG_CUST_NO) A WHERE RNUM = 1)  INFO_AGREE_DT
                     , (SELECT CHL_CD FROM (SELECT AGREE_YN,REG_DT,REG_CHL_CD CHL_CD,ROW_NUMBER() OVER (PARTITION BY ITG_CUST_NO,AGREE_TYPE_CD ORDER BY REG_DT DESC) RNUM FROM CRM_CUST_INFO_PTUSE_AGREE_HST WHERE  AGREE_TYPE_CD = '005' AND ITG_CUST_NO = A.ITG_CUST_NO) A WHERE RNUM = 1)  INFO_AGREE_CHL_CD
                     , (SELECT COMN_CD_NM FROM (SELECT AGREE_YN,REG_DT,REG_CHL_CD CHL_CD ,ROW_NUMBER() OVER (PARTITION BY ITG_CUST_NO,AGREE_TYPE_CD ORDER BY REG_DT DESC) RNUM FROM CRM_CUST_INFO_PTUSE_AGREE_HST WHERE  AGREE_TYPE_CD = '005' AND ITG_CUST_NO = A.ITG_CUST_NO) M,CRM_COMN_CD_BAS B WHERE RNUM = 1 AND B.TOP_COMN_CD = 'S000' AND B.COMN_CD = M.CHL_CD AND  B.COMN_CD_LVL_NO = 2 )  INFO_AGREE_CHL_CD_NM
                     , (SELECT CPRT_CMP_NO FROM (SELECT ITG_CUST_NO, CPRT_CMP_IDFY_NO,CPRT_CMP_NO ,ROW_NUMBER() OVER (PARTITION BY ITG_CUST_NO ORDER BY REG_DT DESC) RNUM FROM CRM_CRPT_CMP_EXECVDEMP_BAS ) WHERE ITG_CUST_NO = A.ITG_CUST_NO AND RNUM =1) CPRT_CMP_NO
                     , (SELECT CMP.CPRT_CMP_NM FROM (SELECT ITG_CUST_NO, CPRT_CMP_IDFY_NO,CPRT_CMP_NO ,ROW_NUMBER() OVER (PARTITION BY ITG_CUST_NO ORDER BY REG_DT DESC) RNUM FROM CRM_CRPT_CMP_EXECVDEMP_BAS ) EX, CRM_CRPT_CMP_BAS CMP WHERE EX.ITG_CUST_NO = A.ITG_CUST_NO AND EX.CPRT_CMP_NO= CMP.CPRT_CMP_NO AND EX.RNUM = 1) CPRT_CMP_NM   
-                    , (SELECT AGREE_YN MARKETING_YN FROM (SELECT AGREE_YN,REG_DT,ROW_NUMBER() OVER (PARTITION BY ITG_CUST_NO,AGREE_TYPE_CD ORDER BY REG_DT DESC) RNUM FROM CRM_CUST_INFO_PTUSE_AGREE_HST WHERE  AGREE_TYPE_CD = '003' AND ITG_CUST_NO = A.ITG_CUST_NO) A WHERE RNUM = 1)  MARKETING_AGREE_YN
+                    , (SELECT AGREE_YN FROM (SELECT AGREE_YN,REG_DT,ROW_NUMBER() OVER (PARTITION BY ITG_CUST_NO,AGREE_TYPE_CD ORDER BY REG_DT DESC) RNUM FROM CRM_CUST_INFO_PTUSE_AGREE_HST WHERE  AGREE_TYPE_CD = '003' AND ITG_CUST_NO = A.ITG_CUST_NO) A WHERE RNUM = 1)  MARKETING_AGREE_YN
                     , (SELECT TO_CHAR(REG_DT,'YYYYMMDDHH24MISS') FROM (SELECT AGREE_YN,REG_DT,ROW_NUMBER() OVER (PARTITION BY ITG_CUST_NO,AGREE_TYPE_CD ORDER BY REG_DT DESC) RNUM FROM CRM_CUST_INFO_PTUSE_AGREE_HST WHERE  AGREE_TYPE_CD = '003' AND ITG_CUST_NO = A.ITG_CUST_NO) A WHERE RNUM = 1)  MARKETING_AGREE_DT
                     , (SELECT CHL_CD FROM (SELECT AGREE_YN,REG_DT,REG_CHL_CD CHL_CD,ROW_NUMBER() OVER (PARTITION BY ITG_CUST_NO,AGREE_TYPE_CD ORDER BY REG_DT DESC) RNUM FROM CRM_CUST_INFO_PTUSE_AGREE_HST WHERE  AGREE_TYPE_CD = '003' AND ITG_CUST_NO = A.ITG_CUST_NO) A WHERE RNUM = 1)  MARKETING_AGREE_CHL_CD
                     , (SELECT COMN_CD_NM FROM (SELECT AGREE_YN,REG_DT,REG_CHL_CD CHL_CD ,ROW_NUMBER() OVER (PARTITION BY ITG_CUST_NO,AGREE_TYPE_CD ORDER BY REG_DT DESC) RNUM FROM CRM_CUST_INFO_PTUSE_AGREE_HST WHERE  AGREE_TYPE_CD = '003' AND ITG_CUST_NO = A.ITG_CUST_NO) M,CRM_COMN_CD_BAS B WHERE RNUM = 1 AND B.TOP_COMN_CD = 'S000' AND B.COMN_CD = M.CHL_CD AND  B.COMN_CD_LVL_NO = 2 )  MARKETING_AGREE_CHL_CD_NM
@@ -266,33 +290,47 @@
     <sql id="sqlContactInfo">
     	SELECT A.ITG_CUST_NO
              , MAX(DECODE(CNTPLC_TYPE_CD,'001',CNTPLC_TYPE_CD,NULL)) CNTPLC_TYPE_CD_001
-             , MAX(DECODE(CNTPLC_TYPE_CD,'001',TEL_NO,NULL)) TEL_NO_001
+             , DAMO.DECRYPT_VAR_B64('AES_256',MAX(DECODE(CNTPLC_TYPE_CD,'001',TEL_NO,NULL)),'') TEL_NO_001
              , MAX(DECODE(CNTPLC_TYPE_CD,'001',TEL_BK_DGT_NO,NULL)) TEL_BK_DGT_NO_001
              , MAX(DECODE(CNTPLC_TYPE_CD,'001',ZIP_CD,NULL)) ZIP_CD_001
              , MAX(DECODE(CNTPLC_TYPE_CD,'001',ADDR_1_CTNTS,NULL)) ADDR_1_CTNTS_001
-             , MAX(DECODE(CNTPLC_TYPE_CD,'001',ADDR_2_CTNTS,NULL)) ADDR_2_CTNTS_001
+             
              , MAX(DECODE(CNTPLC_TYPE_CD,'001',DISTRCT_CD,NULL)) DISTRCT_CD_001
              , MAX(DECODE(CNTPLC_TYPE_CD,'002',CNTPLC_TYPE_CD,NULL)) CNTPLC_TYPE_CD_002
-             , MAX(DECODE(CNTPLC_TYPE_CD,'002',TEL_NO,NULL)) TEL_NO_002
+             , DAMO.DECRYPT_VAR_B64('AES_256',MAX(DECODE(CNTPLC_TYPE_CD,'002',TEL_NO,NULL)),'') TEL_NO_002
              , MAX(DECODE(CNTPLC_TYPE_CD,'002',TEL_BK_DGT_NO,NULL)) TEL_BK_DGT_NO_002
              , MAX(DECODE(CNTPLC_TYPE_CD,'002',ZIP_CD,NULL)) ZIP_CD_002
              , MAX(DECODE(CNTPLC_TYPE_CD,'002',ADDR_1_CTNTS,NULL)) ADDR_1_CTNTS_002
-             , MAX(DECODE(CNTPLC_TYPE_CD,'002',ADDR_2_CTNTS,NULL)) ADDR_2_CTNTS_002
+             
              , MAX(DECODE(CNTPLC_TYPE_CD,'002',DISTRCT_CD,NULL)) DISTRCT_CD_002
              , MAX(DECODE(CNTPLC_TYPE_CD,'003',CNTPLC_TYPE_CD,NULL)) CNTPLC_TYPE_CD_003
-             , MAX(DECODE(CNTPLC_TYPE_CD,'003',TEL_NO,NULL)) TEL_NO_003
+             , DAMO.DECRYPT_VAR_B64('AES_256',MAX(DECODE(CNTPLC_TYPE_CD,'003',TEL_NO,NULL)),'') TEL_NO_003
              , MAX(DECODE(CNTPLC_TYPE_CD,'003',TEL_BK_DGT_NO,NULL)) TEL_BK_DGT_NO_003
              , MAX(DECODE(CNTPLC_TYPE_CD,'003',ZIP_CD,NULL)) ZIP_CD_003
              , MAX(DECODE(CNTPLC_TYPE_CD,'003',ADDR_1_CTNTS,NULL)) ADDR_1_CTNTS_003
-             , MAX(DECODE(CNTPLC_TYPE_CD,'003',ADDR_2_CTNTS,NULL)) ADDR_2_CTNTS_003
+             
              , MAX(DECODE(CNTPLC_TYPE_CD,'003',DISTRCT_CD,NULL)) DISTRCT_CD_003
              , MAX(DECODE(CNTPLC_TYPE_CD,'004',CNTPLC_TYPE_CD,NULL)) CNTPLC_TYPE_CD_004
-             , MAX(DECODE(CNTPLC_TYPE_CD,'004',TEL_NO,NULL)) TEL_NO_004
+             , DAMO.DECRYPT_VAR_B64('AES_256',MAX(DECODE(CNTPLC_TYPE_CD,'004',TEL_NO,NULL)),'') TEL_NO_004
              , MAX(DECODE(CNTPLC_TYPE_CD,'004',TEL_BK_DGT_NO,NULL)) TEL_BK_DGT_NO_004
              , MAX(DECODE(CNTPLC_TYPE_CD,'004',ZIP_CD,NULL)) ZIP_CD_004
              , MAX(DECODE(CNTPLC_TYPE_CD,'004',ADDR_1_CTNTS,NULL)) ADDR_1_CTNTS_004
-             , MAX(DECODE(CNTPLC_TYPE_CD,'004',ADDR_2_CTNTS,NULL)) ADDR_2_CTNTS_004
+             
              , MAX(DECODE(CNTPLC_TYPE_CD,'004',DISTRCT_CD,NULL)) DISTRCT_CD_004
+            <choose>
+            <when test="'Y'.toString().equals(decryptYn) ">
+             , DAMO.DECRYPT_VAR_B64('AES_256',MAX(DECODE(CNTPLC_TYPE_CD,'001',ADDR_2_CTNTS,NULL)),'') ADDR_2_CTNTS_001
+             , DAMO.DECRYPT_VAR_B64('AES_256',MAX(DECODE(CNTPLC_TYPE_CD,'002',ADDR_2_CTNTS,NULL)),'') ADDR_2_CTNTS_002
+             , DAMO.DECRYPT_VAR_B64('AES_256',MAX(DECODE(CNTPLC_TYPE_CD,'003',ADDR_2_CTNTS,NULL)),'') ADDR_2_CTNTS_003
+             , DAMO.DECRYPT_VAR_B64('AES_256',MAX(DECODE(CNTPLC_TYPE_CD,'004',ADDR_2_CTNTS,NULL)),'') ADDR_2_CTNTS_004
+            </when>
+            <otherwise>
+             , MAX(DECODE(CNTPLC_TYPE_CD,'001',ADDR_2_CTNTS,NULL)) ADDR_2_CTNTS_001
+             , MAX(DECODE(CNTPLC_TYPE_CD,'002',ADDR_2_CTNTS,NULL)) ADDR_2_CTNTS_002
+             , MAX(DECODE(CNTPLC_TYPE_CD,'003',ADDR_2_CTNTS,NULL)) ADDR_2_CTNTS_003
+             , MAX(DECODE(CNTPLC_TYPE_CD,'004',ADDR_2_CTNTS,NULL)) ADDR_2_CTNTS_004
+          </otherwise>
+        </choose>
           FROM (
             SELECT ITG_CUST_NO
                  , CNTPLC_TYPE_CD
@@ -309,6 +347,249 @@
          WHERE RNUM = 1
          GROUP BY A.ITG_CUST_NO
     </sql>    
+    <!-- 총구매건수 [의료가전,안마의자,프리미엄안마의자]/ 최초구매날자 [의료가전,안마의자,프리미엄안마의자]/최초설치날짜[의료가전,안마의자,프리미엄안마의자] -->
+    <sql id="sqlBuyGodsInfo">
+    	SELECT 
+            T1.ITG_CUST_NO
+            , T1.CNT_1100
+            , T1.CNT_2100
+            , T1.CNT_2200
+            , T1.CNT_3100
+            , T1.CNT_4100
+            , T1.CNT_1200
+            , T1.CNT_10100
+            , T1.ORD_DE_1100
+            , T1.ORD_DE_2100
+            , T1.ORD_DE_2200
+            , T1.ORD_DE_3100
+            , T1.ORD_DE_4100
+            , T1.ORD_DE_1200
+            , T1.ORD_DE_10100
+            , T1.IST_DCS_DE_1100
+            , T1.IST_DCS_DE_2100
+            , T1.IST_DCS_DE_2200
+            , T1.IST_DCS_DE_3100
+            , T1.IST_DCS_DE_4100
+            , T1.IST_DCS_DE_1200
+            , T1.IST_DCS_DE_10100
+            , T2.FIRST_BUY_DE
+            , T2.TOT
+            , T2.UP_CNT
+            , T2.DW_CNT
+            , T2.FIRST_DE
+            , T2.LAST_DE
+            , T3.FIRST_STORE
+            , T3.FIRST_STORE_NM
+            , T3.LAST_STORE
+            , T3.LAST_STORE_NM
+        FROM (
+    	    SELECT 
+		          CUST.ITG_CUST_NO
+		        , COUNT (DECODE(HST.ITEM_TY_CD,'1100',1)) AS "CNT_1100"
+		        , COUNT (DECODE(HST.ITEM_TY_CD,'2100',1)) AS "CNT_2100"
+		        , COUNT (DECODE(HST.ITEM_TY_CD,'2200',1)) AS "CNT_2200"
+                , COUNT (DECODE(HST.ITEM_TY_CD,'3100',1)) AS "CNT_3100"
+                , COUNT (DECODE(HST.ITEM_TY_CD,'4100',1)) AS "CNT_4100"
+                , COUNT (DECODE(HST.ITEM_TY_CD,'1200',1)) AS "CNT_1200"
+                , COUNT (DECODE(HST.ITEM_TY_CD,'10100',1)) AS "CNT_10100"
+		        , MIN (DECODE(HST.ITEM_TY_CD,'1100',ORD_DE)) AS "ORD_DE_1100"
+		        , MIN (DECODE(HST.ITEM_TY_CD,'2100',ORD_DE)) AS "ORD_DE_2100"
+		        , MIN (DECODE(HST.ITEM_TY_CD,'2200',ORD_DE)) AS "ORD_DE_2200"
+                , MIN (DECODE(HST.ITEM_TY_CD,'3100',ORD_DE)) AS "ORD_DE_3100"
+                , MIN (DECODE(HST.ITEM_TY_CD,'4100',ORD_DE)) AS "ORD_DE_4100"
+                , MIN (DECODE(HST.ITEM_TY_CD,'1200',ORD_DE)) AS "ORD_DE_1200"
+                , MIN (DECODE(HST.ITEM_TY_CD,'10100',ORD_DE)) AS "ORD_DE_10100"
+		        , MIN (DECODE(HST.ITEM_TY_CD,'1100',IST_DCS_DE)) AS "IST_DCS_DE_1100"
+		        , MIN (DECODE(HST.ITEM_TY_CD,'2100',IST_DCS_DE)) AS "IST_DCS_DE_2100"
+		        , MIN (DECODE(HST.ITEM_TY_CD,'2200',IST_DCS_DE)) AS "IST_DCS_DE_2200"
+                , MIN (DECODE(HST.ITEM_TY_CD,'3100',IST_DCS_DE)) AS "IST_DCS_DE_3100"
+                , MIN (DECODE(HST.ITEM_TY_CD,'4100',IST_DCS_DE)) AS "IST_DCS_DE_4100"
+                , MIN (DECODE(HST.ITEM_TY_CD,'1200',IST_DCS_DE)) AS "IST_DCS_DE_1200"
+                , MIN (DECODE(HST.ITEM_TY_CD,'10100',IST_DCS_DE)) AS "IST_DCS_DE_10100"
+		     FROM CRM_CUST_BAS CUST 
+		     LEFT JOIN (
+                         SELECT A.* 
+                              , B.ITG_CUST_NO IST_CUST_NO 
+                           FROM CRM_CUST_BOS_CNTRT_HST A
+                              , CRM_CUST_BAS B
+                          WHERE A.ITG_CUST_NO = B.ITG_CUST_NO
+                            AND A.RTGD_DCS_YN != 'Y' 
+                            AND A.IST_DCS_YN = 'Y'
+                            AND A.SALE_TY_CD != '2401'
+                            AND A.SALE_TY_CD != '1202'
+                            AND B.CUST_STATUS_CD != '003'
+                            AND A.CUST_TY_CD = '1'
+                          UNION ALL
+                         SELECT A.* 
+                              , B.ITG_CUST_NO IST_CUST_NO 
+                           FROM CRM_CUST_BOS_CNTRT_HST A
+                              , CRM_CUST_BAS B
+                          WHERE A.IST_CUST_NM = B.CUST_NM
+                            AND A.MOB_NO = B.MPHON_NO
+                            AND A.RTGD_DCS_YN != 'Y' 
+                            AND A.IST_DCS_YN = 'Y'
+                            AND A.SALE_TY_CD != '1202'
+                            AND B.CUST_STATUS_CD != '003'
+                            AND (A.CUST_TY_CD = '2' OR A.SALE_TY_CD = '2401')
+                       ) HST ON CUST.ITG_CUST_NO = HST.IST_CUST_NO
+		    WHERE IST_DCS_YN = 'Y'
+		    GROUP BY CUST.ITG_CUST_NO
+		) T1 JOIN (
+            SELECT 
+                CUST.ITG_CUST_NO
+                , COUNT(TYPE) TOT
+                , COUNT(DECODE(TYPE,'UP',1)) UP_CNT
+                , COUNT(DECODE(TYPE,'DW',1)) DW_CNT
+                , MAX (NVL(DECODE(TYPE,'UP',EXPRN_DATE),EXPRN_DATE)) LAST_DE
+    			, MIN (NVL(DECODE(TYPE,'DW',EXPRN_DATE),EXPRN_DATE)) FIRST_DE
+                , MIN (MIN_DE) FIRST_BUY_DE
+             FROM CRM_CUST_BAS CUST 
+		     LEFT JOIN (
+                SELECT 
+                    A.ITG_CUST_NO
+                    , A.MIN_DE
+                    , B.EXPRN_DATE
+                    , CASE 
+                        WHEN B.EXPRN_DATE  >  A.MIN_DE  THEN 'UP'
+                        WHEN  A.MIN_DE >=  B.EXPRN_DATE  THEN 'DW'
+                    END TYPE
+                 FROM (
+                    SELECT 
+                        IST_CUST_NO ITG_CUST_NO
+                        , MIN (ORD_DE) MIN_DE
+                     FROM (
+                         SELECT A.* 
+                              , B.ITG_CUST_NO IST_CUST_NO 
+                           FROM CRM_CUST_BOS_CNTRT_HST A
+                              , CRM_CUST_BAS B
+                          WHERE A.ITG_CUST_NO = B.ITG_CUST_NO
+                            AND A.RTGD_DCS_YN != 'Y' 
+                            AND A.IST_DCS_YN = 'Y'
+                            AND A.SALE_TY_CD != '2401'
+                            AND A.SALE_TY_CD != '1202'
+                            AND B.CUST_STATUS_CD != '003'
+                            AND A.CUST_TY_CD = '1'
+                          UNION ALL
+                         SELECT A.* 
+                              , B.ITG_CUST_NO IST_CUST_NO 
+                           FROM CRM_CUST_BOS_CNTRT_HST A
+                              , CRM_CUST_BAS B
+                          WHERE A.IST_CUST_NM = B.CUST_NM
+                            AND A.MOB_NO = B.MPHON_NO
+                            AND A.RTGD_DCS_YN != 'Y' 
+                            AND A.IST_DCS_YN = 'Y'
+                            AND A.SALE_TY_CD != '1202'
+                            AND B.CUST_STATUS_CD != '003'
+                            AND (A.CUST_TY_CD = '2' OR A.SALE_TY_CD = '2401')
+                       ) A 
+                        WHERE IST_DCS_YN = 'Y'
+                          AND ITEM_TY_CD IN ('1100','2100','2200','3100','4100','1200','10100') 
+                        GROUP BY IST_CUST_NO
+                 ) A LEFT JOIN CRM_CUST_EXPRN_HST B ON A.ITG_CUST_NO = B.ITG_CUST_NO 
+                    WHERE MIN_DE IS NOT NULL  
+            ) A ON A.ITG_CUST_NO = CUST.ITG_CUST_NO GROUP BY CUST.ITG_CUST_NO
+		) T2 ON T1.ITG_CUST_NO = T2.ITG_CUST_NO
+		JOIN (        
+            SELECT 
+                CUST.ITG_CUST_NO
+                , AA.SALE_ORGZ_CUST_CD FIRST_STORE
+                , NVL((SELECT STOR_NM FROM CRM_STOR_BAS WHERE STOR_NO = AA.SALE_ORGZ_CUST_CD AND ROWNUM = 1),'미확인') FIRST_STORE_NM
+                , AA.CNTR_NO
+                , AA.ORD_DE
+                , BB.STOR_CD LAST_STORE
+                , NVL((SELECT STOR_NM FROM CRM_STOR_BAS WHERE STOR_NO = BB.STOR_CD AND ROWNUM = 1),'미확인') LAST_STORE_NM
+                , BB.EXPRN_DATE
+             FROM CRM_CUST_BAS CUST LEFT JOIN(
+                SELECT IST_CUST_NO ITG_CUST_NO
+                    , SALE_ORGZ_CUST_CD
+                    , CNTR_NO
+                    , ORD_DE
+                FROM (
+                    SELECT 
+                        A.*
+                        , ROW_NUMBER() OVER (partition by IST_CUST_NO, CNTR_NO ORDER BY CNTR_NO DESC ) RNUM
+                     FROM (
+                         SELECT A.* 
+                              , B.ITG_CUST_NO IST_CUST_NO 
+                           FROM CRM_CUST_BOS_CNTRT_HST A
+                              , CRM_CUST_BAS B
+                          WHERE A.ITG_CUST_NO = B.ITG_CUST_NO
+                            AND A.RTGD_DCS_YN != 'Y' 
+                            AND A.IST_DCS_YN = 'Y'
+                            AND A.SALE_TY_CD != '2401'
+                            AND A.SALE_TY_CD != '1202'
+                            AND B.CUST_STATUS_CD != '003'
+                            AND A.CUST_TY_CD = '1'
+                          UNION ALL
+                         SELECT A.* 
+                              , B.ITG_CUST_NO IST_CUST_NO 
+                           FROM CRM_CUST_BOS_CNTRT_HST A
+                              , CRM_CUST_BAS B
+                          WHERE A.IST_CUST_NM = B.CUST_NM
+                            AND A.MOB_NO = B.MPHON_NO
+                            AND A.RTGD_DCS_YN != 'Y' 
+                            AND A.IST_DCS_YN = 'Y'
+                            AND A.SALE_TY_CD != '1202'
+                            AND B.CUST_STATUS_CD != '003'
+                            AND (A.CUST_TY_CD = '2' OR A.SALE_TY_CD = '2401')
+                       ) A WHERE (IST_CUST_NO, CNTR_NO) IN (
+                        SELECT 
+                            IST_CUST_NO
+                            , MIN(CNTR_NO) CNTR_NO
+                            FROM (
+                         SELECT A.* 
+                              , B.ITG_CUST_NO IST_CUST_NO 
+                           FROM CRM_CUST_BOS_CNTRT_HST A
+                              , CRM_CUST_BAS B
+                          WHERE A.ITG_CUST_NO = B.ITG_CUST_NO
+                            AND A.RTGD_DCS_YN != 'Y' 
+                            AND A.IST_DCS_YN = 'Y'
+                            AND A.SALE_TY_CD != '2401'
+                            AND A.SALE_TY_CD != '1202'
+                            AND B.CUST_STATUS_CD != '003'
+                            AND A.CUST_TY_CD = '1'
+                          UNION ALL
+                         SELECT A.* 
+                              , B.ITG_CUST_NO IST_CUST_NO 
+                           FROM CRM_CUST_BOS_CNTRT_HST A
+                              , CRM_CUST_BAS B
+                          WHERE A.IST_CUST_NM = B.CUST_NM
+                            AND A.MOB_NO = B.MPHON_NO
+                            AND A.RTGD_DCS_YN != 'Y' 
+                            AND A.IST_DCS_YN = 'Y'
+                            AND A.SALE_TY_CD != '1202'
+                            AND B.CUST_STATUS_CD != '003'
+                            AND (A.CUST_TY_CD = '2' OR A.SALE_TY_CD = '2401')
+                       ) CONTR
+                                WHERE IST_DCS_YN = 'Y'
+                                    AND SALE_TY_CD IN ('2101','2102','2103','2104','2401','1401','1402','1403','1404','1405')
+                                    AND SALE_ORGZ_CUST_CD IS NOT NULL
+                                    GROUP BY IST_CUST_NO
+                     )
+                )A WHERE A.RNUM = 1
+            ) AA ON CUST.ITG_CUST_NO = AA.ITG_CUST_NO LEFT JOIN (
+                SELECT 
+                    ITG_CUST_NO
+                    , STOR_CD
+                    , EXPRN_DATE
+                 FROM (
+                    SELECT 
+                        A.*
+                        , ROW_NUMBER() OVER (partition by ITG_CUST_NO, EXPRN_DATE ORDER BY REG_DT DESC ) RNUM
+                    FROM CRM_CUST_EXPRN_HST A
+                        WHERE (ITG_CUST_NO,EXPRN_DATE) IN (
+                            SELECT 
+                                ITG_CUST_NO
+                                , MAX(EXPRN_DATE) EXPRN_DATE
+                             FROM CRM_CUST_EXPRN_HST 
+                                WHERE ITG_CUST_NO IS NOT NULL 
+                                GROUP BY ITG_CUST_NO
+                        ) 
+                )A WHERE A.RNUM = 1
+            ) BB ON CUST.ITG_CUST_NO = BB.ITG_CUST_NO
+		) T3 ON T2.ITG_CUST_NO = T3.ITG_CUST_NO
+    </sql>
+    
     <sql id="sqlConditions">
         <where>
         <if test="itgCustNo != null and itgCustNo != ''">
@@ -381,25 +662,25 @@
                   AND A.REP_NM          =       #{repNm}
         </if>
         <if test="mphonNo != null and mphonNo != ''">
-                  AND A.MPHON_NO        =       #{mphonNo}
+                  AND A.MPHON_NO        =       DAMO.ENCRYPT_VAR_B64('AES_256',#{mphonNo},'')
         </if>
         <if test="mphonBkDgtNo != null and mphonBkDgtNo != ''">
                   AND A.MPHON_BK_DGT_NO =       #{mphonBkDgtNo}
         </if>
         <if test="emailAddr != null and emailAddr != ''">
-                  AND A.EMAIL_ADDR      =       #{emailAddr}
+                  AND A.EMAIL_ADDR      =       DAMO.ENCRYPT_VAR_B64('AES_256',#{emailAddr},'')
         </if>
         <if test="picNm != null and picNm != ''">
                   AND A.PIC_NM          =       #{picNm}
         </if>
         <if test="picMphonNo != null and picMphonNo != ''">
-                  AND A.PIC_MPHON_NO    =       #{picMphonNo}
+                  AND A.PIC_MPHON_NO    =       DAMO.ENCRYPT_VAR_B64('AES_256',#{picMphonNo},'')
         </if>
         <if test="picMphonBkDgtNo != null and picMphonBkDgtNo != ''">
                   AND A.PIC_MPHON_BK_DGT_NO=       #{picMphonBkDgtNo}
         </if>
         <if test="picEmailAddr != null and picEmailAddr != ''">
-                  AND A.PIC_EMAIL_ADDR  =       #{picEmailAddr}
+                  AND A.PIC_EMAIL_ADDR  =       DAMO.ENCRYPT_VAR_B64('AES_256',#{picEmailAddr},'')
         </if>
         <if test="indiInfoValidPerdStaDt != null and indiInfoValidPerdStaDt != ''">
                   AND A.INDI_INFO_VALID_PERD_STA_DT=       TO_DATE(#{indiInfoValidPerdStaDt},'YYYYMMDDHH24MISS')
@@ -503,7 +784,7 @@
 				AND A.ADDR_1_CTNTS    LIKE  '%' ||    #{addr1Ctnts} || '%'
         </if>
         <if test="addr2Ctnts != null and addr2Ctnts != ''">
-                  AND A.ADDR_2_CTNTS    =       #{addr2Ctnts}
+                  AND A.ADDR_2_CTNTS    =       DAMO.ENCRYPT_VAR_B64('AES_256',#{addr2Ctnts},'')
         </if>
 <!--         <if test="rcmdStorNo != null and rcmdStorNo != ''"> -->
 <!--                   AND A.RCMD_STOR_NO    =       #{rcmdStorNo} -->
@@ -824,11 +1105,11 @@
         		  AND (A.ITG_CUST_NO IN (
         		  	SELECT ITG_CUST_NO 
         		  	  FROM CRM_CUST_CNTPLC_BAS
-        		  	 WHERE TEL_NO = #{phoneEncNo}
+        		  	 WHERE TEL_NO = DAMO.ENCRYPT_VAR_B64('AES_256',#{phoneEncNo},'')
         		  	   AND DEL_YN = 'N'
         		      ) 
                      OR
-                     A.MPHON_NO =  #{phoneEncNo}
+                     A.MPHON_NO =  DAMO.ENCRYPT_VAR_B64('AES_256',#{phoneEncNo},'')
                   )
         </if>
         <if test="phoneBackNo !=null and phoneBackNo !=''">
@@ -926,8 +1207,100 @@
 <!--                                             AND EXPRN_CNT > 0 -->
 <!--                   ) -->
 <!--         </if> -->
+        <if test="cntrNo != null and cntrNo != ''">
+        
+                  AND A.ITG_CUST_NO IN ( SELECT ITG_CUST_NO 
+                                           FROM CRM_CUST_BOS_CNTRT_HST
+                                          WHERE  CNTR_NO = #{cntrNo}
+                                          UNION 
+                                         SELECT A.ITG_CUST_NO
+                                           FROM CRM_CUST_BAS A
+                                          INNER JOIN CRM_CUST_BOS_CNTRT_HST B ON A.MPHON_NO = B.MOB_NO AND B.IST_CUST_NM = A.CUST_NM AND B.CNTR_NO = #{cntrNo}
+                                         )
+        </if>
         </where>
     </sql>
+    <sql id="sqlNextGrade">
+<!--    만료포함 -->
+                 SELECT LEAST(NVL(GRP.MIN_GRADE_CD,'999'),  GREATEST( NVL(GRP.MSHIP_GRADE_CD,'000'), NVL( EXP.MSHIP_EXPT_GRADE_CD, A.MSHIP_EXPT_GRADE_CD),NVL(GRD.MSHIP_GRADE_CD,'000')) ) NEXT_MSHIP_GRADE_CD
+                      , A.ITG_CUST_NO
+                      , CASE WHEN A.MSHIP_SBSC_YN != 'Y' THEN NULL 
+                             WHEN LEAST(NVL(GRP.MIN_GRADE_CD,'999'),  GREATEST( NVL(GRP.MSHIP_GRADE_CD,'000'),  NVL( EXP.MSHIP_EXPT_GRADE_CD, A.MSHIP_EXPT_GRADE_CD),NVL(GRD.MSHIP_GRADE_CD,'000')) ) = MIN_GRADE_CD THEN '003'
+                             WHEN LEAST(NVL(GRP.MIN_GRADE_CD,'999'),  GREATEST( NVL(GRP.MSHIP_GRADE_CD,'000'),  NVL( EXP.MSHIP_EXPT_GRADE_CD, A.MSHIP_EXPT_GRADE_CD),NVL(GRD.MSHIP_GRADE_CD,'000')) ) =  NVL(GRP.MSHIP_GRADE_CD,'000') THEN '003'
+                             WHEN LEAST(NVL(GRP.MIN_GRADE_CD,'999'),  GREATEST( NVL(GRP.MSHIP_GRADE_CD,'000'),  NVL( EXP.MSHIP_EXPT_GRADE_CD, A.MSHIP_EXPT_GRADE_CD),NVL(GRD.MSHIP_GRADE_CD,'000')) ) =  NVL(GRD.MSHIP_GRADE_CD,'000') THEN '002'
+                             ELSE '001' END NEXT_MSHIP_GRADE_TYPE_CD
+                   FROM CRM_CUST_BAS A
+                   LEFT JOIN ( SELECT A.ITG_CUST_NO 
+                                    , MAX(MSHIP_GRADE_CD) MSHIP_GRADE_CD
+                                    , '010' GRADE_TYPE_CD FROM CRM_MSHIP_GRADE_KEEP_HST A
+                                WHERE A.USE_YN = 'Y' 
+                                  AND TO_CHAR(ADD_MONTHS(TRUNC(SYSDATE,'MM'),1) ,'YYYYMMDD') BETWEEN NVL(A.GRADE_STRT_YMD,'20000101') AND NVL(A.GRADE_END_YMD,'20991231')
+                                GROUP BY ITG_CUST_NO) GRD  ON A.ITG_CUST_NO = GRD.ITG_CUST_NO
+                   LEFT JOIN ( SELECT B.ITG_CUST_NO 
+                                    , NVL(MIN(DECODE(A.GRADE_TYPE_CD,'020',A.MSHIP_GRADE_CD,NULL)) , MAX(DECODE(A.GRADE_TYPE_CD,'010',A.MSHIP_GRADE_CD,NULL))) MSHIP_GRADE_CD
+                                    , MIN(DECODE(A.GRADE_TYPE_CD,'020',A.MSHIP_GRADE_CD,NULL)) MIN_GRADE_CD
+                                    , DECODE(MIN(DECODE(A.GRADE_TYPE_CD,'020',A.MSHIP_GRADE_CD,NULL)),NULL,'010','020') GRADE_TYPE_CD    
+                                 FROM CRM_MSHIP_GRADE_KEEP_GRP_BAS A 
+                                INNER JOIN CRM_MSHIP_GRADE_KEEP_GRP_REL B ON A.KEEP_GRP_ID = B.KEEP_GRP_ID 
+                                WHERE A.USE_YN= 'Y' 
+                                  AND B.USE_YN = 'Y' 
+                                  AND TO_CHAR(ADD_MONTHS(TRUNC(SYSDATE,'MM'),1),'YYYYMMDD') BETWEEN NVL(A.GRADE_STRT_YMD,'20000101') AND NVL(A.GRADE_END_YMD,'20991231')
+                                  AND TO_CHAR(ADD_MONTHS(TRUNC(SYSDATE,'MM'),1),'YYYYMMDD') BETWEEN NVL(B.GRADE_STRT_YMD,'20000101') AND NVL(B.GRADE_END_YMD,'20991231')
+                                 GROUP BY ITG_CUST_NO ) GRP ON A.ITG_CUST_NO = GRP.ITG_CUST_NO
+                   LEFT JOIN ( SELECT A.ITG_CUST_NO
+                                    , B.MSHP_GRADE_CD MSHIP_EXPT_GRADE_CD
+                                 FROM ( SELECT A.ITG_CUST_NO
+                                             , C.MSHIP_ADVNCMT_SCORE + SUM(B.OCCUR_ADVNCMT_SCORE) ADVNCMT_SCORE
+                                          FROM (SELECT A.*
+                                                     , ROW_NUMBER() OVER (PARTITION BY A.ITG_CUST_NO, A.CHIT_NO ORDER BY A.REG_DT , A.ADVNCMT_HST_SEQ  ) RNUM
+                                                  FROM CRM_ADVNCMT_HST A
+                                                 WHERE ADD_MONTHS(TRUNC(SYSDATE,'MM'),-11) > NVL(A.PBLS_DT,A.REG_DT)   ) A
+                                         INNER JOIN ( SELECT A.ITG_CUST_NO
+                                                           , A.CHIT_NO
+                                                           , SUM(NVL(OCCUR_ADVNCMT_SCORE,0))* -1  OCCUR_ADVNCMT_SCORE 
+                                                           , DECODE(SUM(OCCUR_ADVNCMT_SCORE), 0, 'Y', 'N') CANCEL_YN 
+                                                        FROM CRM_ADVNCMT_HST A
+                                                       GROUP BY A.ITG_CUST_NO
+                                                           , A.CHIT_NO ) B ON A.ITG_CUST_NO = B.ITG_CUST_NO AND A.CHIT_NO = B.CHIT_NO AND A.RNUM = 1 AND B.CANCEL_YN = 'N'
+                                         INNER JOIN CRM_CUST_BAS C ON A.ITG_CUST_NO = C.ITG_CUST_NO AND C.CUST_STATUS_CD != '003'
+                                         GROUP BY A.ITG_CUST_NO , C.MSHIP_ADVNCMT_SCORE
+                                      ) A
+                                INNER JOIN CRM_MSHIP_PLCY_BAS B ON B.STATUS_CD = 'Y' AND  TO_CHAR(ADD_MONTHS(TRUNC(SYSDATE,'MM'),1) ,'YYYYMMDD') BETWEEN B.APPLY_STD_STA_YMD AND B.APPLY_STD_END_YMD AND ADVNCMT_SCORE BETWEEN B.ADVNCMT_STA_SCORE AND B.ADVNCMT_END_SCORE AND B.MSHIP_GRADE_CD = '003'  
+                             ) EXP ON A.ITG_CUST_NO = EXP.ITG_CUST_NO
+                  WHERE A.MSHIP_SBSC_YN = 'Y'
+                    AND A.CUST_STATUS_CD != '003'
+    
+    
+<!--     만료제외 -->
+<!--                  SELECT LEAST(NVL(GRP.MIN_GRADE_CD,'999'),  GREATEST( NVL(GRP.MSHIP_GRADE_CD,'000'),  A.MSHIP_EXPT_GRADE_CD,NVL(GRD.MSHIP_GRADE_CD,A.MSHIP_EXPT_GRADE_CD)) ) NEXT_MSHIP_GRADE_CD -->
+<!--                       , A.ITG_CUST_NO -->
+<!--                       , CASE WHEN A.MSHIP_SBSC_YN != 'Y' THEN NULL  -->
+<!--                              WHEN NVL(GRP.MIN_GRADE_CD,  GREATEST( NVL(GRP.MSHIP_GRADE_CD,'000'),  A.MSHIP_EXPT_GRADE_CD,NVL(GRD.MSHIP_GRADE_CD,A.MSHIP_EXPT_GRADE_CD)) ) = GRP.MIN_GRADE_CD THEN '003' -->
+<!--                              WHEN NVL(GRP.MIN_GRADE_CD,  GREATEST( NVL(GRP.MSHIP_GRADE_CD,'000'),  A.MSHIP_EXPT_GRADE_CD,NVL(GRD.MSHIP_GRADE_CD,A.MSHIP_EXPT_GRADE_CD)) ) = GRP.MSHIP_GRADE_CD THEN '003' -->
+<!--                              WHEN NVL(GRP.MIN_GRADE_CD,  GREATEST( NVL(GRP.MSHIP_GRADE_CD,'000'),  A.MSHIP_EXPT_GRADE_CD,NVL(GRD.MSHIP_GRADE_CD,A.MSHIP_EXPT_GRADE_CD)) ) = GRD.MSHIP_GRADE_CD THEN '002' -->
+<!--                              ELSE '001' END NEXT_MSHIP_GRADE_TYPE_CD -->
+<!--                    FROM CRM_CUST_BAS A -->
+<!--                    LEFT JOIN ( SELECT A.ITG_CUST_NO  -->
+<!--                                     , MAX(MSHIP_GRADE_CD) MSHIP_GRADE_CD -->
+<!--                                     , '010' GRADE_TYPE_CD FROM CRM_MSHIP_GRADE_KEEP_HST A -->
+<!--                                 WHERE A.USE_YN = 'Y'  -->
+<!--                                   AND TO_CHAR(ADD_MONTHS(TRUNC(SYSDATE,'MM'),1) ,'YYYYMMDD') BETWEEN NVL(A.GRADE_STRT_YMD,'20000101') AND NVL(A.GRADE_END_YMD,'20991231') -->
+<!--                                 GROUP BY ITG_CUST_NO) GRD  ON A.ITG_CUST_NO = GRD.ITG_CUST_NO -->
+<!--                    LEFT JOIN ( SELECT B.ITG_CUST_NO  -->
+<!--                                     , NVL(MIN(DECODE(A.GRADE_TYPE_CD,'020',A.MSHIP_GRADE_CD,NULL)) , MAX(DECODE(A.GRADE_TYPE_CD,'010',A.MSHIP_GRADE_CD,NULL))) MSHIP_GRADE_CD -->
+<!--                                     , MIN(DECODE(A.GRADE_TYPE_CD,'020',A.MSHIP_GRADE_CD,NULL)) MIN_GRADE_CD -->
+<!--                                     , DECODE(MIN(DECODE(A.GRADE_TYPE_CD,'020',A.MSHIP_GRADE_CD,NULL)),NULL,'010','020') GRADE_TYPE_CD     -->
+<!--                                  FROM CRM_MSHIP_GRADE_KEEP_GRP_BAS A  -->
+<!--                                 INNER JOIN CRM_MSHIP_GRADE_KEEP_GRP_REL B ON A.KEEP_GRP_ID = B.KEEP_GRP_ID  -->
+<!--                                 WHERE A.USE_YN= 'Y'  -->
+<!--                                   AND B.USE_YN = 'Y'  -->
+<!--                                   AND TO_CHAR(ADD_MONTHS(TRUNC(SYSDATE,'MM'),1),'YYYYMMDD') BETWEEN NVL(A.GRADE_STRT_YMD,'20000101') AND NVL(A.GRADE_END_YMD,'20991231') -->
+<!--                                   AND TO_CHAR(ADD_MONTHS(TRUNC(SYSDATE,'MM'),1),'YYYYMMDD') BETWEEN NVL(B.GRADE_STRT_YMD,'20000101') AND NVL(B.GRADE_END_YMD,'20991231') -->
+<!--                                  GROUP BY ITG_CUST_NO ) GRP ON A.ITG_CUST_NO = GRP.ITG_CUST_NO -->
+<!--                   WHERE A.MSHIP_SBSC_YN = 'Y' -->
+<!--                     AND A.CUST_STATUS_CD != '003' -->
+    </sql>
+    <!-- AND ADD_MONTHS(TRUNC(A.MSHIP_LEAVE_DT),+1) > SYSDATE -->
     <select id="selectExitUser" resultType="com.ceragem.api.crm.model.CrmCustVo">
             SELECT A.*
               FROM (
@@ -935,8 +1308,8 @@
                     , ROW_NUMBER() OVER (ORDER BY MSHIP_LEAVE_DT DESC) RNUM
                  FROM CRM_DORM_CUST_BAS A
                 WHERE A.CUST_NM = #{custNm}
-                  AND A.MPHON_NO = #{mphonNo}
-                  AND ADD_MONTHS(TRUNC(SYSDATE),+1) > A.MSHIP_LEAVE_DT   
+                  AND A.MPHON_NO = DAMO.ENCRYPT_VAR_B64('AES_256',#{mphonNo},'')
+                  AND TO_CHAR(ADD_MONTHS(TRUNC(A.MSHIP_LEAVE_DT),+1),'YYYYMMDD') > TO_CHAR(SYSDATE,'YYYYMMDD')
                   AND A.CUST_STATUS_CD = '003' ) A
               WHERE RNUM = 1
     </select>
@@ -965,19 +1338,69 @@
           , B.ZIP_CD_003 HOME_ZIP_CD
           , B.ADDR_1_CTNTS_003 HOME_ADDR1
           , B.ADDR_2_CTNTS_003 HOME_ADDR2
-<!--             , (SELECT TEL_NO FROM CRM_CUST_CNTPLC_BAS WHERE ITG_CUST_NO = A.ITG_CUST_NO AND CNTPLC_TYPE_CD = '001' AND ROWNUM = 1)  INST_TEL_NO -->
+          , (SELECT MSHIP_PLCY_BAS_NO FROM CRM_MSHIP_PLCY_BAS WHERE STATUS_CD = 'Y' AND MSHP_GRADE_CD = A.MSHIP_GRADE_CD AND TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN APPLY_STD_STA_YMD AND APPLY_STD_END_YMD AND ROWNUM = 1) ORG_MSHIP_PLCY_BAS_NO
+          , ( SELECT MSHIP_PLCY_BAS_NO 
+                FROM CRM_MSHIP_PLCY_BAS PLCY 
+               WHERE NVL(A.MSHIP_TYPE_CD,'003') = DECODE(NVL(A.MSHIP_TYPE_CD,'003'),'003',NVL(A.MSHIP_TYPE_CD,'003'),PLCY.MSHIP_GRADE_CD) 
+                 AND A.MSHIP_GRADE_CD = DECODE(NVL(A.MSHIP_TYPE_CD,'003'),'003',PLCY.MSHP_GRADE_CD,A.MSHIP_GRADE_CD)
+                 AND NVL(PLCY.CPRT_CMP_NO,'1') = NVL(DECODE(NVL(A.MSHIP_TYPE_CD,'002'),'002',(SELECT CPRT_CMP_NO FROM CRM_CRPT_CMP_EXECVDEMP_BAS WHERE ITG_CUST_NO = A.ITG_CUST_NO AND ROWNUM = 1), PLCY.CPRT_CMP_NO),'1')
+                 AND PLCY.STATUS_CD = 'Y'
+                 AND TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN PLCY.APPLY_STD_STA_YMD AND PLCY.APPLY_STD_END_YMD
+                 AND A.MSHIP_SBSC_YN = 'Y'
+                 AND A.CUST_STATUS_CD != '003'
+                 AND ROWNUM = 1
+             ) MSHIP_PLCY_BAS_NO
+          
+          , C.CNT_1100 MEDICAL_HOME_CNT
+          , C.CNT_2100 MASSAGE_CHAIR_CNT
+          , C.CNT_2200 PREMIUM_MASSAGE_CHAIR_CNT
+          , C.CNT_2100 MASSAGE_CHAIR_CNT
+          , C.CNT_3100 YOURIDM_CNT
+          , C.CNT_4100 RAYD_CNT
+          , C.CNT_1200 BALANCE_CNT
+          , C.CNT_10100 CELLUNIC_CNT
+          , C.ORD_DE_1100 MEDICAL_HOME_ORD_DE
+          , C.ORD_DE_2100 MASSAGE_CHAIR_ORD_DE
+          , C.ORD_DE_2200 PREMIUM_MASSAGE_CHAIR_ORD_DE
+          , C.ORD_DE_3100 YOURIDM_ORD_DE
+          , C.ORD_DE_4100 RAYD_ORD_DE
+          , C.ORD_DE_1200 BALANCE_ORD_DE
+          , C.ORD_DE_10100 CELLUNIC_ORD_DE
+          , C.IST_DCS_DE_1100 MEDICAL_HOME_IST_DCS_DE
+          , C.IST_DCS_DE_2100 MASSAGE_CHAIR_IST_DCS_DE
+          , C.IST_DCS_DE_2200 PREMIUM_MASSAGE_CHAIR_IST_DCS_DE
+          , C.IST_DCS_DE_3100 YOURIDM_IST_DCS_DE
+          , C.IST_DCS_DE_4100 RAYD_IST_DCS_DE  
+          , C.IST_DCS_DE_1200 BALANCE_IST_DCS_DE
+          , C.IST_DCS_DE_10100 CELLUNIC_IST_DCS_DE
+          , C.FIRST_BUY_DE
+		  , C.TOT
+		  , C.UP_CNT
+		  , C.DW_CNT
+		  , C.FIRST_DE
+		  , C.LAST_DE
+		  , C.FIRST_STORE
+		  , C.FIRST_STORE_NM
+		  , C.LAST_STORE
+		  , C.LAST_STORE_NM
+          , D.NEXT_MSHIP_GRADE_CD
+          , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'MB020' AND COMN_CD = D.NEXT_MSHIP_GRADE_CD AND  COMN_CD_LVL_NO = 2) NEXT_MSHIP_GRADE_CD_NM
+          , D.NEXT_MSHIP_GRADE_TYPE_CD
+          , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'MB270' AND COMN_CD = D.NEXT_MSHIP_GRADE_TYPE_CD AND  COMN_CD_LVL_NO = 2) NEXT_MSHIP_GRADE_TYPE_CD_NM
+          , DECODE(A.MSHIP_LOGIN_PWD,NULL,NULL, NVL(E.REG_DT, TO_CHAR(A.MSHIP_SBSC_DT, 'YYYYMMDDHH24MISS'))) MSHIP_LOGIN_PWD_CHNG_DT
+<!--             , (SELECT DAMO.DECRYPT_VAR_B64('AES_256',TEL_NO,'') FROM CRM_CUST_CNTPLC_BAS WHERE ITG_CUST_NO = A.ITG_CUST_NO AND CNTPLC_TYPE_CD = '001' AND ROWNUM = 1)  INST_TEL_NO -->
 <!--             , (SELECT DISTRCT_CD FROM CRM_CUST_CNTPLC_BAS WHERE ITG_CUST_NO = A.ITG_CUST_NO AND CNTPLC_TYPE_CD = '001' AND ROWNUM = 1)  INST_DISTRCT_CD -->
 <!--             , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'CU100' AND COMN_CD = (SELECT DISTRCT_CD FROM CRM_CUST_CNTPLC_BAS WHERE ITG_CUST_NO = A.ITG_CUST_NO AND CNTPLC_TYPE_CD = '001' AND ROWNUM = 1) AND  COMN_CD_LVL_NO = 2) INST_DISTRCT_CD_NM -->
 <!--             , (SELECT ZIP_CD FROM CRM_CUST_CNTPLC_BAS WHERE ITG_CUST_NO = A.ITG_CUST_NO AND CNTPLC_TYPE_CD = '001' AND ROWNUM = 1)  INST_ZIP_CD -->
 <!--             , (SELECT ADDR_1_CTNTS FROM CRM_CUST_CNTPLC_BAS WHERE ITG_CUST_NO = A.ITG_CUST_NO AND CNTPLC_TYPE_CD = '001' AND ROWNUM = 1)  INST_ADDR1 -->
 <!--             , (SELECT ADDR_2_CTNTS FROM CRM_CUST_CNTPLC_BAS WHERE ITG_CUST_NO = A.ITG_CUST_NO AND CNTPLC_TYPE_CD = '001' AND ROWNUM = 1)  INST_ADDR2 -->
-<!--             , (SELECT TEL_NO FROM CRM_CUST_CNTPLC_BAS WHERE ITG_CUST_NO = A.ITG_CUST_NO AND CNTPLC_TYPE_CD = '002' AND ROWNUM = 1)  JOB_TEL_NO -->
+<!--             , (SELECT DAMO.DECRYPT_VAR_B64('AES_256',TEL_NO,'') FROM CRM_CUST_CNTPLC_BAS WHERE ITG_CUST_NO = A.ITG_CUST_NO AND CNTPLC_TYPE_CD = '002' AND ROWNUM = 1)  JOB_TEL_NO -->
 <!--             , (SELECT DISTRCT_CD FROM CRM_CUST_CNTPLC_BAS WHERE ITG_CUST_NO = A.ITG_CUST_NO AND CNTPLC_TYPE_CD = '002' AND ROWNUM = 1)  JOB_DISTRCT_CD -->
 <!--             , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'CU100' AND COMN_CD = (SELECT DISTRCT_CD FROM CRM_CUST_CNTPLC_BAS WHERE ITG_CUST_NO = A.ITG_CUST_NO AND CNTPLC_TYPE_CD = '002' AND ROWNUM = 1) AND  COMN_CD_LVL_NO = 2) JOB_DISTRCT_CD_NM -->
 <!--             , (SELECT ZIP_CD FROM CRM_CUST_CNTPLC_BAS WHERE ITG_CUST_NO = A.ITG_CUST_NO AND CNTPLC_TYPE_CD = '002' AND ROWNUM = 1)  JOB_ZIP_CD -->
 <!--             , (SELECT ADDR_1_CTNTS FROM CRM_CUST_CNTPLC_BAS WHERE ITG_CUST_NO = A.ITG_CUST_NO AND CNTPLC_TYPE_CD = '002' AND ROWNUM = 1)  JOB_ADDR1 -->
 <!--             , (SELECT ADDR_2_CTNTS FROM CRM_CUST_CNTPLC_BAS WHERE ITG_CUST_NO = A.ITG_CUST_NO AND CNTPLC_TYPE_CD = '002' AND ROWNUM = 1)  JOB_ADDR2 -->
-<!--             , (SELECT TEL_NO FROM CRM_CUST_CNTPLC_BAS WHERE ITG_CUST_NO = A.ITG_CUST_NO AND CNTPLC_TYPE_CD = '003' AND ROWNUM = 1)  HOME_TEL_NO -->
+<!--             , (SELECT DAMO.DECRYPT_VAR_B64('AES_256',TEL_NO,'') FROM CRM_CUST_CNTPLC_BAS WHERE ITG_CUST_NO = A.ITG_CUST_NO AND CNTPLC_TYPE_CD = '003' AND ROWNUM = 1)  HOME_TEL_NO -->
 <!--             , (SELECT DISTRCT_CD FROM CRM_CUST_CNTPLC_BAS WHERE ITG_CUST_NO = A.ITG_CUST_NO AND CNTPLC_TYPE_CD = '003' AND ROWNUM = 1)  HOME_DISTRCT_CD -->
 <!--             , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'CU100' AND COMN_CD = (SELECT DISTRCT_CD FROM CRM_CUST_CNTPLC_BAS WHERE ITG_CUST_NO = A.ITG_CUST_NO AND CNTPLC_TYPE_CD = '003' AND ROWNUM = 1) AND  COMN_CD_LVL_NO = 2) HOME_DISTRCT_CD_NM -->
 <!--             , (SELECT ZIP_CD FROM CRM_CUST_CNTPLC_BAS WHERE ITG_CUST_NO = A.ITG_CUST_NO AND CNTPLC_TYPE_CD = '003' AND ROWNUM = 1)  HOME_ZIP_CD -->
@@ -1017,10 +1440,14 @@
                ORDER BY ITG_CUST_NO DESC
         <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingFooter"/>
         ) A LEFT JOIN  (<include refid="sqlContactInfo"/>) B ON A.ITG_CUST_NO= B.ITG_CUST_NO
+        	LEFT JOIN (<include refid="sqlBuyGodsInfo"/>) C ON A.ITG_CUST_NO= C.ITG_CUST_NO
+            LEFT JOIN (<include refid="sqlNextGrade"/>)  D ON A.ITG_CUST_NO= D.ITG_CUST_NO
+            LEFT JOIN (<include refid="sqlPwdChngDt"/>) E ON A.ITG_CUST_NO= E.ITG_CUST_NO
         ORDER BY A.ITG_CUST_NO DESC
     </select>
     <select id="select" resultType="com.ceragem.api.crm.model.CrmCustVo">
-               SELECT /* com.ceragem.api.crm.dao.CrmCustBasDao.select */<include refid="sqlSelectCols"/>
+    /* com.ceragem.api.crm.dao.CrmCustBasDao.select */
+               SELECT <include refid="sqlSelectCols"/>
                		, B.TEL_NO_001  INST_TEL_NO
                     , B.DISTRCT_CD_001 INST_DISTRCT_CD
                     , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'CU100' AND COMN_CD = B.DISTRCT_CD_001 AND  COMN_CD_LVL_NO = 2) INST_DISTRCT_CD_NM
@@ -1041,17 +1468,86 @@
                     , B.ADDR_2_CTNTS_003 HOME_ADDR2
                     , (SELECT LISTAGG( CM.COMN_CD_NM,',') WITHIN GROUP(ORDER BY LVL) FROM  (SELECT REGEXP_SUBSTR(A.INTRST_FILD_CD, '[^,]+', 1, LEVEL) CD, LEVEL LVL  FROM DUAL CONNECT BY REGEXP_SUBSTR(A.INTRST_FILD_CD, '[^,]+', 1, LEVEL) IS NOT NULL) DL, CRM_COMN_CD_BAS CM WHERE CM.COMN_CD = DL.CD AND CM.COMN_CD_LVL_NO = 2 AND CM.TOP_COMN_CD = 'CU060'  ) INTRST_FILD_CD_NM
                  	, (SELECT MSHIP_PLCY_BAS_NO FROM CRM_MSHIP_PLCY_BAS WHERE STATUS_CD = 'Y' AND MSHP_GRADE_CD = A.MSHIP_GRADE_CD AND TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN APPLY_STD_STA_YMD AND APPLY_STD_END_YMD AND ROWNUM = 1) ORG_MSHIP_PLCY_BAS_NO
-                 FROM CRM_CUST_BAS A
+                    , ( SELECT MSHIP_PLCY_BAS_NO 
+                        FROM CRM_MSHIP_PLCY_BAS PLCY 
+                       WHERE NVL(A.MSHIP_TYPE_CD,'003') = DECODE(NVL(A.MSHIP_TYPE_CD,'003'),'003',NVL(A.MSHIP_TYPE_CD,'003'),PLCY.MSHIP_GRADE_CD) 
+                         AND A.MSHIP_GRADE_CD = DECODE(NVL(A.MSHIP_TYPE_CD,'003'),'003',PLCY.MSHP_GRADE_CD,A.MSHIP_GRADE_CD)
+                         AND NVL(PLCY.CPRT_CMP_NO,'1') = NVL(DECODE(NVL(A.MSHIP_TYPE_CD,'002'),'002',(SELECT CPRT_CMP_NO FROM CRM_CRPT_CMP_EXECVDEMP_BAS WHERE ITG_CUST_NO = A.ITG_CUST_NO AND ROWNUM = 1), PLCY.CPRT_CMP_NO),'1')
+                         AND PLCY.STATUS_CD = 'Y'
+                         AND A.MSHIP_SBSC_YN = 'Y'
+                         AND TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN PLCY.APPLY_STD_STA_YMD AND PLCY.APPLY_STD_END_YMD
+                         AND A.CUST_STATUS_CD != '003'
+                         AND ROWNUM = 1
+                      ) MSHIP_PLCY_BAS_NO
+                    , ( SELECT COUNT(1) CNT
+                          FROM CRM_APP_PUSH_TRM_HST TRM
+                         INNER JOIN CRM_APP_PUSH_DSP_HST DST ON TRM.DSP_HST_ID = DST.DSP_HST_ID AND DST.DSP_STATUS_CD = '002'
+                         WHERE A.ITG_CUST_NO     =       TRM.ITG_CUST_NO
+                           AND TRM.PUSH_STATUS_CD = '000'
+                           AND TRM.TRM_STATUS_CD = '001'
+                           AND NVL(TRM.PUSH_TRM_DT , TRM.AMD_DT) >= TRUNC(SYSDATE) - 30
+                           AND DST.TGT_APP_ID IN (SELECT COMN_CD FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'PS030' AND RFRN_1_COMN_CD = 'MEM' AND  COMN_CD_LVL_NO = 2  )  ) MSHIP_PUSH_UNREAD_CNT
+                      , C.CNT_1100 MEDICAL_HOME_CNT
+          , C.CNT_2100 MASSAGE_CHAIR_CNT
+          , C.CNT_2200 PREMIUM_MASSAGE_CHAIR_CNT
+          , C.CNT_2100 MASSAGE_CHAIR_CNT
+          , C.CNT_3100 YOURIDM_CNT
+          , C.CNT_4100 RAYD_CNT
+          , C.CNT_1200 BALANCE_CNT
+          , C.CNT_10100 CELLUNIC_CNT
+          , C.ORD_DE_1100 MEDICAL_HOME_ORD_DE
+          , C.ORD_DE_2100 MASSAGE_CHAIR_ORD_DE
+          , C.ORD_DE_2200 PREMIUM_MASSAGE_CHAIR_ORD_DE
+          , C.ORD_DE_3100 YOURIDM_ORD_DE
+          , C.ORD_DE_4100 RAYD_ORD_DE
+          , C.ORD_DE_1200 BALANCE_ORD_DE
+          , C.ORD_DE_10100 CELLUNIC_ORD_DE
+          , C.IST_DCS_DE_1100 MEDICAL_HOME_IST_DCS_DE
+          , C.IST_DCS_DE_2100 MASSAGE_CHAIR_IST_DCS_DE
+          , C.IST_DCS_DE_2200 PREMIUM_MASSAGE_CHAIR_IST_DCS_DE
+          , C.IST_DCS_DE_3100 YOURIDM_IST_DCS_DE
+          , C.IST_DCS_DE_4100 RAYD_IST_DCS_DE  
+          , C.IST_DCS_DE_1200 BALANCE_IST_DCS_DE
+          , C.IST_DCS_DE_10100 CELLUNIC_IST_DCS_DE
+                    , C.FIRST_BUY_DE
+                    , C.TOT
+                    , C.UP_CNT
+                    , C.DW_CNT
+                    , C.FIRST_DE
+                    , C.LAST_DE
+                    , C.FIRST_STORE
+                    , C.FIRST_STORE_NM
+                    , C.LAST_STORE
+                    , C.LAST_STORE_NM
+                    , D.NEXT_MSHIP_GRADE_CD
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'MB020' AND COMN_CD = D.NEXT_MSHIP_GRADE_CD AND  COMN_CD_LVL_NO = 2) NEXT_MSHIP_GRADE_CD_NM
+                    , D.NEXT_MSHIP_GRADE_TYPE_CD
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'MB270' AND COMN_CD = D.NEXT_MSHIP_GRADE_TYPE_CD AND  COMN_CD_LVL_NO = 2) NEXT_MSHIP_GRADE_TYPE_CD_NM
+                    , DECODE(A.MSHIP_LOGIN_PWD,NULL,NULL, NVL(E.REG_DT, TO_CHAR(A.MSHIP_SBSC_DT, 'YYYYMMDDHH24MISS'))) MSHIP_LOGIN_PWD_CHNG_DT
+        FROM CRM_CUST_BAS A
                  LEFT JOIN  (<include refid="sqlContactInfo"/>) B ON A.ITG_CUST_NO= B.ITG_CUST_NO
+                 LEFT JOIN (<include refid="sqlBuyGodsInfo"/>) C ON A.ITG_CUST_NO= C.ITG_CUST_NO
+                 LEFT JOIN (<include refid="sqlNextGrade"/>)  D ON A.ITG_CUST_NO= D.ITG_CUST_NO
+                 LEFT JOIN (<include refid="sqlPwdChngDt"/>) E ON A.ITG_CUST_NO= E.ITG_CUST_NO
         		WHERE A.ITG_CUST_NO       =       #{itgCustNo}
     </select>
+    <sql id="sqlPwdChngDt">
+        SELECT ITG_CUST_NO,
+               REG_DT
+        FROM (SELECT ITG_CUST_NO,
+                     TO_CHAR(REG_DT, 'YYYYMMDDHH24MISS') REG_DT,
+                     ROW_NUMBER() OVER (PARTITION BY ITG_CUST_NO ORDER BY REG_DT DESC) RNUM
+              FROM CRM_CUST_INFO_CHNG_HST
+              WHERE CHNG_CLUS_CTNTS = '로그인암호변경')
+        WHERE RNUM = '1'
+    </sql>
     <select id="selectBasic" resultType="com.ceragem.api.crm.model.CrmCustVo">
-                SELECT /* com.ceragem.api.crm.dao.CrmCustBasDao.selectBasic */ <include refid="sqlCols" />
+                SELECT /* com.ceragem.api.crm.dao.CrmCustBasDao.selectBasic */ <include refid="sqlSelectBaseCols" />
                   FROM CRM_CUST_BAS A
                  WHERE A.ITG_CUST_NO       =       #{itgCustNo}
     </select>
     <select id="selectLoginId"  resultType="com.ceragem.api.crm.model.CrmCustVo">
-               SELECT /* com.ceragem.api.crm.dao.CrmCustBasDao.selectLoginId */<include refid="sqlSelectCols"/>
+               SELECT <include refid="sqlSelectCols"/>
                		, B.TEL_NO_001  INST_TEL_NO
                     , B.DISTRCT_CD_001 INST_DISTRCT_CD
                     , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'CU100' AND COMN_CD = B.DISTRCT_CD_001 AND  COMN_CD_LVL_NO = 2) INST_DISTRCT_CD_NM
@@ -1070,8 +1566,24 @@
                     , B.ZIP_CD_003 HOME_ZIP_CD
                     , B.ADDR_1_CTNTS_003 HOME_ADDR1
                     , B.ADDR_2_CTNTS_003 HOME_ADDR2
+                    , (SELECT RFRN_2_COMN_CD FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'MB020' AND COMN_CD = A.MSHIP_GRADE_CD AND  COMN_CD_LVL_NO = 2) MSHIP_GRADE_COLOR		/*모바일 로그인 시 등급컬러*/
+                    , ( SELECT COUNT(1) CNT
+                          FROM CRM_APP_PUSH_TRM_HST TRM
+                         INNER JOIN CRM_APP_PUSH_DSP_HST DST ON TRM.DSP_HST_ID = DST.DSP_HST_ID AND DST.DSP_STATUS_CD = '002'
+                         WHERE A.ITG_CUST_NO     =       TRM.ITG_CUST_NO
+                           AND TRM.TRM_STATUS_CD = '001'
+                           AND TRM.PUSH_STATUS_CD = '000'
+                           AND NVL(TRM.PUSH_TRM_DT , TRM.AMD_DT) >= TRUNC(SYSDATE) - 30
+                           AND DST.TGT_APP_ID IN (SELECT COMN_CD FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'PS030' AND RFRN_1_COMN_CD = 'MEM' AND  COMN_CD_LVL_NO = 2  )  ) MSHIP_PUSH_UNREAD_CNT
+                   , D.NEXT_MSHIP_GRADE_CD
+                   , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'MB020' AND COMN_CD = D.NEXT_MSHIP_GRADE_CD AND  COMN_CD_LVL_NO = 2) NEXT_MSHIP_GRADE_CD_NM
+                   , D.NEXT_MSHIP_GRADE_TYPE_CD
+                   , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'MB270' AND COMN_CD = D.NEXT_MSHIP_GRADE_TYPE_CD AND  COMN_CD_LVL_NO = 2) NEXT_MSHIP_GRADE_TYPE_CD_NM
+                   , DECODE(A.MSHIP_LOGIN_PWD,NULL,NULL, NVL(E.REG_DT, TO_CHAR(A.MSHIP_SBSC_DT, 'YYYYMMDDHH24MISS'))) MSHIP_LOGIN_PWD_CHNG_DT
                  FROM CRM_CUST_BAS A
                  LEFT JOIN  (<include refid="sqlContactInfo"/>) B ON A.ITG_CUST_NO= B.ITG_CUST_NO
+                 LEFT JOIN (<include refid="sqlNextGrade"/>)  D ON A.ITG_CUST_NO= D.ITG_CUST_NO
+                 LEFT JOIN (<include refid="sqlPwdChngDt"/>) E ON A.ITG_CUST_NO= E.ITG_CUST_NO
         	    WHERE A.MSHIP_LOGIN_ID = #{mshipLoginId}
 <!--         	      AND CUST_STATUS_CD != '003'  -->
                   AND ROWNUM = 1
@@ -1096,17 +1608,25 @@
                     , B.ZIP_CD_003 HOME_ZIP_CD
                     , B.ADDR_1_CTNTS_003 HOME_ADDR1
                     , B.ADDR_2_CTNTS_003 HOME_ADDR2
+                    , ( SELECT COUNT(1) CNT
+                          FROM CRM_APP_PUSH_TRM_HST TRM
+                         INNER JOIN CRM_APP_PUSH_DSP_HST DST ON TRM.DSP_HST_ID = DST.DSP_HST_ID AND DST.DSP_STATUS_CD = '002'
+                         WHERE A.ITG_CUST_NO     =       TRM.ITG_CUST_NO
+                           AND TRM.TRM_STATUS_CD = '001'
+                           AND TRM.PUSH_STATUS_CD = '000'
+                           AND NVL(TRM.PUSH_TRM_DT , TRM.AMD_DT) >= TRUNC(SYSDATE) - 30
+                           AND DST.TGT_APP_ID IN (SELECT COMN_CD FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'PS030' AND RFRN_1_COMN_CD = 'MEM' AND  COMN_CD_LVL_NO = 2  )  ) MSHIP_PUSH_UNREAD_CNT
                  FROM CRM_CUST_BAS A
                  LEFT JOIN  (<include refid="sqlContactInfo"/>) B ON A.ITG_CUST_NO= B.ITG_CUST_NO
                 WHERE A.CUST_NM = #{custNm}
-                  AND A.MPHON_NO = #{mphonNo}
+                  AND A.MPHON_NO = DAMO.ENCRYPT_VAR_B64('AES_256',#{mphonNo},'')
                   AND ROWNUM = 1
     </select>
 
     <select id="selectMphone" resultType="com.ceragem.api.crm.model.CrmCustVo">
                SELECT /* com.ceragem.api.crm.dao.CrmCustBasDao.selectMphone */ A.ITG_CUST_NO
                     , A.CUST_NM
-                    , DECODE(A.CUST_STATUS_CD ,'003',B.MPHON_NO,A.MPHON_NO)  MPHON_NO          
+                    , DAMO.DECRYPT_VAR_B64('AES_256',DECODE(A.CUST_STATUS_CD ,'003',B.MPHON_NO,A.MPHON_NO),'')  MPHON_NO          
                  FROM CRM_CUST_BAS A
                  LEFT JOIN CRM_DORM_CUST_BAS B ON  A.ITG_CUST_NO = B.ITG_CUST_NO AND A.CUST_STATUS_CD = '003'
                 WHERE A.ITG_CUST_NO = #{itgCustNo}
@@ -1118,6 +1638,12 @@
     	</selectKey>
                 INSERT /* com.ceragem.api.crm.dao.CrmCustBasDao.insert */ INTO CRM_CUST_BAS (
         <include refid="sqlCols"/>
+        			, INGRS_PATH_CD			/* QR유입경로*/
+        			, HLTH_INTRST_FILD_CD	/* 건강관심분야코드*/
+        			, HLTH_INTRST_FILD_CD_NM	/* 건강관심분야코드명*/
+<!--                     , EXPRN_INFO_AGREE_YN /* 체험정보동의여부*/ -->
+<!--                     , EXPRN_INFO_AGREE_DT /* 체험정보동의일 */ -->
+<!--                     , EXPRN_INFO_AGREE_CHL_CD /* 체험정보동의채널코드*/ -->
                  ) SELECT
                        #{itgCustNo}
                      , NVL(#{corpDivYn},'N')
@@ -1129,13 +1655,13 @@
                      , #{corpTelNo}
                      , NVL(#{fornYn},'N')
                      , #{repNm}
-                     , #{mphonNo} 
+                     , DAMO.ENCRYPT_VAR_B64('AES_256',#{mphonNo} ,'')
                      , SUBSTRB(#{mphonNo},-4)
-                     , #{emailAddr}
+                     , DAMO.ENCRYPT_VAR_B64('AES_256',#{emailAddr},'')
                      , #{picNm}
-                     , #{picMphonNo}
+                     , DAMO.ENCRYPT_VAR_B64('AES_256',#{picMphonNo},'')
                      , #{picMphonBkDgtNo}
-                     , #{picEmailAddr} 
+                     , DAMO.ENCRYPT_VAR_B64('AES_256',#{picEmailAddr},'') 
                      , TO_DATE(#{indiInfoValidPerdStaDt},'YYYYMMDDHH24MISS')
                      , TO_DATE(#{indiInfoValidPerdEndDt},'YYYYMMDDHH24MISS')
                      , NVL(#{custStatusCd},'001')
@@ -1146,7 +1672,7 @@
                      , #{distrctCd}
                      , #{zipCd}
                      , #{addr1Ctnts}
-                     , #{addr2Ctnts}  
+                     , DAMO.ENCRYPT_VAR_B64('AES_256',#{addr2Ctnts},'')  
                      , #{rcmdStorNo}
                      , #{rcmdrCustNo}
                      , #{rcmdExecvdempNo}
@@ -1166,10 +1692,14 @@
                      , NVL(#{alrmTkRcvAgreeYn},'N')
                      , TO_DATE(#{alrmTkRcvAgreeDt},'YYYYMMDDHH24MISS')
                      , #{alrmTkRcvAgreeChlCd}
-                     , NVL(#{pushRcvAgreeYn},'N')
-                     , TO_DATE(#{pushRcvAgreeDt},'YYYYMMDDHH24MISS')
-                     , #{pushRcvAgreeChlCd}
-                     , NVL(#{ciCertfYn},'N')
+<!--                      , NVL(#{pushRcvAgreeYn},'N') -->
+<!--                      , TO_DATE(#{pushRcvAgreeDt},'YYYYMMDDHH24MISS') -->
+<!--                      , #{pushRcvAgreeChlCd} -->
+                     , NULL
+                     , NULL
+                     , NULL
+                     <!-- , NVL(#{ciCertfYn},'N') -->
+                     , NVL2(#{ci},'Y','N')
                      , #{ci}
                      , NVL(#{diCertfYn},'N')
                      , #{di}
@@ -1201,16 +1731,26 @@
                      , TO_DATE(#{bllkRegDt},'YYYYMMDDHH24MISS')
                      , NVL(#{prtctFamlyYn},'N')
                      , NVL(#{regChlCd},'CRM')
-                     , NVL(#{dormPerdCd},1)
-                     , #{appPushTokn}
+                     , '99' 
+<!--                      , '99' NVL(#{dormPerdCd},1) -->
+<!--                      , #{appPushTokn} -->
+                     , NULL
 					 , #{exprnYn}
                      , NULL
+                     , NVL(#{mshipGradeCd},'001')
+                     , NVL(#{mshipGradeCd},'001')
                      , #{regrId}
                      , SYSDATE
                      , #{regrId}
                      , SYSDATE
-                 FROM DUAL 
-                WHERE NOT EXISTS(SELECT 1 FROM CRM_CUST_BAS WHERE MPHON_NO = #{mphonNo}  AND CUST_NM = #{custNm})
+                     , NVL(#{ingrsPathCd}, '')
+                     , NVL(#{hlthIntrstFildCd}, '')		/* 건강관심분야코드*/
+        			 , NVL(#{hlthIntrstFildCdNm}, '')	/* 건강관심분야코드명*/
+<!--         			 , NVL(#{exprnInfoAgreeYn}, 'N')	/* 체험 정보 동의 여부 */ -->
+<!--                      , TO_DATE(#{exprnInfoAgreeDt},'YYYYMMDDHH24MISS')  /* 체험 정보 동의 일시 */ -->
+<!--                      , #{exprnInfoAgreeChlCd}           /* 체험 정보 동의 채널 코드 */ -->
+                 FROM DUAL
+                WHERE NOT EXISTS(SELECT 1 FROM CRM_CUST_BAS WHERE MPHON_NO = DAMO.ENCRYPT_VAR_B64('AES_256',#{mphonNo} ,'') AND CUST_NM = #{custNm})
     </insert>
     <insert id="insertCard">
         INSERT /*com.ceragem.api.crm.dao.CrmCustBasDao.insertCard */INTO CRM_CARD_PBLS_HST (
@@ -1259,6 +1799,9 @@
     	</selectKey>
                 INSERT /* com.ceragem.api.crm.dao.CrmCustBasDao.insertMembership */ INTO CRM_CUST_BAS (
         <include refid="sqlCols"/>
+        			,INGRS_PATH_CD		/* QR유입경로*/
+        			,HLTH_INTRST_FILD_CD	/* 건강관심분야코드*/
+					,HLTH_INTRST_FILD_CD_NM	/* 건강관심분야코드명*/        			        			
                  ) SELECT
                        #{itgCustNo}
                      , NVL(#{corpDivYn},'N')
@@ -1270,13 +1813,13 @@
                      , #{corpTelNo}
                      , NVL(#{fornYn},'N')
                      , #{repNm}
-                     , #{mphonNo}  
+                     , DAMO.ENCRYPT_VAR_B64('AES_256',#{mphonNo},'')  
                      , SUBSTRB(#{mphonNo},-4)
-                     , #{emailAddr}  
+                     , DAMO.ENCRYPT_VAR_B64('AES_256',#{emailAddr},'')  
                      , #{picNm}
-                     , #{picMphonNo}
+                     , DAMO.ENCRYPT_VAR_B64('AES_256',#{picMphonNo},'')
                      , #{picMphonBkDgtNo}
-                     , #{picEmailAddr}
+                     , DAMO.ENCRYPT_VAR_B64('AES_256',#{picEmailAddr},'')
                      , TO_DATE(#{indiInfoValidPerdStaDt},'YYYYMMDDHH24MISS')
                      , TO_DATE(#{indiInfoValidPerdEndDt},'YYYYMMDDHH24MISS')
                      , NVL(#{custStatusCd},'001')
@@ -1287,7 +1830,7 @@
                      , #{distrctCd}
                      , #{zipCd}
                      , #{addr1Ctnts}
-                     , #{addr2Ctnts}
+                     , DAMO.ENCRYPT_VAR_B64('AES_256',#{addr2Ctnts},'')
                      , #{rcmdStorNo}
                      , #{rcmdrCustNo}
                      , #{rcmdExecvdempNo}
@@ -1307,10 +1850,14 @@
                      , NVL(#{alrmTkRcvAgreeYn},'N')
                      , TO_DATE(#{alrmTkRcvAgreeDt},'YYYYMMDDHH24MISS')
                      , #{alrmTkRcvAgreeChlCd}
-                     , NVL(#{pushRcvAgreeYn},'N')
-                     , TO_DATE(#{pushRcvAgreeDt},'YYYYMMDDHH24MISS')
-                     , #{pushRcvAgreeChlCd}
-                     , NVL(#{ciCertfYn},'N')
+<!--                      , NVL(#{pushRcvAgreeYn},'N') -->
+<!--                      , TO_DATE(#{pushRcvAgreeDt},'YYYYMMDDHH24MISS') -->
+<!--                      , #{pushRcvAgreeChlCd} -->
+                     , NULL
+                     , NULL
+                     , NULL
+                     <!-- , NVL(#{ciCertfYn},'N') -->
+                     , NVL2(#{ci},'Y','N')
                      , #{ci}
                      , NVL(#{diCertfYn},'N')
                      , #{di}
@@ -1343,34 +1890,43 @@
                      , NVL(#{prtctFamlyYn},'N')
                      , NVL(#{regChlCd},#{amdrId})
                      , NVL(#{dormPerdCd},1)
-                     , #{appPushTokn}
+<!--                      , #{appPushTokn} -->
+                     , NULL
 					 , #{exprnYn}
                      , NULL
+                     , NVL(DECODE(#{mshipGradeCd},'001','002',#{mshipGradeCd}),'002')                     
+                     , NVL(DECODE(#{mshipGradeCd},'001','002',#{mshipGradeCd}),'002')
                      , #{regrId}
                      , SYSDATE
                      , #{regrId}
                      , SYSDATE
+                     , NVL(#{ingrsPathCd}, '')
+                     , NVL(#{hlthIntrstFildCd}, '')		/* 건강관심분야코드*/
+					 , NVL(#{hlthIntrstFildCdNm}, '')	/* 건강관심분야코드명*/
+<!--                      , NVL(#{exprnInfoAgreeYn}, 'N')	/* 체험 정보 동의 여부 */ -->
+<!--                      , TO_DATE(#{exprnInfoAgreeDt},'YYYYMMDDHH24MISS')  /* 체험 정보 동의 일시 */ -->
+<!--                      , #{exprnInfoAgreeChlCd}           /* 체험 정보 동의 채널 코드 */ -->
                  FROM DUAL 
-                WHERE NOT EXISTS(SELECT 1 FROM CRM_CUST_BAS WHERE MPHON_NO = #{mphonNo}  AND CUST_NM = #{custNm})
+                WHERE NOT EXISTS(SELECT 1 FROM CRM_CUST_BAS WHERE MPHON_NO = DAMO.ENCRYPT_VAR_B64('AES_256',#{mphonNo} ,'') AND CUST_NM = #{custNm})
     </insert>
     <update id="update">
                UPDATE CRM_CUST_BAS /* com.ceragem.api.crm.dao.CrmCustBasDao.udate */
                   SET CORP_DIV_YN                             =         NVL(#{corpDivYn},'N')
                     , CUST_NM                                 =         #{custNm}
-                    , GNDR_CD                                 =         #{gndrCd}
-                    , BIRTHDAY                                =         #{birthday}
+                    , GNDR_CD                                 =         NVL(#{gndrCd},GNDR_CD)
+                    , BIRTHDAY                                =         NVL(#{birthday},BIRTHDAY)
                     , BIZ_NO                                  =         #{bizNo}
                     , CORP_REG_NO                             =         #{corpRegNo}
-                    , CORP_TEL_NO                             =         #{corpTelNo}
+                    , CORP_TEL_NO                             =         DAMO.ENCRYPT_VAR_B64('AES_256',#{corpTelNo},'')
                     , FORN_YN                                 =         NVL(#{fornYn},'N')
                     , REP_NM                                  =         #{repNm}
-                    , MPHON_NO                                =         #{mphonNo} 
+                    , MPHON_NO                                =         DAMO.ENCRYPT_VAR_B64('AES_256',#{mphonNo},'') 
                     , MPHON_BK_DGT_NO                         =         SUBSTRB( #{mphonNo},-4)
-                    , EMAIL_ADDR                              =         #{emailAddr}
+                    , EMAIL_ADDR                              =         DAMO.ENCRYPT_VAR_B64('AES_256',#{emailAddr},'')
                     , PIC_NM                                  =         #{picNm}
-                    , PIC_MPHON_NO                            =         #{picMphonNo}
+                    , PIC_MPHON_NO                            =         DAMO.ENCRYPT_VAR_B64('AES_256',#{picMphonNo},'')
                     , PIC_MPHON_BK_DGT_NO                     =         #{picMphonBkDgtNo}
-                    , PIC_EMAIL_ADDR                          =         #{picEmailAddr}
+                    , PIC_EMAIL_ADDR                          =         DAMO.ENCRYPT_VAR_B64('AES_256',#{picEmailAddr},'')
                     , INDI_INFO_VALID_PERD_STA_DT             =         TO_DATE(#{indiInfoValidPerdStaDt},'YYYYMMDDHH24MISS')
                     , INDI_INFO_VALID_PERD_END_DT             =         TO_DATE(#{indiInfoValidPerdEndDt},'YYYYMMDDHH24MISS')
 <!--                     , CUST_STATUS_CD                          =         NVL(#{custStatusCd},CUST_STATUS_CD) -->
@@ -1381,7 +1937,7 @@
                     , DISTRCT_CD                              =         #{distrctCd}
                     , ZIP_CD                                  =         #{zipCd}
                     , ADDR_1_CTNTS                            =         #{addr1Ctnts}
-                    , ADDR_2_CTNTS                            =         #{addr2Ctnts}
+                    , ADDR_2_CTNTS                            =         DAMO.ENCRYPT_VAR_B64('AES_256',#{addr2Ctnts},'')
                     , RCMD_STOR_NO                            =         #{rcmdStorNo}
                     , RCMDR_CUST_NO                           =         #{rcmdrCustNo}
                     , RCMD_EXECVDEMP_NO                       =         #{rcmdExecvdempNo}
@@ -1404,8 +1960,9 @@
 <!--                     , PUSH_RCV_AGREE_YN                       =         NVL(#{pushRcvAgreeYn},'N') -->
 <!--                     , PUSH_RCV_AGREE_DT                       =         TO_DATE(#{pushRcvAgreeDt},'YYYYMMDDHH24MISS') -->
 <!--                     , PUSH_RCV_AGREE_CHL_CD                   =         #{pushRcvAgreeChlCd} -->
-                    , CI_CERTF_YN                             =         NVL(#{ciCertfYn},'N')
-                    , CI                                      =         #{ci}
+                    <!-- , CI_CERTF_YN                             =         NVL(#{ciCertfYn},'N') -->
+                    , CI_CERTF_YN                             =         NVL2(NVL(CI,#{ci}),'Y','N')
+                    , CI                                      =         NVL(CI,#{ci})
                     , DI_CERTF_YN                             =         NVL(#{diCertfYn},'N')
                     , DI                                      =         #{di}
                     , RCV_RFSL_YN                             =         NVL(#{rcvRfslYn},'N')
@@ -1417,7 +1974,7 @@
 <!--                     , MSHIP_LAST_LOGIN_IP_ADDR                =         #{mshipLastLoginIpAddr} -->
 <!--                     , MSHIP_LAST_STOR_VISIT_DT                =         TO_DATE(#{mshipLastStorVisitDt},'YYYYMMDDHH24MISS') -->
 <!--                     , MSHIP_LAST_VISIT_STOR_NO                =         #{mshipLastVisitStorNo} -->
-<!--                     , MSHIP_TYPE_CD                           =         NVL(#{mshipTypeCd},MSHIP_TYPE_CD) -->
+                     , MSHIP_TYPE_CD                           =         NVL(#{mshipTypeCd},'003')
 <!--                     , MSHIP_SBSC_DT                           =         TO_DATE(#{mshipSbscDt},'YYYYMMDDHH24MISS') -->
 <!--                     , MSHIP_GRADE_CD                          =         NVL(#{mshipGradeCd},'002') -->
 <!--                     , MSHIP_GRADE_CHNG_DT                     =         TO_DATE(#{mshipGradeChngDt},'YYYYMMDDHH24MISS') -->
@@ -1427,58 +1984,61 @@
 <!--                     , MSHIP_LEAVE_DT                          =         TO_DATE(#{mshipLeaveDt},'YYYYMMDDHH24MISS') -->
 <!--                     , EXTNC_POINT_LMT_SCORE                   =         #{extncPointLmtScore} -->
 <!--                     , ACCUM_POINT_LMT_SCORE                   =         #{accumPointLmtScore} -->
-                    , MSHIP_CHL_CD                            =         #{mshipChlCd}
+<!--                     , MSHIP_CHL_CD                            =         #{mshipChlCd} -->
 <!--                     , BLLK_REG_STOR_NO                        =         #{bllkRegStorNo} -->
 <!--                     , BLLKMSHP_YN                             =         NVL(#{bllkmshpYn},'N') -->
 <!--                     , BLLK_REG_CHL_CD                         =         #{bllkRegChlCd} -->
 <!--                     , BLLK_REG_WHY_CTNTS                      =         #{bllkRegWhyCtnts} -->
 <!--                     , BLLK_REG_DT                             =         TO_DATE(#{bllkRegDt},'YYYYMMDDHH24MISS') -->
                     , PRTCT_FAMLY_YN                          =         NVL(#{prtctFamlyYn},PRTCT_FAMLY_YN) 
-                    , DORM_PERD_CD                            =         NVL(#{dormPerdCd},DORM_PERD_CD)
+<!--                     , DORM_PERD_CD                            =         NVL(#{dormPerdCd},DORM_PERD_CD) -->
+                    , DORM_PERD_CD                            =     '99' 
                     , APP_PUSH_TOKN 					      =         #{appPushTokn}
 					, EXPRN_YN                                =         #{exprnYn}
+                    , HLTH_INTRST_FILD_CD                     =         #{hlthIntrstFildCd}           /*건강관심분야코드*/
+                    , HLTH_INTRST_FILD_CD_NM                  =         #{hlthIntrstFildCdNm}   /*건강관심분야코드명*/
 <!--                     , REG_CHL_CD                              =         #{regChlCd} -->
                     , AMDR_ID                                 =         #{amdrId}
                     , AMD_DT                                  =         SYSDATE
         <include refid="sqlPkConditions"/>
     </update>
+    <!-- AND MSHIP_LOGIN_ID IS NOT NULL // 세라체크 는 로그인 아이디 없음 -->
     <update id="updateLastLogin">
          UPDATE CRM_CUST_BAS /* com.ceragem.api.crm.dao.CrmCustBasDao.updateLoginDt */
             SET MSHIP_LAST_LOGIN_DT                     =         NVL(TO_DATE(#{mshipLastLoginDt},'YYYYMMDDHH24MISS'),SYSDATE)
               , MSHIP_LAST_LOGIN_IP_ADDR                =         #{mshipLastLoginIpAddr}
            <include refid="sqlPkConditions"/>
-            AND MSHIP_LOGIN_ID IS NOT NULL
             AND CUST_STATUS_CD != '003'
     </update>
     <update id="updateMembership">
                UPDATE CRM_CUST_BAS /* com.ceragem.api.crm.dao.CrmCustBasDao.updateMembership */
-                  SET CORP_DIV_YN                             =         NVL(#{corpDivYn},'N')
+                  SET CORP_DIV_YN                             =         NVL(#{corpDivYn},CORP_DIV_YN)
                     , CUST_NM                                 =         #{custNm}
-                    , GNDR_CD                                 =         #{gndrCd}
-                    , BIRTHDAY                                =         #{birthday}
+                    , GNDR_CD                                 =         NVL(#{gndrCd},GNDR_CD)
+                    , BIRTHDAY                                =         NVL(#{birthday},BIRTHDAY)
                     , BIZ_NO                                  =         #{bizNo}
                     , CORP_REG_NO                             =         #{corpRegNo}
-                    , CORP_TEL_NO                             =         #{corpTelNo}
+                    , CORP_TEL_NO                             =         DAMO.ENCRYPT_VAR_B64('AES_256',#{corpTelNo},'')
                     , FORN_YN                                 =         NVL(#{fornYn},'N')
                     , REP_NM                                  =         #{repNm}
-                    , MPHON_NO                                =         #{mphonNo} 
+                    , MPHON_NO                                =         DAMO.ENCRYPT_VAR_B64('AES_256',#{mphonNo},'') 
                     , MPHON_BK_DGT_NO                         =         SUBSTRB(#{mphonNo},-4)
-                    , EMAIL_ADDR                              =         #{emailAddr}
+                    , EMAIL_ADDR                              =         DAMO.ENCRYPT_VAR_B64('AES_256',#{emailAddr},'')
                     , PIC_NM                                  =         #{picNm}
-                    , PIC_MPHON_NO                            =         #{picMphonNo}
+                    , PIC_MPHON_NO                            =         DAMO.ENCRYPT_VAR_B64('AES_256',#{picMphonNo},'')
                     , PIC_MPHON_BK_DGT_NO                     =         #{picMphonBkDgtNo}
-                    , PIC_EMAIL_ADDR                          =         #{picEmailAddr}
+                    , PIC_EMAIL_ADDR                          =         DAMO.ENCRYPT_VAR_B64('AES_256',#{picEmailAddr},'')
                     , INDI_INFO_VALID_PERD_STA_DT             =         TO_DATE(#{indiInfoValidPerdStaDt},'YYYYMMDDHH24MISS')
                     , INDI_INFO_VALID_PERD_END_DT             =         TO_DATE(#{indiInfoValidPerdEndDt},'YYYYMMDDHH24MISS')
 <!--                     , CUST_STATUS_CD                          =         NVL(#{custStatusCd},CUST_STATUS_CD) -->
 <!--                     , CUST_STATUS_CHNG_DT                     =         TO_DATE(#{custStatusChngDt},'YYYYMMDDHH24MISS') -->
-                    , CUST_INFO_CHNG_DT                       =         TO_DATE(#{custInfoChngDt},'YYYYMMDDHH24MISS')
-                    , CUST_TYPE_CD                            =         NVL(#{custTypeCd},'001')
-                    , CUST_DIV_CD                             =         #{custDivCd}
+                    , CUST_INFO_CHNG_DT                       =         NVL(TO_DATE(#{custInfoChngDt},'YYYYMMDDHH24MISS'),SYSDATE)
+                    , CUST_TYPE_CD                            =         NVL(#{custTypeCd},CUST_TYPE_CD)
+                    , CUST_DIV_CD                             =         NVL(#{custDivCd},CUST_DIV_CD)
                     , DISTRCT_CD                              =         #{distrctCd}
                     , ZIP_CD                                  =         #{zipCd}
                     , ADDR_1_CTNTS                            =         #{addr1Ctnts}
-                    , ADDR_2_CTNTS                            =         #{addr2Ctnts}
+                    , ADDR_2_CTNTS                            =         DAMO.ENCRYPT_VAR_B64('AES_256',#{addr2Ctnts},'')
                     , RCMD_STOR_NO                            =         #{rcmdStorNo}
                     , RCMDR_CUST_NO                           =         #{rcmdrCustNo}
                     , RCMD_EXECVDEMP_NO                       =         #{rcmdExecvdempNo}
@@ -1501,8 +2061,17 @@
 <!--                     , PUSH_RCV_AGREE_YN                       =         NVL(#{pushRcvAgreeYn},'N') -->
 <!--                     , PUSH_RCV_AGREE_DT                       =         TO_DATE(#{pushRcvAgreeDt},'YYYYMMDDHH24MISS') -->
 <!--                     , PUSH_RCV_AGREE_CHL_CD                   =         #{pushRcvAgreeChlCd} -->
-                    , CI_CERTF_YN                             =         NVL(#{ciCertfYn},'N')
-                    , CI                                      =         #{ci}
+					, SMS_RCV_AGREE_YN                        =         NVL(#{smsRcvAgreeYn},NVL(SMS_RCV_AGREE_YN,'N'))
+                    , SMS_RCV_AGREE_DT                        =         NVL(TO_DATE(#{smsRcvAgreeDt},'YYYYMMDDHH24MISS'),NVL(SMS_RCV_AGREE_DT,SYSDATE))
+                    , EMAIL_RCV_AGREE_YN                      =         NVL(#{emailRcvAgreeYn},NVL(EMAIL_RCV_AGREE_YN,'N'))
+                    , EMAIL_RCV_AGREE_DT                      =         NVL(TO_DATE(#{emailRcvAgreeDt},'YYYYMMDDHH24MISS'),NVL(EMAIL_RCV_AGREE_DT,SYSDATE))
+                    , ALRM_TK_RCV_AGREE_YN                    =         NVL(#{alrmTkRcvAgreeYn},NVL(ALRM_TK_RCV_AGREE_YN,'N'))
+                    , ALRM_TK_RCV_AGREE_DT                    =         NVL(TO_DATE(#{alrmTkRcvAgreeDt},'YYYYMMDDHH24MISS'),NVL(ALRM_TK_RCV_AGREE_DT,SYSDATE))
+                    , PUSH_RCV_AGREE_YN                       =         NVL(#{pushRcvAgreeYn},NVL(PUSH_RCV_AGREE_YN,'N'))
+                    , PUSH_RCV_AGREE_DT                       =         NVL(TO_DATE(#{pushRcvAgreeDt},'YYYYMMDDHH24MISS'),NVL(PUSH_RCV_AGREE_DT,SYSDATE))
+                    <!-- , CI_CERTF_YN                             =         NVL(#{ciCertfYn},'N') -->
+                    , CI_CERTF_YN                             =         NVL2(NVL(CI,#{ci}),'Y','N')
+                    , CI                                      =         NVL(CI,#{ci})
                     , DI_CERTF_YN                             =         NVL(#{diCertfYn},'N')
                     , DI                                      =         #{di}
                     , RCV_RFSL_YN                             =         NVL(#{rcvRfslYn},'N')
@@ -1514,9 +2083,11 @@
 <!--                     , MSHIP_LAST_LOGIN_IP_ADDR                =         #{mshipLastLoginIpAddr} -->
 <!--                     , MSHIP_LAST_STOR_VISIT_DT                =         TO_DATE(#{mshipLastStorVisitDt},'YYYYMMDDHH24MISS') -->
 <!--                     , MSHIP_LAST_VISIT_STOR_NO                =         #{mshipLastVisitStorNo} -->
-<!--                     , MSHIP_TYPE_CD                           =         NVL(#{mshipTypeCd},'001') -->
+                    , MSHIP_TYPE_CD                           =         NVL(#{mshipTypeCd},'003')
                     , MSHIP_SBSC_DT                           =         NVL(TO_DATE(#{mshipSbscDt},'YYYYMMDDHH24MISS'),NVL(MSHIP_SBSC_DT,SYSDATE))
-                    , MSHIP_GRADE_CD                          =         NVL(DECODE(#{mshipGradeCd},'001','002',#{mshipGradeCd}),'002')
+                    , MSHIP_GRADE_CD                          =         GREATEST('002' , NVL(#{mshipGradeCd},'002'))
+                    , MSHIP_EXPT_GRADE_CD                     =         GREATEST('002' , NVL(#{mshipExptGradeCd},'002')) 
+                    , MSHIP_ORI_GRADE_CD                      =         GREATEST('002' , NVL(#{mshipGradeCd},'002'))
                     , MSHIP_GRADE_CHNG_DT                     =         NVL(TO_DATE(#{mshipGradeChngDt},'YYYYMMDDHH24MISS'),NVL(MSHIP_GRADE_CHNG_DT,SYSDATE))
                     , MSHIP_INFO_CHNG_DT                      =         SYSDATE
                     , MSHIP_INFO_CONFR_EXECVDEMP_NO           =         #{mshipInfoConfrExecvdempNo}
@@ -1524,7 +2095,7 @@
 <!--                     , MSHIP_LEAVE_DT                          =         TO_DATE(#{mshipLeaveDt},'YYYYMMDDHH24MISS') -->
 <!--                     , EXTNC_POINT_LMT_SCORE                   =         #{extncPointLmtScore} -->
 <!--                     , ACCUM_POINT_LMT_SCORE                   =         #{accumPointLmtScore} -->
-                    , MSHIP_CHL_CD                            =         #{mshipChlCd}
+                    , MSHIP_CHL_CD                            =         NVL(#{mshipChlCd},#{regChlCd})
 <!--                     , BLLK_REG_STOR_NO                        =         #{bllkRegStorNo} -->
 <!--                     , BLLKMSHP_YN                             =         NVL(#{bllkmshpYn},'N') -->
 <!--                     , BLLK_REG_CHL_CD                         =         #{bllkRegChlCd} -->
@@ -1532,23 +2103,41 @@
 <!--                     , BLLK_REG_DT                             =         TO_DATE(#{bllkRegDt},'YYYYMMDDHH24MISS') -->
                     , PRTCT_FAMLY_YN                          =         NVL(#{prtctFamlyYn},PRTCT_FAMLY_YN) 
 <!--                     , REG_CHL_CD                              =         #{regChlCd} -->
-                    , DORM_PERD_CD                            =         NVL(#{dormPerdCd},DORM_PERD_CD)
+<!--                     , DORM_PERD_CD                            =         NVL(#{dormPerdCd},DORM_PERD_CD) -->
+                    , DORM_PERD_CD                            =         '99'
                     , APP_PUSH_TOKN                           =         #{appPushTokn}
                     , EXPRN_YN                                =         #{exprnYn}
+<!--                    , HLTH_INTRST_FILD_CD                     =         #{hlthIntrstFildCd}           /*건강관심분야코드*/ -->
+<!--                    , HLTH_INTRST_FILD_CD_NM                  =         #{hlthIntrstFildCdNm}   /*건강관심분야코드명*/   -->
                     , AMDR_ID                                 =         #{amdrId}
                     , AMD_DT                                  =         SYSDATE
+<!--                     , EXPRN_INFO_AGREE_YN                     =         NVL(#{exprnInfoAgreeYn}, 'N')	/* 체험 정보 동의 여부 */ -->
+<!--                     , EXPRN_INFO_AGREE_DT                     =         TO_DATE(#{exprnInfoAgreeDt},'YYYYMMDDHH24MISS')  /* 체험 정보 동의 일시 */ -->
+<!--                     , EXPRN_INFO_AGREE_CHL_CD                 =         #{exprnInfoAgreeChlCd}           /* 체험 정보 동의 채널 코드 */ -->
         <include refid="sqlPkConditions"/>
     </update>
     <insert id="insertDormant">
     			INSERT /* com.ceragem.api.crm.dao.CrmCustBasDao.insertDormant */
     			  INTO CRM_DORM_CUST_BAS (
         			   <include refid="sqlCols"/>
+        			, INGRS_PATH_CD				/* QR유입경로*/
+        			, HLTH_INTRST_FILD_CD		/* 건강관심분야코드*/
+					, HLTH_INTRST_FILD_CD_NM	/* 건강관심분야코드명*/
+                    , EXPRN_INFO_AGREE_YN /* 체험정보동의여부*/
+                    , EXPRN_INFO_AGREE_DT /* 체험정보동의일 */
+                    , EXPRN_INFO_AGREE_CHL_CD /* 체험정보동의채널코드*/
                  )
                 SELECT <include refid="sqlDormCols"/>
                      , #{amdrId}
                      , SYSDATE
                      , #{regrId}
                      , SYSDATE
+                     , INGRS_PATH_CD
+                     , HLTH_INTRST_FILD_CD		
+					 , HLTH_INTRST_FILD_CD_NM
+                     , EXPRN_INFO_AGREE_YN /* 체험정보동의여부*/
+                     , EXPRN_INFO_AGREE_DT /* 체험정보동의일 */
+                     , EXPRN_INFO_AGREE_CHL_CD /* 체험정보동의채널코드*/	
                   FROM CRM_CUST_BAS A
         <include refid="sqlPkConditions"/>
                    AND  A.ITG_CUST_NO NOT IN (
@@ -1569,6 +2158,8 @@
                     <choose>
                         <when test="custStatusCd != null and '002'.toString().equals(custStatusCd)">
                       CUST_STATUS_CD                          =         '002'
+                      <!-- 23.7.3 예정등급 null 제외 -->
+                    <!-- , MSHIP_EXPT_GRADE_CD                     =         null -->
                     </when>
                     <otherwise>
                       CUST_STATUS_CD                          =         '003'
@@ -1576,8 +2167,8 @@
                     , MPHON_NO                                =         FN_CRM_AUTO_SEQ('EXT')
                     , MPHON_BK_DGT_NO                         =         ''
                     , MSHIP_LEAVE_DT                          =         SYSDATE
-<!--                     , GNDR_CD                                 =         '' -->
-<!--                     , BIRTHDAY                                =         '' -->
+                    , GNDR_CD                                 =         ''
+                    , BIRTHDAY                                =         ''
 <!--                     , BIZ_NO                                  =         '' -->
 <!--                     , CORP_REG_NO                             =         '' -->
 <!--                     , CORP_TEL_NO                             =         '' -->
@@ -1601,7 +2192,7 @@
 <!--                     , MSHIP_SBSC_YN                           =         '' -->
                     , MSHIP_LOGIN_ID                          =         ''
 <!--                     , MSHIP_SBT_NO                            =         '' -->
-<!--                     , MSHIP_LOGIN_PWD                         =         '' -->
+                    , MSHIP_LOGIN_PWD                         =         ''
 <!--                     , MSHIP_LAST_LOGIN_DT                     =         '' -->
 <!--                     , MSHIP_LAST_LOGIN_IP_ADDR                =         '' -->
 <!--                     , MSHIP_LAST_STOR_VISIT_DT                =         '' -->
@@ -1650,9 +2241,9 @@
                     , CORP_TEL_NO                             =         #{corpTelNo}
                     , FORN_YN                                 =         NVL(#{fornYn},'N')
                     , REP_NM                                  =         #{repNm}
-                    , MPHON_NO                                =         CASE WHEN #{mphonNo} LIKE 'QF%' THEN  #{mphonNo} ELSE #{mphonNo} END 
+                    , MPHON_NO                                =         CASE WHEN #{mphonNo} LIKE 'QF%' THEN  #{mphonNo} ELSE DAMO.ENCRYPT_VAR_B64('AES_256',#{mphonNo},'') END 
                     , MPHON_BK_DGT_NO                         =         #{mphonBkDgtNo}
-                    , EMAIL_ADDR                              =         CASE WHEN #{emailAddr} LIKE 'QF%' THEN  #{emailAddr} ELSE #{emailAddr} END
+                    , EMAIL_ADDR                              =         CASE WHEN #{emailAddr} LIKE 'QF%' THEN  #{emailAddr} ELSE DAMO.ENCRYPT_VAR_B64('AES_256',#{emailAddr},'') END
                     , PIC_NM                                  =         #{picNm}
                     , PIC_MPHON_NO                            =         #{picMphonNo}
                     , PIC_MPHON_BK_DGT_NO                     =         #{picMphonBkDgtNo}
@@ -1667,7 +2258,7 @@
                     , DISTRCT_CD                              =         #{distrctCd}
                     , ZIP_CD                                  =         #{zipCd}
                     , ADDR_1_CTNTS                            =         #{addr1Ctnts}
-                    , ADDR_2_CTNTS                            =         CASE WHEN #{addr2Ctnts} LIKE 'QF%' THEN  #{addr2Ctnts} ELSE #{addr2Ctnts} END
+                    , ADDR_2_CTNTS                            =         CASE WHEN #{addr2Ctnts} LIKE 'QF%' THEN  #{addr2Ctnts} ELSE DAMO.ENCRYPT_VAR_B64('AES_256',#{addr2Ctnts},'') END
                     , RCMD_STOR_NO                            =         #{rcmdStorNo}
                     , RCMDR_CUST_NO                           =         #{rcmdrCustNo}
                     , RCMD_EXECVDEMP_NO                       =         #{rcmdExecvdempNo}
@@ -1690,8 +2281,9 @@
                     , PUSH_RCV_AGREE_YN                       =         NVL(#{pushRcvAgreeYn},'N')
                     , PUSH_RCV_AGREE_DT                       =         TO_DATE(#{pushRcvAgreeDt},'YYYYMMDDHH24MISS')
                     , PUSH_RCV_AGREE_CHL_CD                   =         #{pushRcvAgreeChlCd}
-                    , CI_CERTF_YN                             =         NVL(#{ciCertfYn},'N')
-                    , CI                                      =         #{ci}
+                    <!-- , CI_CERTF_YN                             =         NVL(#{ciCertfYn},'N') -->
+                    , CI_CERTF_YN                             =         NVL2(NVL(CI,#{ci}),'Y','N')
+                    , CI                                      =         NVL(CI,#{ci})
                     , DI_CERTF_YN                             =         NVL(#{diCertfYn},'N')
                     , DI                                      =         #{di}
                     , RCV_RFSL_YN                             =         NVL(#{rcvRfslYn},'N')
@@ -1706,10 +2298,16 @@
                     , BLLK_REG_WHY_CTNTS                      =         #{bllkRegWhyCtnts}
                     , BLLK_REG_DT                             =         SYSDATE
                     , PRTCT_FAMLY_YN                          =         NVL(#{prtctFamlyYn},PRTCT_FAMLY_YN)
-                    , DORM_PERD_CD                            =         NVL(#{dormPerdCd},DORM_PERD_CD)
+<!--                     , DORM_PERD_CD                            =         NVL(#{dormPerdCd},DORM_PERD_CD) -->
+                    , DORM_PERD_CD                            =         '99'
                     , APP_PUSH_TOKN                           =         #{appPushTokn}
                     , EXPRN_YN                                =         #{exprnYn}
                     , SALE_AGGR_AMT                           =         #{saleAggrAmt}
+<!--                     , HLTH_INTRST_FILD_CD                     =         #{hlthIntrstFildCd}           /*건강관심분야코드*/ -->
+<!--                    , HLTH_INTRST_FILD_CD_NM                  =         #{hlthIntrstFildCdNm}   /*건강관심분야코드명*/ -->
+                    , EXPRN_INFO_AGREE_YN                     =         NVL(#{exprnInfoAgreeYn}, 'N')	/* 체험 정보 동의 여부 */
+                    , EXPRN_INFO_AGREE_DT                     =         TO_DATE(#{exprnInfoAgreeDt},'YYYYMMDDHH24MISS')  /* 체험 정보 동의 일시 */
+                    , EXPRN_INFO_AGREE_CHL_CD                 =         #{exprnInfoAgreeChlCd}           /* 체험 정보 동의 채널 코드 */
         <include refid="sqlPkConditions"/>
     </update>
     <update id="updateBlack">
@@ -1723,12 +2321,12 @@
     </update>
     <update id="updateRepCntplc"> 
                UPDATE CRM_CUST_BAS /* com.ceragem.api.crm.dao.CrmCustBasDao.updateRepCntplc */
-                  SET MPHON_NO                                =         CASE WHEN #{mphonNo} LIKE 'QF%' THEN #{mphonNo} ELSE #{mphonNo}  END 
+                  SET MPHON_NO                                =         CASE WHEN #{mphonNo} LIKE 'QF%' THEN #{mphonNo} ELSE DAMO.ENCRYPT_VAR_B64('AES_256',#{mphonNo} ,'') END 
                     , MPHON_BK_DGT_NO                         =         #{mphonBkDgtNo}
                     , DISTRCT_CD                              =         #{distrctCd}
                     , ZIP_CD                                  =         #{zipCd}
                     , ADDR_1_CTNTS                            =         #{addr1Ctnts}
-                    , ADDR_2_CTNTS                            =         CASE WHEN #{addr2Ctnts} LIKE 'QF%' THEN #{addr2Ctnts} ELSE #{addr2Ctnts}  END
+                    , ADDR_2_CTNTS                            =         CASE WHEN #{addr2Ctnts} LIKE 'QF%' THEN #{addr2Ctnts} ELSE DAMO.ENCRYPT_VAR_B64('AES_256',#{addr2Ctnts} ,'') END
         <include refid="sqlPkConditions"/>
     </update>
     <update id="updateRepHshld">
@@ -1744,9 +2342,37 @@
     </update>
     <update id="updateRemainPoint">
                UPDATE CRM_CUST_BAS /* com.ceragem.api.crm.dao.CrmCustBasDao.updateRemainPoint */
-                  SET REMAIN_POINT_SCORE                      =         #{remainPointScore}
+                  SET REMAIN_POINT_SCORE                      =         (SELECT SUM(OCCUR_POINT_SCORE) FROM CRM_POINT_HST WHERE ITG_CUST_NO = CRM_CUST_BAS.ITG_CUST_NO )
         <include refid="sqlPkConditions"/>
     </update>
+    <update id="updatePointSeq">
+            MERGE INTO CRM_POINT_HST A
+            USING ( SELECT * 
+                      FROM ( SELECT A.*
+                                  , SUM(A.OCCUR_POINT_SCORE) OVER (PARTITION BY ITG_CUST_NO ORDER BY REG_DT,POINT_HST_SEQ) SUBSUM
+                               FROM CRM_POINT_HST A 
+                              <include refid="sqlPkConditions"/>
+                               ) A 
+                      WHERE SUBSUM != REMAIN_POINT_SCORE ) B ON ( A.POINT_HST_SEQ = B.POINT_HST_SEQ )
+             WHEN MATCHED THEN
+           UPDATE SET A.REMAIN_POINT_SCORE = B.SUBSUM
+        <include refid="sqlPkConditions"/>
+    </update>
+    
+     <update id="updateAdvPointSeq">
+            MERGE INTO CRM_ADVNCMT_HST A
+            USING ( SELECT * 
+                      FROM ( SELECT A.*
+                                  , SUM(A.OCCUR_ADVNCMT_SCORE) OVER (PARTITION BY ITG_CUST_NO ORDER BY REG_DT,ADVNCMT_HST_SEQ) SUBSUM
+                               FROM CRM_ADVNCMT_HST A 
+                               <include refid="sqlPkConditions"/>
+                               ) A 
+                      WHERE SUBSUM != REMAIN_ADVNCMT_SCORE ) B ON ( A.ADVNCMT_HST_SEQ = B.ADVNCMT_HST_SEQ )
+             WHEN MATCHED THEN
+           UPDATE SET A.REMAIN_ADVNCMT_SCORE = B.SUBSUM
+        <include refid="sqlPkConditions"/>
+    </update>
+    
     
     <update id="updateLastVisitStore">
                UPDATE CRM_CUST_BAS /* com.ceragem.api.crm.dao.CrmCustBasDao.updateLastVisitStore */
@@ -1801,6 +2427,9 @@
     <update id="updateAlliance">
                 UPDATE CRM_CUST_BAS
                    SET MSHIP_TYPE_CD                           =         '002'
+                   <!-- 23.2.1 제휴사 회사 번호 추가 -->
+                   <!-- 회원 테이블에 제휴사 회사 번호가 들어가 있지 않아서 등급별 쿠폰 지금 에러 발생 -> 수정처리함 -->
+                      ,CPRT_CMP_NO                            =          #{cprtCmpNo}
                  WHERE ITG_CUST_NO                             =         #{itgCustNo}
                    AND ( SELECT COUNT(1) 
                            FROM CRM_CRPT_CMP_EXECVDEMP_BAS 
@@ -1824,13 +2453,27 @@
                UPDATE CRM_CUST_BAS /* com.ceragem.api.crm.dao.CrmCustBasDao.updateToken */ 
                   SET APP_PUSH_TOKN                           =         #{appPushTokn}
                     , APP_PUSH_OS_CD                          =         NVL(#{appPushOsCd},APP_PUSH_OS_CD)
+                    , PUSH_RCV_AGREE_YN                       =         NVL(#{pushRcvAgreeYn},PUSH_RCV_AGREE_YN)
+                    , PUSH_RCV_AGREE_DT                       =         DECODE(NVL(#{pushRcvAgreeYn},PUSH_RCV_AGREE_YN),'Y',NVL(PUSH_RCV_AGREE_DT,SYSDATE),NULL)
+                    , PUSH_RCV_AGREE_CHL_CD                   =         NVL(#{regChlCd},PUSH_RCV_AGREE_CHL_CD)
         <include refid="sqlPkConditions"/>
+                  AND NVL(#{regChlCd},PUSH_RCV_AGREE_CHL_CD)  =         'MEM' 
     </update>
     
     <update id="updateDormantStatus">
                UPDATE CRM_DORM_CUST_BAS /* com.ceragem.api.crm.dao.CrmCustBasDao.updateDormantStatus */ 
                   SET CUST_STATUS_CD                           =         '003'
                     , MSHIP_LEAVE_DT                           =         NVL(MSHIP_LEAVE_DT,SYSDATE)
+                    , GNDR_CD                                  =         NULL /*성별코드        */
+                    , BIRTHDAY                                 =         NULL /*생년월일        */
+                    , EMAIL_ADDR                               =         ''
+                    , ZIP_CD                                   =         ''
+                    , ADDR_1_CTNTS                             =         ''
+                    , ADDR_2_CTNTS                             =         ''
+                    , CI_CERTF_YN                             =         'N'
+                    , CI                                      =         ''
+                    , DI_CERTF_YN                             =         'N'
+                    , DI                                      =         ''
         <include refid="sqlPkConditions"/>
     </update>
     

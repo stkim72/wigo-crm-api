@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ceragem.api.base.dao.ApiExecHstDao">
+    <resultMap type="com.ceragem.api.base.model.ApiExecHstVo" id="ApiExecHstVo">
+        <result property="apiRsltTxn"  column="API_RSLT_TXN"  jdbcType="CLOB" javaType="java.lang.String" />
+        <result property="apiParamTxn"  column="API_PARAM_TXN"  jdbcType="CLOB" javaType="java.lang.String" />
+    </resultMap>
+
+    <sql id="sqlPkConditions">
+                WHERE API_HST_CD        =       #{apiHstCd}
+    </sql>
+    <sql id="sqlCols">
+                      API_HST_CD                    /*API이력코드        */
+                    , API_CD                    /*API코드        */
+                    , API_CALL_URL                    /*API호출URL        */
+                    , API_RSLT_CD                    /*API결과코드        */
+                    , API_RSLT_MSG_TXN                    /*API결과메시지내역        */
+                    , API_PARAM_TXN                    /*API파라미터내역        */
+                    , API_RSLT_TXN                    /*API결과내역        */
+                    , API_CALL_DT                    /*API호출일시        */
+                    , API_EXEC_MSEC                    /*API실행초        */
+                    , API_CALL_IP_ADDR           /*API호출IP주소*/
+                    , REGR_ID                    /*등록자ID        */
+                    , REG_DT                    /*등록일시        */
+                    , AMDR_ID                    /*수정자ID        */
+                    , AMD_DT                    /*수정일시        */
+    </sql>
+    <sql id="sqlConditions">
+    <where>
+        <if test="apiHstCd != null and apiHstCd != ''">
+            <choose>
+                <when test="apiHstCd instanceof String">
+                              AND API_HST_CD        =       #{apiHstCd}
+                </when>
+                <otherwise>
+                    AND API_HST_CD        IN
+                    <foreach item="item" index="index" collection="apiHstCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="apiCd != null and apiCd != ''">
+            <choose>
+                <when test="apiCd instanceof String">
+                              AND API_CD            =       #{apiCd}
+                </when>
+                <otherwise>
+                    AND API_CD            IN
+                    <foreach item="item" index="index" collection="apiCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="apiCallUrl != null and apiCallUrl != ''">
+                      AND API_CALL_URL      =       #{apiCallUrl}
+        </if>
+        <if test="apiRsltCd != null and apiRsltCd != ''">
+            <choose>
+                <when test="apiRsltCd instanceof String">
+                              AND API_RSLT_CD       =       #{apiRsltCd}
+                </when>
+                <otherwise>
+                    AND API_RSLT_CD       IN
+                    <foreach item="item" index="index" collection="apiRsltCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="apiRsltMsgTxn != null and apiRsltMsgTxn != ''">
+                      AND API_RSLT_MSG_TXN  =       #{apiRsltMsgTxn}
+        </if>
+        <if test="apiParamTxn != null and apiParamTxn != ''">
+                      AND API_PARAM_TXN     =       #{apiParamTxn}
+        </if>
+        <if test="apiRsltTxn != null and apiRsltTxn != ''">
+                      AND API_RSLT_TXN      =       #{apiRsltTxn}
+        </if>
+        <if test="apiCallDt != null and apiCallDt != ''">
+                      AND API_CALL_DT       =       #{apiCallDt}
+        </if>
+        <if test="apiExecMsec != null and apiExecMsec != ''">
+                      AND API_EXEC_MSEC      =       #{apiExecMsec}
+        </if>
+        </where>
+    </sql>
+    <select id="selectListCount" resultType="int">
+                SELECT /* com.ceragem.api.base.dao.ApiExecHstDao.selectListCount */ COUNT(1)
+                 FROM API_EXEC_HST
+        <include refid="sqlConditions"/>
+    </select>
+    <select id="selectList" resultMap="ApiExecHstVo">
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingHeader"/>
+               SELECT /* com.ceragem.api.base.dao.ApiExecHstDao.selectList */ <include refid="sqlCols"/>
+                 FROM API_EXEC_HST
+        <include refid="sqlConditions"/>
+               ORDER BY API_CALL_DT DESC
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingFooter"/>
+    </select>
+    <select id="select" resultMap="ApiExecHstVo">
+               SELECT /* com.ceragem.api.base.dao.ApiExecHstDao.select */ <include refid="sqlCols"/>
+                 FROM API_EXEC_HST
+        <include refid="sqlPkConditions"/>
+    </select>
+    <insert id="insert">
+                INSERT /* com.ceragem.api.base.dao.ApiExecHstDao.insert */ INTO API_EXEC_HST (
+        <include refid="sqlCols"/>
+                 ) VALUES (
+                       NVL(#{apiHstCd},FN_CRM_AUTO_SEQ('AH'))
+                     , #{apiCd}
+                     , #{apiCallUrl}
+                     , #{apiRsltCd}
+                     , SUBSTRB(#{apiRsltMsgTxn},1,1000)
+                     , #{apiParamTxn}
+                     , #{apiRsltTxn}
+                     , DECODE(#{apiCallDt},NULL,SYSDATE,TO_DATE(#{apiCallDt},'YYYYMMDDHH24MISS'))
+                     , DECODE(#{apiExecMsec},NULL,0,#{apiExecMsec} )
+                     , #{apiCallIpAddr}
+                     , #{regrId}
+                     , SYSDATE
+                     , #{amdrId}
+                     , SYSDATE
+                 )
+    </insert>
+    <update id="update">
+               UPDATE API_EXEC_HST /* com.ceragem.api.base.dao.ApiExecHstDao.update */
+                  SET API_CD              =         #{apiCd}
+                    , API_CALL_URL        =         #{apiCallUrl}
+                    , API_RSLT_CD         =         #{apiRsltCd}
+                    , API_RSLT_MSG_TXN    =         SUBSTRB(#{apiRsltMsgTxn},1,1000)
+                    , API_PARAM_TXN       =         #{apiParamTxn}
+                    , API_RSLT_TXN        =         #{apiRsltTxn}
+                    , API_CALL_DT         =         #{apiCallDt}
+                    , API_EXEC_MSEC        =         #{apiExecMsec}
+                    , AMDR_ID             =         #{amdrId}
+                    , AMD_DT              =         SYSDATE
+        <include refid="sqlPkConditions"/>
+    </update>
+    <delete id="delete">
+               DELETE /* com.ceragem.api.base.dao.ApiExecHstDao.delete */ 
+                 FROM API_EXEC_HST
+        <include refid="sqlPkConditions"/>
+    </delete>
+</mapper>

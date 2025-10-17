@@ -1,6 +1,7 @@
 package com.ceragem.api.crm.model;
 
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Pattern;
 
 import com.ceragem.api.base.model.ApiBaseVo;
 import com.ceragem.api.base.util.Utilities;
@@ -45,6 +46,7 @@ public class CrmCustInstallLocVo extends ApiBaseVo {
 	@Schema(description = "이동전화번호", example = "01012345678", hidden = false, required = true, nullable = false, maxLength = 20)
 	@NotEmpty
 	@MaxByte(max = 20)
+	@Pattern(regexp = "^[0-9]*$", message = "전화번호는 숫자만 가능합니다")
 	private String mphonNo;
 	/**
 	 * 이메일주소

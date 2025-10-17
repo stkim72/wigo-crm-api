@@ -2,12 +2,15 @@ package com.ceragem.api.crm.service;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import javax.imageio.ImageIO;
 
@@ -109,12 +112,21 @@ public class CrmCouponService extends AbstractCrmService {
 
 	public final static String API_CODE_CUST_FOUND = "IAR0518";
 	public final static String API_CODE_CUST_FOUND_MSG = "회원쿠폰에 발급된 통합회원 번호가 없습니다.";
-	
+
 	public final static String API_CODE_GITG_FOUND = "IAR0519";
 	public final static String API_CODE_GITG_FOUND_MSG = "선물하기 불가능한 쿠폰입니다.";
-	
+
 	public final static String API_COUPN_STOR_NOT_FOUND = "IAR0520";
 	public final static String API_COUPN_STOR_NOT_FOUND_MSG = "사용매장으로 등록된 매장이 없습니다.";
+
+	public final static String API_CODE_UNMSHIP_NOT_FOUND = "IAR0521";
+	public final static String API_CODE_UNMSHIP_NOT_FOUND_MSG = "비회원만 사용가능한 쿠폰입니다.";
+
+	public final static String API_CODE_COUPON_NOT_STORE = "IAR0522";
+	public final static String API_CODE_COUPON_NOT_STORE_MSG = "해당 매장에서 사용가능한 쿠폰이 아닙니다.";
+
+	public final static String API_CODE_MASTER_NOT_USE = "IAR0522";
+	public final static String API_CODE_MASTER_NOT_USE_MSG = "사용중지된 쿠폰 마스터 입니다.";
 
 	@Autowired
 	CrmCoupnPblsHstDao dao;
@@ -268,7 +280,14 @@ public class CrmCouponService extends AbstractCrmService {
 			pointVo.setPblsDivCd(COUPON_POINT);
 			pointService.saveDeposit(pointVo);
 		}
-		return dao.updateApprove(coupon);
+
+		int ret = dao.updateApprove(coupon);
+		if (ret > 0) {
+			coupon.setUseDivCd("001"); // 사용
+			coupon.setUseYn("Y");
+			dao.insertUseHis(coupon);
+		}
+		return ret;
 	}
 
 	public CrmCouponVo updateValidate(CrmCouponVo param) throws Exception {
@@ -287,7 +306,13 @@ public class CrmCouponService extends AbstractCrmService {
 		if (COUPON_KIND_POINT.equals(coupon.getCoupnKndCd()))
 			throw new EzApiException(API_CODE_COUPON_POINT_CANCEL, API_CODE_COUPON_POINT_CANCEL_MSG);
 
-		return dao.updateCancel(coupon);
+		int ret = dao.updateCancel(coupon);
+		if (ret > 0) {
+			coupon.setUseDivCd("002"); // 사용취소
+			coupon.setUseYn("N");
+			dao.insertUseHis(coupon);
+		}
+		return ret;
 	}
 
 	public CrmCouponVo validateApprove(CrmCouponVo vo) throws Exception {
@@ -301,34 +326,51 @@ public class CrmCouponService extends AbstractCrmService {
 //		6. 채널코드 추가 필수
 // 		7. 마스터 매장코드 없을시 전부 매장 체크 안함 , 있을시에만 체크함 | 쿠폰발급 후 매장 생성 시 문제 
 //		8. 사용매장 있을시 마스타에서 등록 매자 없으면 사용가능 , 사용매장 있고 마스타 등록 있을시 매장 체크 , 사용매장 없을시 체크 안함
-		
+
 		CrmCouponVo coupon = null;
 		if (Utilities.isEmpty(vo.getStorNo()) || Utilities.isEmpty(vo.getStorNo().trim())) {
 			coupon = dao.select(vo);
+			if (coupon == null || "Y".equals(coupon.getWellnessYn())) {
+				throw new EzApiException(API_CODE_COUPON_NOT_STORE, API_CODE_COUPON_NOT_STORE_MSG);
+			}
+
 		} else {
 			EzMap storCnt = dao.selectStorCnt(vo);
+			if (storCnt == null || !storCnt.getString("useYn").equals("Y")) {
+				throw new EzApiException(API_CODE_MASTER_NOT_USE, API_CODE_MASTER_NOT_USE_MSG);
+			}
 			vo.setMshipCoupnBasNo(null);
-			if (Utilities.isNotEmpty(storCnt) && storCnt.getInt("storCnt") > 0) {
-				vo.setMshipCoupnBasNo(storCnt.getString("mshipCoupnBasNo"));
-			} 
-			coupon = dao.selectJoinStore(vo);
+			if ("Y".equals(storCnt.getString("wellnessYn"))) {
+				coupon = dao.select(vo);
+				if (!vo.getStorNo().equals(coupon.getStorNo())) {
+					throw new EzApiException(API_CODE_COUPON_NOT_STORE, API_CODE_COUPON_NOT_STORE_MSG);
+				}
+			} else {
+				if (Utilities.isNotEmpty(storCnt) && storCnt.getInt("storCnt") > 0) {
+					vo.setMshipCoupnBasNo(storCnt.getString("mshipCoupnBasNo"));
+				}
+				coupon = dao.selectJoinStore(vo);
+			}
+
 		}
 
 		if (coupon == null)
 			throw new EzApiException(API_CODE_COUPON_NOT_FOUND, API_CODE_COUPON_NOT_FOUND_MSG);
+
 //		if (Utilities.isEmpty(coupon.getItgCustNo()) || Utilities.isEmpty(coupon.getItgCustNo().trim())) {
 //			throw new EzApiException(API_CODE_CUST_FOUND, API_CODE_CUST_FOUND_MSG);
 //		}
-		
+
 		// coupon = dao.select(vo);
 //		if (coupon == null)
 //			throw new EzApiException(API_CODE_COUPON_NOT_FOUND, API_CODE_COUPON_NOT_FOUND_MSG);
-		
+
 		if ("Y".equals(coupon.getUseYn()))
-			throw new EzApiException(API_CODE_COUPON_USED, API_CODE_COUPON_USED_MSG);	// 이미사용
+			throw new EzApiException(API_CODE_COUPON_USED, API_CODE_COUPON_USED_MSG); // 이미사용
+
 		if ("0".equals(coupon.getChkStor()))
-			throw new EzApiException(API_COUPN_STOR_NOT_FOUND, API_COUPN_STOR_NOT_FOUND_MSG);	// 등록매장
-		
+			throw new EzApiException(API_COUPN_STOR_NOT_FOUND, API_COUPN_STOR_NOT_FOUND_MSG); // 등록매장
+
 		// 업데이트 정보 저장
 		coupon.setChitNo(vo.getChitNo());
 		coupon.setBuyGodsCd(vo.getBuyGodsCd());
@@ -337,31 +379,35 @@ public class CrmCouponService extends AbstractCrmService {
 		coupon.setSaleAmt(vo.getSaleAmt());
 		coupon.setPromNo(vo.getPromNo());
 		coupon.setCampNo(vo.getCampNo());
-		
+		coupon.setUseStorNo(vo.getStorNo());
 		if (Utilities.isNotEmpty(coupon.getSgntYn()) && coupon.getSgntYn().equals("Y")) {
 			coupon.setItgCustNo(vo.getItgCustNo());
 		}
-		
+
 		// 적용매장 체크
-		
-		
+
 		// 사용기간 체크
-//		long nano = System.currentTimeMillis();
-//		int toDay = Integer.valueOf(new SimpleDateFormat("yyyyMMdd").format(nano));
-//		if (coupon.getUseStdDayCondCd().equals("Y")) {
-//
-//			long issueDt = Long.valueOf(coupon.getRegDt().substring(0, 8));
-//			if (toDay - issueDt > Long.valueOf(coupon.getCoupnUsePossDay())) {
-//				throw new EzApiException(API_CODE_USE_DAY_OVER, API_CODE_USE_DAY_OVER_MSG);
-//			}
-//		} else {
-//
-//			int fromPblsStdDay = Integer.valueOf(coupon.getFromPblsStdDay());
-//			int toPblsStdDay = Integer.valueOf(coupon.getToPblsStdDay());
-//			if (toDay < fromPblsStdDay || toDay > toPblsStdDay) {
-//				throw new EzApiException(API_CODE_USE_DAY_OVER, API_CODE_USE_DAY_OVER_MSG);
-//			}
-//		}
+		long now = System.currentTimeMillis();
+		int toDay = Integer.valueOf(new SimpleDateFormat("yyyyMMdd").format(now));
+		if (Utilities.isNotEmpty(coupon.getUseStdDayCondCd()) && coupon.getUseStdDayCondCd().equals("Y")) {
+			long issueDt = Long.valueOf(coupon.getRegDt().substring(0, 8));
+
+			DateFormat format = new SimpleDateFormat("yyyyMMdd");
+			Date d1 = format.parse(toDay + "");
+			Date d2 = format.parse(issueDt + "");
+			long Sec = (d1.getTime() - d2.getTime()) / 1000; // 초
+			long Days = Sec / (24 * 60 * 60); // 일자수
+
+			if (Utilities.isEmpty(coupon.getCoupnUsePossDay()) || Days > Long.valueOf(coupon.getCoupnUsePossDay())) {
+				throw new EzApiException(API_CODE_USE_DAY_OVER, API_CODE_USE_DAY_OVER_MSG);
+			}
+		} else {
+			int fromPblsStdDay = Integer.valueOf(coupon.getFromUseStdDay());
+			int toPblsStdDay = Integer.valueOf(coupon.getToUseStdDay());
+			if (toDay < fromPblsStdDay || toDay > toPblsStdDay) {
+				throw new EzApiException(API_CODE_USE_DAY_OVER, API_CODE_USE_DAY_OVER_MSG);
+			}
+		}
 
 		// 일 최대 사용
 //		Integer maxUseCnt = coupon.getMaxUseCnt();
@@ -379,6 +425,27 @@ public class CrmCouponService extends AbstractCrmService {
 //				throw new EzApiException(API_CODE_MSHIP_NOT_FOUND, API_CODE_MSHIP_NOT_FOUND_MSG);
 //			}
 //		}
+
+		// 회원체크 추가
+		// 회원선택 > 멤버십
+		// 비회원 선택 > 멤버십 제외
+		// 전체 > 체크안함
+		if (Utilities.isNotEmpty(vo.getItgCustNo())
+				&& (coupon.getUseDivCd().equals("001") || coupon.getUseDivCd().equals("002"))) {
+			CrmCustVo custVo = custService.getCustVo(vo.getItgCustNo());
+			if (custVo.getMshipSbscYn() == null || custVo.getMshipSbscYn().isEmpty()
+					|| custVo.getMshipSbscYn().equals("N")) {
+				throw new EzApiException(API_CODE_MSHIP_NOT_FOUND, API_CODE_MSHIP_NOT_FOUND_MSG);
+			}
+		}
+
+		if (Utilities.isNotEmpty(vo.getItgCustNo()) && (coupon.getUseDivCd().equals("002"))) {
+			CrmCustVo custVo = custService.getCustVo(vo.getItgCustNo());
+			if (custVo.getMshipSbscYn() == null || custVo.getMshipSbscYn().isEmpty()
+					|| custVo.getMshipSbscYn().equals("Y")) {
+				throw new EzApiException(API_CODE_UNMSHIP_NOT_FOUND, API_CODE_UNMSHIP_NOT_FOUND_MSG);
+			}
+		}
 
 		// 쿠폰 종류 [coupnKndCd 001 정액,002 정율,005 포인트]
 		// 적용금액 applyAmt , 최소구매금액 minBuyAmt
@@ -440,7 +507,7 @@ public class CrmCouponService extends AbstractCrmService {
 		List<CrmCouponVo> ret = new ArrayList<CrmCouponVo>();
 		for (int i = 0; i < list.size(); i++) {
 			CrmCouponVo vo = list.get(i);
-			ret.add(insertIssue(vo));
+			ret.add(insertIssueTem(vo));
 		}
 		return ret;
 	}
@@ -452,9 +519,7 @@ public class CrmCouponService extends AbstractCrmService {
 	// }
 
 	public byte[] createBarcode(String text, int width, int height) throws Exception {
-		log.debug("[text:%s],width:%d,height:%d", text, width, height);
 		BufferedImage barcode = Utilities.createBarcodeImage(text, width, height);
-
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		ImageIO.write(barcode, "png", bos);
 		return bos.toByteArray();
@@ -465,47 +530,114 @@ public class CrmCouponService extends AbstractCrmService {
 		return 0;
 	}
 
+	public CrmCouponVo insertIssueCtc(CrmCouponVo cpVo) throws Exception {
+		EzMap param = new EzMap();
+		param.setString("userCd", cpVo.getRegrId());
+		EzMap emp = dao.selectIssueUser(param);
+		if (emp == null) {
+			throw new EzApiException(Constants._API_CODE_INVALID_PARAM, "존재하지 않는 사원번호입니다.");
+		}
+		String delYn = emp.getString("delYn");
+		if ("Y".equals(delYn)) {
+			throw new EzApiException(Constants._API_CODE_INVALID_PARAM, "퇴사한 사원번호입니다.");
+		}
+		CrmCouponVo vo = insertIssueTem(cpVo, true);
+		if (vo == null) {
+			throw new EzApiException(Constants._API_COUPN_NO_DATA, "발급 가능한 쿠폰이 존재하지 않습니다.");
+		}
+		return vo;
+	}
+
 	public CrmCouponVo insertIssueTem(CrmCouponVo cpVo) throws Exception {
-		
+		return insertIssueTem(cpVo, false);
+	}
+
+	public CrmCouponVo insertIssueTem(CrmCouponVo cpVo, boolean fireEvent) throws Exception {
+
 		CrmCouponVo voTem = dao.selectMaster(cpVo);
 		if (voTem == null) {
-//			throw new EzApiException(Constants._API_COUPN_NO_DATA, Constants._API_COUPN_NO_DATA_MSG);
-			return null;
+			if (fireEvent)
+				throw new EzApiException(Constants._API_COUPN_NO_DATA, Constants._API_COUPN_NO_DATA_MSG);
+			else
+				return null;
 		}
 
 		// 발행기간체크
 		long now = System.currentTimeMillis();
-		String toDay = new SimpleDateFormat("yyyyMMdd",Locale.KOREA).format(now);
-		if (Integer.parseInt(voTem.getToPblsStdDay()) < Integer.parseInt(toDay) || Integer.parseInt(voTem.getFromPblsStdDay()) > Integer.parseInt(toDay)) {
-			//throw new EzApiException(Constants._API_COUPN_OVER_DAY_DATA, Constants._API_COUPN_OVER_DAY_DATA_MSG);
-			return null;
+		String toDay = new SimpleDateFormat("yyyyMMdd", Locale.KOREA).format(now);
+		if (Integer.parseInt(voTem.getToPblsStdDay()) < Integer.parseInt(toDay)
+				|| Integer.parseInt(voTem.getFromPblsStdDay()) > Integer.parseInt(toDay)) {
+			if (fireEvent)
+				throw new EzApiException(Constants._API_COUPN_OVER_DAY_DATA, Constants._API_COUPN_OVER_DAY_DATA_MSG);
+			else
+				return null;
 		}
-		
+
 		// 일최대발급체크
 		int dayCoupnCnt = dao.getDayCoupnCnt(voTem); // 당일 발급된수량
-		int maxIssueCnt = voTem.getMaxIssueCnt();	 // 마스터 설정 수량
+		int maxIssueCnt = voTem.getMaxIssueCnt(); // 마스터 설정 수량
 
 		// 일최대 발급 체크
 		if ((dayCoupnCnt + 1) > maxIssueCnt) {
-			//throw new EzApiException(Constants._API_COUPN_OVER_ISSUE_DATA, Constants._API_COUPN_OVER_ISSUE_DATA_MSG);
-			return null;
+			if (fireEvent)
+				throw new EzApiException(Constants._API_COUPN_OVER_ISSUE_DATA,
+						Constants._API_COUPN_OVER_ISSUE_DATA_MSG);
+			else
+				return null;
 		}
-		
+		if ("002".equals(voTem.getCoupnIssueMethCd()) || "003".equals(voTem.getCoupnIssueMethCd())) {
+			int issueRstrtnCnt = voTem.getIssueRstrtnCnt() == null ? 0 : voTem.getIssueRstrtnCnt();
+			if (issueRstrtnCnt > 0) {
+				EzMap cntMap = dao.selectPubCnt(cpVo);
+				int totCnt = cntMap.getInt("totCnt");
+				int itgCnt = cntMap.getInt("itgCnt");
+				if ("002".equals(voTem.getCoupnIssueMethCd())) {
+					if (itgCnt + 1 > issueRstrtnCnt) {
+						if (fireEvent)
+							throw new EzApiException(Constants._API_COUPN_OVER_ISSUE_DATA, "회원당 최대 발급매수를 초과했습니다.");
+						else
+							return null;
+					}
+				} else if ("003".equals(voTem.getCoupnIssueMethCd())) {
+					if (totCnt + 1 > issueRstrtnCnt) {
+						if (fireEvent)
+							throw new EzApiException(Constants._API_COUPN_OVER_ISSUE_DATA, "최대 발급매수를 초과했습니다.");
+						else
+							return null;
+					}
+				}
+			}
+
+		}
+
 		// 적용회원 체크
 		CrmCustVo custVo = custService.getCustVo(cpVo.getItgCustNo());
 //		String mshipTypeCd = String.valueOf(voTem.getMshipTypeCds());
 		String applyMshpGradeCtnts = String.valueOf(voTem.getApplyMshpGradeCtnts());
-		
+
 		if (!Arrays.asList(applyMshpGradeCtnts.split(",")).contains(custVo.getMshipGradeCd())) {
-			//throw new EzApiException(Constants._API_COUPN_GRADE_DATA, Constants._API_COUPN_GRADE_DATA_MSG);
-			return null;
-		} else if (Utilities.isNotEmpty(voTem.getCprtCmpNo())) {
-			//throw new EzApiException(Constants._API_COUPN_CMPNO_DATA, Constants._API_COUPN_CMPNO_DATA_MSG);
-			if(custVo.getMshipTypeCd().equals("002") && !(voTem.getCprtCmpNo().equals(custVo.getCprtCmpNo()))) {
+			if (fireEvent)
+				throw new EzApiException(Constants._API_COUPN_GRADE_DATA, Constants._API_COUPN_GRADE_DATA_MSG);
+			else
 				return null;
+		} else if (Utilities.isNotEmpty(voTem.getCprtCmpNo())) {
+
+			if (custVo.getMshipTypeCd().equals("002") && !(voTem.getCprtCmpNo().equals(custVo.getCprtCmpNo()))) {
+				if (fireEvent)
+					throw new EzApiException(Constants._API_COUPN_CMPNO_DATA, Constants._API_COUPN_CMPNO_DATA_MSG);
+				else
+					return null;
 			}
 		}
-		
+
+		if (Utilities.isNotEmpty(cpVo.getChitNo())) {
+			CrmCouponSo so = new CrmCouponSo();
+			so.setChitNo(cpVo.getChitNo());
+			int cnt = dao.selectListCount(so);
+			if (cnt > 0)
+				throw new EzApiException(API_CODE_DUPLICATED_ISSUE, API_CODE_DUPLICATED_ISSUE_MSG);
+		}
+
 //		if (!Arrays.asList(mshipTypeCd.split(",")).contains(custVo.getMshipTypeCd())) {
 //			
 //		} else if (!Arrays.asList(applyMshpGradeCtnts.split(",")).contains(custVo.getMshipGradeCd())) {
@@ -513,9 +645,10 @@ public class CrmCouponService extends AbstractCrmService {
 //		} else if (custVo.getMshipTypeCd().equals("002") && !(voTem.getCprtCmpNo().equals(custVo.getCprtCmpNo()))) {
 //			
 //		}
-		
-//		int cnt = 
-		dao.insertIssueTem(cpVo);
+
+		int cnt = dao.insertIssueTem(cpVo);
+		if (cnt == 0)
+			return null;
 
 		return dao.getMaxCoupnHstSeq(cpVo);
 	}
@@ -533,7 +666,7 @@ public class CrmCouponService extends AbstractCrmService {
 	}
 
 	public CrmCouponVo saveGiftCoupn(String coupnPblsBasNo, String fromItgCustNo, String toItgCustNo) {
-		
+
 		// 해당쿠폰 으로 선물가능 여부 체크 , 사용가능
 		// 양도자 양수자 체크
 		// 받은선물 재 선물 불가
@@ -541,7 +674,7 @@ public class CrmCouponService extends AbstractCrmService {
 		prm.setItgCustNo(fromItgCustNo);
 		prm.setCoupnPblsBasNo(coupnPblsBasNo);
 		CrmCouponVo coupon = dao.select(prm);
-		
+
 		if (coupon == null)
 			throw new EzApiException(API_CODE_COUPON_NOT_FOUND, API_CODE_COUPON_NOT_FOUND_MSG);
 		if ("Y".equals(coupon.getUseYn()))
@@ -554,13 +687,48 @@ public class CrmCouponService extends AbstractCrmService {
 		vo.setCoupnPblsBasNo(coupnPblsBasNo);
 		vo.setTrns(fromItgCustNo);
 		int result = dao.updateGiftCoupn(vo);
-		
+
 		if (result == 0) {
 			return null;
 		}
 		prm.setItgCustNo(toItgCustNo);
 		CrmCouponVo resultCoupon = dao.select(prm);
 		return resultCoupon;
+	}
+
+	public List<CrmCouponVo> getCoupnChlList(CrmCouponSo so) {
+		return dao.getCoupnChlList(so);
+	}
+
+	public CrmCouponVo insertMasterIssue(CrmCouponVo vo) throws Exception {
+		return insertIssueTem(vo);
+	}
+
+	public CrmCouponVo getCertfNo(String certfNo) {
+		EzMap so = new EzMap();
+		so.setString("certfNo", certfNo);
+		return dao.selectCertfNo(so);
+	}
+
+	public List<CrmCouponVo> insertEventCoupon(Map<String, Object> param) throws Exception {
+		List<EzMap> cList = couponDao.selectEventCoupon(param);
+		CrmCouponVo vo = new CrmCouponVo();
+		vo.setItgCustNo((String) param.get("itgCustNo"));
+		List<CrmCouponVo> rList = new ArrayList<>();
+
+		for (int i = 0; i < cList.size(); i++) {
+			EzMap map = cList.get(i);
+			vo.setMshipCoupnBasNo(map.getString("mshipCoupnBasNo"));
+			vo.setPromNo(map.getString("promNo"));
+			for (int j = 0; j < map.getInt("issueCnt"); j++) {
+				CrmCouponVo ret = insertIssueTem(vo);
+				if (ret == null)
+					break;
+				rList.add(ret);
+			}
+		}
+		return rList;
+
 	}
 
 }

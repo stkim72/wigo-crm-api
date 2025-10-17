@@ -30,9 +30,9 @@
                     , TO_CHAR(A.REG_DT,'YYYYMMDDHH24MISS')    REG_DT                    /*등록일시        */
                     , A.REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS , BOS : BOS , MEM : 멤버십 , CERA : 세라체크 , DNA : 세라DNA , IoT : IoT]*/
                     , B.CUST_NM
-                    , B.MPHON_NO  MPHON_NO 
+                    , DAMO.DECRYPT_VAR_B64('AES_256',B.MPHON_NO,'')  MPHON_NO 
 <!--                     , C.CUST_NM ACQIE_CUST_NM -->
-<!--                     , C.MPHON_NO  ACQIE_MPHON_NO -->
+<!--                     , DAMO.DECRYPT_VAR_B64('AES_256',C.MPHON_NO,'')  ACQIE_MPHON_NO -->
 <!--                     , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'CU330' AND COMN_CD = A.ACQIE_REL_CD AND  COMN_CD_LVL_NO = 2) ACQIE_REL_CD_NM -->
     </sql>
     <sql id="sqlConditions">

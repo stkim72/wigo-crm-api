@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<contextListener class="com.ceragem.api.config.logger.LoggerStartupListener"/>
+
+    <property name="LOG_PATH" value="/log/sw/tomcat/api" />
+	<property name="LOG_FILE_NAME" value="ceragem-api" />
+
+    <!-- File Appender -->
+    <appender name="FILEOUT" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<prudent>false</prudent>
+		<if condition='isDefined("log.file.id")'>
+			<then>
+				<file>${LOG_PATH}/${LOG_FILE_NAME}-${log.file.id}.log</file>
+			</then>
+			<else>
+				<file>${LOG_PATH}/${LOG_FILE_NAME}.log</file>
+			</else>
+		</if>
+
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<if condition='isDefined("log.file.id")'>
+				<then>
+					<fileNamePattern>${LOG_PATH}/${LOG_FILE_NAME}-${log.file.id}.%d{yyyy-MM-dd}.log</fileNamePattern>
+				</then>
+				<else>
+					<fileNamePattern>${LOG_PATH}/${LOG_FILE_NAME}.%d{yyyy-MM-dd}.log</fileNamePattern>
+				</else>
+			</if>
+			<maxHistory>90</maxHistory>
+		</rollingPolicy>
+		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+			<level>DEBUG</level>
+		</filter>
+
+		<encoder>
+			<pattern>%d{yyyy:MM:dd HH:mm:ss.SSS} %-5level [%thread] %logger{35} : %marker %msg %n</pattern>
+		</encoder>
+	</appender>
+
+    <!-- Console appender -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy:MM:dd HH:mm:ss.SSS} %-5level [%thread] %logger{35} : %marker %msg %n</pattern>
+        </encoder>
+    </appender>
+    <logger name="org.springframework" level="INFO" additivity="true" />
+    <logger name="com.ceragem" level="INFO" additivity="true" />
+    <root level="error">
+    	<appender-ref ref="STDOUT" />
+		<appender-ref ref="FILEOUT"/>
+    </root>
+</configuration>

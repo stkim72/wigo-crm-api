@@ -353,4 +353,24 @@ public class CrmCouponSo extends ApiPagination {
 
 	@Parameter(description = "사용시간", example = "", hidden = true, required = false)
 	private String useHour;
+
+	/**
+	 * 등록채널코드 공통코드 : CH100 [COM : MAL , POS : POS]
+	 */
+	@Parameter(description = "등록채널코드  [MEM : 멤버십 , COM : 직영몰 , POS : POS]", example = "", hidden = true, required = false)
+	@CodeValue(codeId = "CH100", codes = { "MEM", "COM",
+			"POS" }, message = "[MEM : MEM , COM : 직영몰 , POS : POS] 등록된 코드가 아닙니다. ")
+	private String chlCd;
+
+	@Parameter(description = "직영몰쿠폰여부", example = "", hidden = false, required = false)
+	@YnValue
+	private String chlComYn;
+
+	@Parameter(description = "웰니스인식쿠폰여부")
+	@YnValue
+	private String wellnessIdYn;
+
+	@Parameter(description = "웰니스쿠폰여부")
+	@YnValue
+	private String wellnessYn;
 }

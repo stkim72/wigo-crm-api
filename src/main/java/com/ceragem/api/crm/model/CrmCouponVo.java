@@ -1,11 +1,12 @@
 package com.ceragem.api.crm.model;
 
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
-import com.ceragem.api.base.constant.Constants;
 import com.ceragem.api.base.util.Utilities;
 import com.ceragem.api.crm.validate.CodeValue;
 import com.ceragem.api.crm.validate.DatetimeValue;
@@ -384,13 +385,31 @@ public class CrmCouponVo extends CrmMshipCoupnBasVo {
 	@Schema(description = "무기명여부", example = "", hidden = false, required = false, nullable = true)
 	@YnValue
 	private String sgntYn;
-
+	/**
+	 * 사용구분코드
+	 */
+	@Schema(description = "사용구분", example = "", hidden = false, required = false, nullable = true)
+	private String useDivCd;
+	/**
+	 * 채널코드
+	 */
+	@Schema(description = "채널코드", example = "", hidden = false, required = false, nullable = true)
+	private String chlCd;
 	/**
 	 * 추천인고객번호
 	 */
 	@Schema(description = "추천인고객번호", example = "CST20220411121212001", hidden = false, required = false, nullable = true, maxLength = 30)
 	@MaxByte(max = 30)
 	private String rcmdrCustNo2;
+
+	private String orgMshipPlcyBasNo;
+
+	@Schema(description = "웰니스인식쿠폰여부", example = "", hidden = false, required = false, nullable = true)
+	private String wellnessIdYn;
+
+	@Schema(description = "웰니스쿠폰여부", example = "", hidden = false, required = false, nullable = true)
+	private String wellnessYn;
+
 //	@Schema(description = "상품목록", accessMode = AccessMode.READ_ONLY)
 //	public List<CrmGodsBasVo> getGodsList() {
 //		if (goods != null)
@@ -414,6 +433,11 @@ public class CrmCouponVo extends CrmMshipCoupnBasVo {
 //
 //		return goods;
 //	}
+	@Schema(description = "직영몰쿠폰여부", example = "", hidden = false, required = false, nullable = true, accessMode = AccessMode.READ_ONLY)
+
+	public String getChlComYn() {
+		return "COM".equals(getRegChlCd()) ? "Y" : "N";
+	}
 
 	@Schema(description = "쿠폰사용가능시작일", example = "20220101", hidden = false, required = false, nullable = true, accessMode = AccessMode.READ_ONLY)
 	public String getUseStartYmd() {
@@ -440,17 +464,19 @@ public class CrmCouponVo extends CrmMshipCoupnBasVo {
 				regDt = regDt.substring(0, 8);
 
 			int days = Utilities.parseInt(getCoupnUsePossDay());
+			SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd", Locale.KOREAN);
+
 			Calendar cal = Calendar.getInstance();
 			Date dt = null;
 			try {
-				dt = Constants._DATE_FORMAT.parse(regDt);
+				dt = df.parse(regDt);
 			} catch (ParseException e) {
 				dt = new Date();
 			}
 			cal.setTime(dt);
 			cal.add(Calendar.DATE, days);
 
-			String stdDt = Constants._DATE_FORMAT.format(cal.getTime());
+			String stdDt = df.format(cal.getTime());
 			if (Utilities.isEmpty(getToUseStdDay()))
 				return stdDt;
 			return stdDt.compareTo(getToUseStdDay()) < 0 ? stdDt : getToUseStdDay();

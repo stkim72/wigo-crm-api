@@ -1,0 +1,435 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ceragem.api.crm.dao.CrmBllkCustHstDao">
+    <sql id="sqlPkConditions">
+                WHERE BLLK_CUST_HST_SEQ =       #{bllkCustHstSeq}
+    </sql>
+    <sql id="sqlCols">
+                      BLLK_CUST_HST_SEQ                    /*주의고객이력일련번호        */
+                    , ITG_CUST_NO                    /*통합고객번호        */
+                    , BLLK_REG_WHY_CD                    /*주의고객등록사유코드        공통코드 : CU320        [001 : 구매취소 2회 이상 , 002 : 상습컴플레인 3회 이상 , 003 : 폭언 및 욕설 2회 이상 , 999 : 기타]*/
+                    , BLLK_REG_WHY_CTNTS                    /*주의고객등록사유내용        */
+                    , STOR_NO                    /*매장번호        */
+                    , DEL_YN                    /*삭제여부        */
+                    , AMDR_ID                    /*수정자ID        */
+                    , AMD_DT                    /*수정일시        */
+                    , REGR_ID                    /*등록자ID        */
+                    , REG_DT                    /*등록일시        */
+                    , REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP]*/
+    </sql>
+    <sql id="sqlSelectCols">
+                      A.BLLK_CUST_HST_SEQ                    /*주의고객이력일련번호        */
+                    , A.ITG_CUST_NO                    /*통합고객번호        */
+                    , A.BLLK_REG_WHY_CD                    /*주의고객등록사유코드        공통코드 : CU320        [001 : 구매취소 2회 이상 , 002 : 상습컴플레인 3회 이상 , 003 : 폭언 및 욕설 2회 이상 , 999 : 기타]*/
+                    , A.BLLK_REG_WHY_CTNTS                    /*주의고객등록사유내용        */
+                    , A.STOR_NO                    /*매장번호        */
+                    , A.DEL_YN                    /*삭제여부        */
+                    , A.AMDR_ID                    /*수정자ID        */
+                    , TO_CHAR(A.AMD_DT,'YYYYMMDDHH24MISS')    AMD_DT                    /*수정일시        */
+                    , A.REGR_ID                    /*등록자ID        */
+                    , TO_CHAR(A.REG_DT,'YYYYMMDDHH24MISS')    REG_DT                    /*등록일시        */
+                    , A.REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP]*/
+                    , (SELECT STOR_NM FROM CRM_STOR_BAS WHERE STOR_NO = A.STOR_NO AND ROWNUM = 1) STOR_NO_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'CU320' AND COMN_CD = A.BLLK_REG_WHY_CD AND  COMN_CD_LVL_NO = 2) BLLK_REG_WHY_CD_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'S000' AND COMN_CD = A.REG_CHL_CD AND  COMN_CD_LVL_NO = 2) REG_CHL_CD_NM
+    </sql>
+    <sql id="sqlConditions">
+    <where>
+        <if test="bllkCustHstSeq != null and bllkCustHstSeq != ''">
+                  AND A.BLLK_CUST_HST_SEQ=       #{bllkCustHstSeq}
+        </if>
+        <if test="itgCustNo != null and itgCustNo != ''">
+                  AND A.ITG_CUST_NO     =       #{itgCustNo}
+        </if>
+        <if test="bllkRegWhyCd != null and bllkRegWhyCd != ''">
+            <choose>
+                <when test="bllkRegWhyCd instanceof String">
+                    AND A.BLLK_REG_WHY_CD =       #{bllkRegWhyCd}
+                </when>
+                <otherwise>
+                    AND A.BLLK_REG_WHY_CD IN
+                    <foreach item="item" index="index" collection="bllkRegWhyCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="bllkRegWhyCtnts != null and bllkRegWhyCtnts != ''">
+                  AND A.BLLK_REG_WHY_CTNTS=       #{bllkRegWhyCtnts}
+        </if>
+        <if test="storNo != null and storNo != ''">
+                  AND A.STOR_NO         =       #{storNo}
+        </if>
+        <if test="delYn != null and delYn != ''">
+                  AND A.DEL_YN          =       #{delYn}
+        </if>
+        <if test="regChlCd != null and regChlCd != ''">
+            <choose>
+                <when test="regChlCd instanceof String">
+                    AND A.REG_CHL_CD      =       #{regChlCd}
+                </when>
+                <otherwise>
+                    AND A.REG_CHL_CD      IN
+                    <foreach item="item" index="index" collection="regChlCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        </where>
+    </sql>
+    <select id="selectListCount" resultType="int">
+                SELECT /* com.ceragem.api.crm.dao.CrmBllkCustHstDao.selectListCount */ COUNT(1)
+                 FROM CRM_BLLK_CUST_HST A
+        <include refid="sqlConditions"/>
+    </select>
+    <select id="selectList" resultType="com.ceragem.api.crm.model.CrmBllkCustHstVo">
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingHeader"/>
+               SELECT /* com.ceragem.api.crm.dao.CrmBllkCustHstDao.selectList */ <include refid="sqlSelectCols"/>
+               		, B.CORP_DIV_YN                    /*법인구분여부        */
+                    , B.CUST_NM                    /*고객명        */
+                    , B.GNDR_CD                    /*성별코드        */
+                    , B.BIRTHDAY                    /*생년월일        */
+                    , B.BIZ_NO                    /*사업자등록번호        */
+                    , B.CORP_REG_NO                    /*법인등록번호        */
+                    , B.CORP_TEL_NO                    /*법인전화번호        */
+                    , B.FORN_YN                    /*외국인여부        */
+                    , B.REP_NM                    /*대표명        */
+                    , B.MPHON_NO MPHON_NO                     /*이동전화번호암호화값        */
+                    , B.MPHON_BK_DGT_NO                    /*이동전화뒤자리번호        */
+                    , B.EMAIL_ADDR EMAIL_ADDR                    /*이메일주소        */
+                    , B.PIC_NM                    /*담당자명        */
+                    , B.PIC_MPHON_NO  PIC_MPHON_NO                    /*담당자이동전화번호        */
+                    , B.PIC_MPHON_BK_DGT_NO                    /*담당자이동전화뒤자리번호        */
+                    , B.PIC_EMAIL_ADDR PIC_EMAIL_ADDR                    /*담당자이메일주소        */
+                    , TO_CHAR(B.INDI_INFO_VALID_PERD_STA_DT,'YYYYMMDDHH24MISS')    INDI_INFO_VALID_PERD_STA_DT                    /*개인정보유효기간시작일시        */
+                    , TO_CHAR(B.INDI_INFO_VALID_PERD_END_DT,'YYYYMMDDHH24MISS')    INDI_INFO_VALID_PERD_END_DT                    /*개인정보유효기간종료일시        */
+                    , B.CUST_STATUS_CD                    /*고객상태코드        */
+                    , TO_CHAR(B.CUST_STATUS_CHNG_DT,'YYYYMMDDHH24MISS')    CUST_STATUS_CHNG_DT                    /*고객상태변경일시        */
+                    , TO_CHAR(B.CUST_INFO_CHNG_DT,'YYYYMMDDHH24MISS')    CUST_INFO_CHNG_DT                    /*고객정보변경일시        */
+                    , B.CUST_TYPE_CD                    /*고객유형코드        */
+                    , B.CUST_DIV_CD                    /*고객구분코드        */
+                    , B.ZIP_CD                    /*우편번호        */
+                    , B.ADDR_1_CTNTS                    /*주소1내용        */
+                    , B.ADDR_2_CTNTS ADDR_2_CTNTS                    /*주소2내용        */
+                    , B.RCMD_STOR_NO                    /*추천매장번호        */
+                    , B.RCMDR_CUST_NO                    /*추천인고객번호        */
+                    , B.RCMD_EXECVDEMP_NO                    /*추천임직원번호        */
+                    , B.MARRY_YN                    /*결혼여부        */
+                    , B.REP_HSHLD_NO                    /*대표가구번호        */
+                    , B.FAMLY_REL_CD                    /*가족관계코드        */
+                    , B.DWEL_NFPY_CD                    /*주거평수코드        */
+                    , B.INTRST_FILD_CD                    /*관심분야코드        */
+                    , B.REP_GODS_NO                    /*대표제품번호        */
+                    , B.REP_USE_CUST_DIV_CD                    /*대표사용고객구분코드        */
+                    , B.SMS_RCV_AGREE_YN                    /*SMS수신동의여부        */
+                    , TO_CHAR(B.SMS_RCV_AGREE_DT,'YYYYMMDDHH24MISS')    SMS_RCV_AGREE_DT                    /*SMS수신동의일시        */
+                    , B.SMS_RCV_AGREE_CHL_CD                    /*SMS수신동의채널코드        */
+                    , B.EMAIL_RCV_AGREE_YN                    /*이메일수신동의여부        */
+                    , TO_CHAR(B.EMAIL_RCV_AGREE_DT,'YYYYMMDDHH24MISS')    EMAIL_RCV_AGREE_DT                    /*이메일수신동의일시        */
+                    , B.EMAIL_RCV_AGREE_CHL_CD                    /*이메일수신동의채널코드        */
+                    , B.ALRM_TK_RCV_AGREE_YN                    /*알람톡수신동의여부        */
+                    , TO_CHAR(B.ALRM_TK_RCV_AGREE_DT,'YYYYMMDDHH24MISS')    ALRM_TK_RCV_AGREE_DT                    /*알람톡수신동의일시        */
+                    , B.ALRM_TK_RCV_AGREE_CHL_CD                    /*알람톡수신동의채널코드        */
+                    , B.PUSH_RCV_AGREE_YN                    /*PUSH수신동의여부        */
+                    , TO_CHAR(B.PUSH_RCV_AGREE_DT,'YYYYMMDDHH24MISS')    PUSH_RCV_AGREE_DT                    /*PUSH수신동의일시        */
+                    , B.PUSH_RCV_AGREE_CHL_CD                    /*PUSH수신동의채널코드        */
+                    , B.CI_CERTF_YN                    /*CI인증여부        */
+                    , B.CI                    /*CI        */
+                    , B.DI_CERTF_YN                    /*DI인증여부        */
+                    , B.DI                    /*DI        */
+                    , B.RCV_RFSL_YN                    /*수신거부여부        */
+                    , B.MSHIP_SBSC_YN                    /*멤버십가입여부        */
+                    , B.MSHIP_LOGIN_ID                    /*멤버십로그인ID        */
+                    , B.MSHIP_SBT_NO                    /*멤버십대체번호        */
+                    , B.MSHIP_LOGIN_PWD                    /*멤버십로그인비밀번호        */
+                    , TO_CHAR(B.MSHIP_LAST_LOGIN_DT,'YYYYMMDDHH24MISS')    MSHIP_LAST_LOGIN_DT                    /*멤버십최종로그인일시        */
+                    , B.MSHIP_LAST_LOGIN_IP_ADDR                    /*멤버십최종로그인IP주소        */
+                    , TO_CHAR(B.MSHIP_LAST_STOR_VISIT_DT,'YYYYMMDDHH24MISS')    MSHIP_LAST_STOR_VISIT_DT                    /*멤버십최종매장방문일시        */
+                    , B.MSHIP_LAST_VISIT_STOR_NO                    /*멤버십최종방문매장번호        */
+                    , B.MSHIP_TYPE_CD                    /*멤버십유형코드        */
+                    , TO_CHAR(B.MSHIP_SBSC_DT,'YYYYMMDDHH24MISS')    MSHIP_SBSC_DT                    /*멤버십가입일시        */
+                    , B.MSHIP_GRADE_CD                    /*멤버십등급코드        */
+                    , TO_CHAR(B.MSHIP_GRADE_CHNG_DT,'YYYYMMDDHH24MISS')    MSHIP_GRADE_CHNG_DT                    /*멤버십등급변경일시        */
+                    , TO_CHAR(B.MSHIP_INFO_CHNG_DT,'YYYYMMDDHH24MISS')    MSHIP_INFO_CHNG_DT                    /*멤버십정보변경일시        */
+                    , B.MSHIP_INFO_CONFR_EXECVDEMP_NO                    /*멤버십정보확인자임직원번호        */
+                    , B.CPRT_EXECVDEMP_NO                    /*제휴임직원번호        */
+                    , TO_CHAR(B.MSHIP_LEAVE_DT,'YYYYMMDDHH24MISS')    MSHIP_LEAVE_DT                    /*멤버십탈퇴일시        */
+                    , B.EXTNC_POINT_LMT_SCORE                    /*소멸포인트한도점수        */
+                    , B.ACCUM_POINT_LMT_SCORE                    /*적립포인트한도점수        */
+                    , B.REMAIN_POINT_SCORE                    /*잔여포인트점수        */
+                    , B.MSHIP_CHL_CD                    /*멤버십채널코드        */
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'CU030' AND COMN_CD = B.CUST_TYPE_CD AND  COMN_CD_LVL_NO = 2) CUST_TYPE_CD_NM 
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'CU010' AND COMN_CD = B.CUST_DIV_CD AND  COMN_CD_LVL_NO = 2) CUST_DIV_CD_NM
+                    , (SELECT STOR_NM FROM CRM_STOR_BAS WHERE STOR_NO = B.RCMD_STOR_NO AND ROWNUM = 1) RCMD_STOR_NO_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'CU040' AND COMN_CD = B.FAMLY_REL_CD AND  COMN_CD_LVL_NO = 2) FAMLY_REL_CD_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'CU050' AND COMN_CD = B.DWEL_NFPY_CD AND  COMN_CD_LVL_NO = 2) DWEL_NFPY_CD_NM
+<!--                     , (SELECT LISTAGG( CM.COMN_CD_NM,',') WITHIN GROUP(ORDER BY LVL) FROM  (SELECT REGEXP_SUBSTR(B.INTRST_FILD_CD, '[^,]+', 1, LEVEL) CD, LEVEL LVL  FROM DUAL CONNECT BY REGEXP_SUBSTR(B.INTRST_FILD_CD, '[^,]+', 1, LEVEL) IS NOT NULL) DL, CRM_COMN_CD_BAS CM WHERE CM.COMN_CD = DL.CD AND CM.COMN_CD_LVL_NO = 2 AND CM.TOP_COMN_CD = 'CU060'  ) INTRST_FILD_CD_NM -->
+                    , (SELECT GODS_NM FROM CRM_GODS_BAS WHERE GODS_NO = B.REP_GODS_NO ) REP_GODS_NO_NM 
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'CU060' AND COMN_CD = B.REP_USE_CUST_DIV_CD AND  COMN_CD_LVL_NO = 2) REP_USE_CUST_DIV_CD_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'S000' AND COMN_CD = B.SMS_RCV_AGREE_CHL_CD AND  COMN_CD_LVL_NO = 2) SMS_RCV_AGREE_CHL_CD_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'S000' AND COMN_CD = B.EMAIL_RCV_AGREE_CHL_CD AND  COMN_CD_LVL_NO = 2) EMAIL_RCV_AGREE_CHL_CD_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'S000' AND COMN_CD = B.ALRM_TK_RCV_AGREE_CHL_CD AND  COMN_CD_LVL_NO = 2) ALRM_TK_RCV_AGREE_CHL_CD_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'S000' AND COMN_CD = B.PUSH_RCV_AGREE_CHL_CD AND  COMN_CD_LVL_NO = 2) PUSH_RCV_AGREE_CHL_CD_NM
+                    , (SELECT STOR_NM FROM CRM_STOR_BAS WHERE STOR_NO = B.MSHIP_LAST_VISIT_STOR_NO AND ROWNUM = 1) MSHIP_LAST_VISIT_STOR_NO_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'MB010' AND COMN_CD = B.MSHIP_TYPE_CD AND  COMN_CD_LVL_NO = 2) MSHIP_TYPE_CD_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'MB020' AND COMN_CD = B.MSHIP_GRADE_CD AND  COMN_CD_LVL_NO = 2) MSHIP_GRADE_CD_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'S000' AND COMN_CD = B.MSHIP_CHL_CD AND  COMN_CD_LVL_NO = 2) MSHIP_CHL_CD_NM
+                    , (SELECT STOR_NM FROM CRM_STOR_BAS WHERE STOR_NO = B.BLLK_REG_STOR_NO AND ROWNUM = 1)  BLLK_REG_STOR_NO_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'S000' AND COMN_CD = B.BLLK_REG_CHL_CD AND  COMN_CD_LVL_NO = 2) BLLK_REG_CHL_CD_NM
+                 FROM CRM_BLLK_CUST_HST A
+                INNER JOIN CRM_CUST_BAS B ON A.ITG_CUST_NO = B.ITG_CUST_NO
+        <include refid="sqlConditions"/>
+               ORDER BY REG_DT DESC
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingFooter"/>
+    </select>
+    <select id="select" resultType="com.ceragem.api.crm.model.CrmBllkCustHstVo">
+               SELECT /* com.ceragem.api.crm.dao.CrmBllkCustHstDao.select */<include refid="sqlSelectCols"/>
+               		, B.CORP_DIV_YN                    /*법인구분여부        */
+                    , B.CUST_NM                    /*고객명        */
+                    , B.GNDR_CD                    /*성별코드        */
+                    , B.BIRTHDAY                    /*생년월일        */
+                    , B.BIZ_NO                    /*사업자등록번호        */
+                    , B.CORP_REG_NO                    /*법인등록번호        */
+                    , B.CORP_TEL_NO                    /*법인전화번호        */
+                    , B.FORN_YN                    /*외국인여부        */
+                    , B.REP_NM                    /*대표명        */
+                    , B.MPHON_NO MPHON_NO                     /*이동전화번호암호화값        */
+                    , B.MPHON_BK_DGT_NO                    /*이동전화뒤자리번호        */
+                    , B.EMAIL_ADDR EMAIL_ADDR                    /*이메일주소        */
+                    , B.PIC_NM                    /*담당자명        */
+                    , B.PIC_MPHON_NO  PIC_MPHON_NO                    /*담당자이동전화번호        */
+                    , B.PIC_MPHON_BK_DGT_NO                    /*담당자이동전화뒤자리번호        */
+                    , B.PIC_EMAIL_ADDR PIC_EMAIL_ADDR                    /*담당자이메일주소        */
+                    , TO_CHAR(B.INDI_INFO_VALID_PERD_STA_DT,'YYYYMMDDHH24MISS')    INDI_INFO_VALID_PERD_STA_DT                    /*개인정보유효기간시작일시        */
+                    , TO_CHAR(B.INDI_INFO_VALID_PERD_END_DT,'YYYYMMDDHH24MISS')    INDI_INFO_VALID_PERD_END_DT                    /*개인정보유효기간종료일시        */
+                    , B.CUST_STATUS_CD                    /*고객상태코드        */
+                    , TO_CHAR(B.CUST_STATUS_CHNG_DT,'YYYYMMDDHH24MISS')    CUST_STATUS_CHNG_DT                    /*고객상태변경일시        */
+                    , TO_CHAR(B.CUST_INFO_CHNG_DT,'YYYYMMDDHH24MISS')    CUST_INFO_CHNG_DT                    /*고객정보변경일시        */
+                    , B.CUST_TYPE_CD                    /*고객유형코드        */
+                    , B.CUST_DIV_CD                    /*고객구분코드        */
+                    , B.ZIP_CD                    /*우편번호        */
+                    , B.ADDR_1_CTNTS                    /*주소1내용        */
+                    , B.ADDR_2_CTNTS ADDR_2_CTNTS                    /*주소2내용        */
+                    , B.RCMD_STOR_NO                    /*추천매장번호        */
+                    , B.RCMDR_CUST_NO                    /*추천인고객번호        */
+                    , B.RCMD_EXECVDEMP_NO                    /*추천임직원번호        */
+                    , B.MARRY_YN                    /*결혼여부        */
+                    , B.REP_HSHLD_NO                    /*대표가구번호        */
+                    , B.FAMLY_REL_CD                    /*가족관계코드        */
+                    , B.DWEL_NFPY_CD                    /*주거평수코드        */
+                    , B.INTRST_FILD_CD                    /*관심분야코드        */
+                    , B.REP_GODS_NO                    /*대표제품번호        */
+                    , B.REP_USE_CUST_DIV_CD                    /*대표사용고객구분코드        */
+                    , B.SMS_RCV_AGREE_YN                    /*SMS수신동의여부        */
+                    , TO_CHAR(B.SMS_RCV_AGREE_DT,'YYYYMMDDHH24MISS')    SMS_RCV_AGREE_DT                    /*SMS수신동의일시        */
+                    , B.SMS_RCV_AGREE_CHL_CD                    /*SMS수신동의채널코드        */
+                    , B.EMAIL_RCV_AGREE_YN                    /*이메일수신동의여부        */
+                    , TO_CHAR(B.EMAIL_RCV_AGREE_DT,'YYYYMMDDHH24MISS')    EMAIL_RCV_AGREE_DT                    /*이메일수신동의일시        */
+                    , B.EMAIL_RCV_AGREE_CHL_CD                    /*이메일수신동의채널코드        */
+                    , B.ALRM_TK_RCV_AGREE_YN                    /*알람톡수신동의여부        */
+                    , TO_CHAR(B.ALRM_TK_RCV_AGREE_DT,'YYYYMMDDHH24MISS')    ALRM_TK_RCV_AGREE_DT                    /*알람톡수신동의일시        */
+                    , B.ALRM_TK_RCV_AGREE_CHL_CD                    /*알람톡수신동의채널코드        */
+                    , B.PUSH_RCV_AGREE_YN                    /*PUSH수신동의여부        */
+                    , TO_CHAR(B.PUSH_RCV_AGREE_DT,'YYYYMMDDHH24MISS')    PUSH_RCV_AGREE_DT                    /*PUSH수신동의일시        */
+                    , B.PUSH_RCV_AGREE_CHL_CD                    /*PUSH수신동의채널코드        */
+                    , B.CI_CERTF_YN                    /*CI인증여부        */
+                    , B.CI                    /*CI        */
+                    , B.DI_CERTF_YN                    /*DI인증여부        */
+                    , B.DI                    /*DI        */
+                    , B.RCV_RFSL_YN                    /*수신거부여부        */
+                    , B.MSHIP_SBSC_YN                    /*멤버십가입여부        */
+                    , B.MSHIP_LOGIN_ID                    /*멤버십로그인ID        */
+                    , B.MSHIP_SBT_NO                    /*멤버십대체번호        */
+                    , B.MSHIP_LOGIN_PWD                    /*멤버십로그인비밀번호        */
+                    , TO_CHAR(B.MSHIP_LAST_LOGIN_DT,'YYYYMMDDHH24MISS')    MSHIP_LAST_LOGIN_DT                    /*멤버십최종로그인일시        */
+                    , B.MSHIP_LAST_LOGIN_IP_ADDR                    /*멤버십최종로그인IP주소        */
+                    , TO_CHAR(B.MSHIP_LAST_STOR_VISIT_DT,'YYYYMMDDHH24MISS')    MSHIP_LAST_STOR_VISIT_DT                    /*멤버십최종매장방문일시        */
+                    , B.MSHIP_LAST_VISIT_STOR_NO                    /*멤버십최종방문매장번호        */
+                    , B.MSHIP_TYPE_CD                    /*멤버십유형코드        */
+                    , TO_CHAR(B.MSHIP_SBSC_DT,'YYYYMMDDHH24MISS')    MSHIP_SBSC_DT                    /*멤버십가입일시        */
+                    , B.MSHIP_GRADE_CD                    /*멤버십등급코드        */
+                    , TO_CHAR(B.MSHIP_GRADE_CHNG_DT,'YYYYMMDDHH24MISS')    MSHIP_GRADE_CHNG_DT                    /*멤버십등급변경일시        */
+                    , TO_CHAR(B.MSHIP_INFO_CHNG_DT,'YYYYMMDDHH24MISS')    MSHIP_INFO_CHNG_DT                    /*멤버십정보변경일시        */
+                    , B.MSHIP_INFO_CONFR_EXECVDEMP_NO                    /*멤버십정보확인자임직원번호        */
+                    , B.CPRT_EXECVDEMP_NO                    /*제휴임직원번호        */
+                    , TO_CHAR(B.MSHIP_LEAVE_DT,'YYYYMMDDHH24MISS')    MSHIP_LEAVE_DT                    /*멤버십탈퇴일시        */
+                    , B.EXTNC_POINT_LMT_SCORE                    /*소멸포인트한도점수        */
+                    , B.ACCUM_POINT_LMT_SCORE                    /*적립포인트한도점수        */
+                    , B.REMAIN_POINT_SCORE                    /*잔여포인트점수        */
+                    , B.MSHIP_CHL_CD                    /*멤버십채널코드        */
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'CU030' AND COMN_CD = B.CUST_TYPE_CD AND  COMN_CD_LVL_NO = 2) CUST_TYPE_CD_NM 
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'CU010' AND COMN_CD = B.CUST_DIV_CD AND  COMN_CD_LVL_NO = 2) CUST_DIV_CD_NM
+                    , (SELECT STOR_NM FROM CRM_STOR_BAS WHERE STOR_NO = B.RCMD_STOR_NO AND ROWNUM = 1) RCMD_STOR_NO_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'CU040' AND COMN_CD = B.FAMLY_REL_CD AND  COMN_CD_LVL_NO = 2) FAMLY_REL_CD_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'CU050' AND COMN_CD = B.DWEL_NFPY_CD AND  COMN_CD_LVL_NO = 2) DWEL_NFPY_CD_NM
+<!--                     , (SELECT LISTAGG( CM.COMN_CD_NM,',') WITHIN GROUP(ORDER BY LVL) FROM  (SELECT REGEXP_SUBSTR(B.INTRST_FILD_CD, '[^,]+', 1, LEVEL) CD, LEVEL LVL  FROM DUAL CONNECT BY REGEXP_SUBSTR(B.INTRST_FILD_CD, '[^,]+', 1, LEVEL) IS NOT NULL) DL, CRM_COMN_CD_BAS CM WHERE CM.COMN_CD = DL.CD AND CM.COMN_CD_LVL_NO = 2 AND CM.TOP_COMN_CD = 'CU060'  ) INTRST_FILD_CD_NM -->
+                    , (SELECT GODS_NM FROM CRM_GODS_BAS WHERE GODS_NO = B.REP_GODS_NO ) REP_GODS_NO_NM 
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'CU060' AND COMN_CD = B.REP_USE_CUST_DIV_CD AND  COMN_CD_LVL_NO = 2) REP_USE_CUST_DIV_CD_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'S000' AND COMN_CD = B.SMS_RCV_AGREE_CHL_CD AND  COMN_CD_LVL_NO = 2) SMS_RCV_AGREE_CHL_CD_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'S000' AND COMN_CD = B.EMAIL_RCV_AGREE_CHL_CD AND  COMN_CD_LVL_NO = 2) EMAIL_RCV_AGREE_CHL_CD_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'S000' AND COMN_CD = B.ALRM_TK_RCV_AGREE_CHL_CD AND  COMN_CD_LVL_NO = 2) ALRM_TK_RCV_AGREE_CHL_CD_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'S000' AND COMN_CD = B.PUSH_RCV_AGREE_CHL_CD AND  COMN_CD_LVL_NO = 2) PUSH_RCV_AGREE_CHL_CD_NM
+                    , (SELECT STOR_NM FROM CRM_STOR_BAS WHERE STOR_NO = B.MSHIP_LAST_VISIT_STOR_NO AND ROWNUM = 1) MSHIP_LAST_VISIT_STOR_NO_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'MB010' AND COMN_CD = B.MSHIP_TYPE_CD AND  COMN_CD_LVL_NO = 2) MSHIP_TYPE_CD_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'MB020' AND COMN_CD = B.MSHIP_GRADE_CD AND  COMN_CD_LVL_NO = 2) MSHIP_GRADE_CD_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'S000' AND COMN_CD = B.MSHIP_CHL_CD AND  COMN_CD_LVL_NO = 2) MSHIP_CHL_CD_NM
+                    , (SELECT STOR_NM FROM CRM_STOR_BAS WHERE STOR_NO = B.BLLK_REG_STOR_NO AND ROWNUM = 1)  BLLK_REG_STOR_NO_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'S000' AND COMN_CD = B.BLLK_REG_CHL_CD AND  COMN_CD_LVL_NO = 2) BLLK_REG_CHL_CD_NM
+                 FROM CRM_BLLK_CUST_HST A
+                INNER JOIN CRM_CUST_BAS B ON A.ITG_CUST_NO = B.ITG_CUST_NO
+        <include refid="sqlPkConditions"/>
+    </select>
+    <select id="selectCustList" resultType="com.ceragem.api.crm.model.CrmBllkCustHstVo">
+   		SELECT /* com.ceragem.api.crm.dao.CrmBllkCustHstDao.selectCustList */ A.* 
+    	  FROM (
+               SELECT <include refid="sqlSelectCols"/>
+                    , ROW_NUMBER() OVER (PARTITION BY A.REG_CHL_CD,A.STOR_NO ORDER BY A.REG_DT DESC ) RNUM
+                    , B.CORP_DIV_YN                    /*법인구분여부        */
+                    , B.CUST_NM                    /*고객명        */
+                    , B.GNDR_CD                    /*성별코드        */
+                    , B.BIRTHDAY                    /*생년월일        */
+                    , B.BIZ_NO                    /*사업자등록번호        */
+                    , B.CORP_REG_NO                    /*법인등록번호        */
+                    , B.CORP_TEL_NO                    /*법인전화번호        */
+                    , B.FORN_YN                    /*외국인여부        */
+                    , B.REP_NM                    /*대표명        */
+                    , B.MPHON_NO MPHON_NO                     /*이동전화번호암호화값        */
+                    , B.MPHON_BK_DGT_NO                    /*이동전화뒤자리번호        */
+                    , B.EMAIL_ADDR                    /*이메일주소        */
+                    , B.PIC_NM                    /*담당자명        */
+                    , B.PIC_MPHON_NO PIC_MPHON_NO                    /*담당자이동전화번호        */
+                    , B.PIC_MPHON_BK_DGT_NO                    /*담당자이동전화뒤자리번호        */
+                    , B.PIC_EMAIL_ADDR                    /*담당자이메일주소        */
+                    , TO_CHAR(B.INDI_INFO_VALID_PERD_STA_DT,'YYYYMMDDHH24MISS')    INDI_INFO_VALID_PERD_STA_DT                    /*개인정보유효기간시작일시        */
+                    , TO_CHAR(B.INDI_INFO_VALID_PERD_END_DT,'YYYYMMDDHH24MISS')    INDI_INFO_VALID_PERD_END_DT                    /*개인정보유효기간종료일시        */
+                    , B.CUST_STATUS_CD                    /*고객상태코드        */
+                    , TO_CHAR(B.CUST_STATUS_CHNG_DT,'YYYYMMDDHH24MISS')    CUST_STATUS_CHNG_DT                    /*고객상태변경일시        */
+                    , TO_CHAR(B.CUST_INFO_CHNG_DT,'YYYYMMDDHH24MISS')    CUST_INFO_CHNG_DT                    /*고객정보변경일시        */
+                    , B.CUST_TYPE_CD                    /*고객유형코드        */
+                    , B.CUST_DIV_CD                    /*고객구분코드        */
+                    , B.ZIP_CD                    /*우편번호        */
+                    , B.ADDR_1_CTNTS                    /*주소1내용        */
+                    , B.ADDR_2_CTNTS                    /*주소2내용        */
+                    , B.RCMD_STOR_NO                    /*추천매장번호        */
+                    , B.RCMDR_CUST_NO                    /*추천인고객번호        */
+                    , B.RCMD_EXECVDEMP_NO                    /*추천임직원번호        */
+                    , B.MARRY_YN                    /*결혼여부        */
+                    , B.REP_HSHLD_NO                    /*대표가구번호        */
+                    , B.FAMLY_REL_CD                    /*가족관계코드        */
+                    , B.DWEL_NFPY_CD                    /*주거평수코드        */
+                    , B.INTRST_FILD_CD                    /*관심분야코드        */
+                    , B.REP_GODS_NO                    /*대표제품번호        */
+                    , B.REP_USE_CUST_DIV_CD                    /*대표사용고객구분코드        */
+                    , B.SMS_RCV_AGREE_YN                    /*SMS수신동의여부        */
+                    , TO_CHAR(B.SMS_RCV_AGREE_DT,'YYYYMMDDHH24MISS')    SMS_RCV_AGREE_DT                    /*SMS수신동의일시        */
+                    , B.SMS_RCV_AGREE_CHL_CD                    /*SMS수신동의채널코드        */
+                    , B.EMAIL_RCV_AGREE_YN                    /*이메일수신동의여부        */
+                    , TO_CHAR(B.EMAIL_RCV_AGREE_DT,'YYYYMMDDHH24MISS')    EMAIL_RCV_AGREE_DT                    /*이메일수신동의일시        */
+                    , B.EMAIL_RCV_AGREE_CHL_CD                    /*이메일수신동의채널코드        */
+                    , B.ALRM_TK_RCV_AGREE_YN                    /*알람톡수신동의여부        */
+                    , TO_CHAR(B.ALRM_TK_RCV_AGREE_DT,'YYYYMMDDHH24MISS')    ALRM_TK_RCV_AGREE_DT                    /*알람톡수신동의일시        */
+                    , B.ALRM_TK_RCV_AGREE_CHL_CD                    /*알람톡수신동의채널코드        */
+                    , B.PUSH_RCV_AGREE_YN                    /*PUSH수신동의여부        */
+                    , TO_CHAR(B.PUSH_RCV_AGREE_DT,'YYYYMMDDHH24MISS')    PUSH_RCV_AGREE_DT                    /*PUSH수신동의일시        */
+                    , B.PUSH_RCV_AGREE_CHL_CD                    /*PUSH수신동의채널코드        */
+                    , B.CI_CERTF_YN                    /*CI인증여부        */
+                    , B.CI                    /*CI        */
+                    , B.DI_CERTF_YN                    /*DI인증여부        */
+                    , B.DI                    /*DI        */
+                    , B.RCV_RFSL_YN                    /*수신거부여부        */
+                    , B.MSHIP_SBSC_YN                    /*멤버십가입여부        */
+                    , B.MSHIP_LOGIN_ID                    /*멤버십로그인ID        */
+                    , B.MSHIP_SBT_NO                    /*멤버십대체번호        */
+                    , B.MSHIP_LOGIN_PWD                    /*멤버십로그인비밀번호        */
+                    , TO_CHAR(B.MSHIP_LAST_LOGIN_DT,'YYYYMMDDHH24MISS')    MSHIP_LAST_LOGIN_DT                    /*멤버십최종로그인일시        */
+                    , B.MSHIP_LAST_LOGIN_IP_ADDR                    /*멤버십최종로그인IP주소        */
+                    , TO_CHAR(B.MSHIP_LAST_STOR_VISIT_DT,'YYYYMMDDHH24MISS')    MSHIP_LAST_STOR_VISIT_DT                    /*멤버십최종매장방문일시        */
+                    , B.MSHIP_LAST_VISIT_STOR_NO                    /*멤버십최종방문매장번호        */
+                    , B.MSHIP_TYPE_CD                    /*멤버십유형코드        */
+                    , TO_CHAR(B.MSHIP_SBSC_DT,'YYYYMMDDHH24MISS')    MSHIP_SBSC_DT                    /*멤버십가입일시        */
+                    , B.MSHIP_GRADE_CD                    /*멤버십등급코드        */
+                    , TO_CHAR(B.MSHIP_GRADE_CHNG_DT,'YYYYMMDDHH24MISS')    MSHIP_GRADE_CHNG_DT                    /*멤버십등급변경일시        */
+                    , TO_CHAR(B.MSHIP_INFO_CHNG_DT,'YYYYMMDDHH24MISS')    MSHIP_INFO_CHNG_DT                    /*멤버십정보변경일시        */
+                    , B.MSHIP_INFO_CONFR_EXECVDEMP_NO                    /*멤버십정보확인자임직원번호        */
+                    , B.CPRT_EXECVDEMP_NO                    /*제휴임직원번호        */
+                    , TO_CHAR(B.MSHIP_LEAVE_DT,'YYYYMMDDHH24MISS')    MSHIP_LEAVE_DT                    /*멤버십탈퇴일시        */
+                    , B.EXTNC_POINT_LMT_SCORE                    /*소멸포인트한도점수        */
+                    , B.ACCUM_POINT_LMT_SCORE                    /*적립포인트한도점수        */
+                    , B.REMAIN_POINT_SCORE                    /*잔여포인트점수        */
+                    , B.MSHIP_CHL_CD                    /*멤버십채널코드        */
+                 FROM CRM_BLLK_CUST_HST A
+                INNER JOIN CRM_CUST_BAS B ON A.ITG_CUST_NO = B.ITG_CUST_NO
+        	    WHERE A.ITG_CUST_NO = #{itgCustNo} ) A
+         WHERE A.RNUM = 1 
+           AND A.DEL_YN = 'N'
+         ORDER BY A.REG_DT DESC
+               
+    </select>
+    <insert id="insert">
+    	<selectKey order="BEFORE" keyProperty="bllkCustHstSeq" resultType="String">
+    		SELECT FN_CRM_AUTO_SEQ('CBL') FROM DUAL
+    	</selectKey>
+                INSERT /* com.ceragem.api.crm.dao.CrmBllkCustHstDao.insert */ INTO CRM_BLLK_CUST_HST (
+        <include refid="sqlCols"/>
+                 ) VALUES (
+                       #{bllkCustHstSeq}
+                     , #{itgCustNo}
+                     , #{bllkRegWhyCd}
+                     , #{bllkRegWhyCtnts}
+                     , #{storNo}
+                     , NVL(#{delYn},'N')
+                     , #{amdrId}
+                     , SYSDATE
+                     , #{regrId}
+                     , SYSDATE
+                     , NVL(#{regChlCd},#{regrId})
+                 )
+    </insert>
+    <update id="update">
+               UPDATE CRM_BLLK_CUST_HST /* com.ceragem.api.crm.dao.CrmBllkCustHstDao.update */
+                  SET BLLK_REG_WHY_CD                         =         #{bllkRegWhyCd}
+                    , BLLK_REG_WHY_CTNTS                      =         #{bllkRegWhyCtnts}
+                    , STOR_NO                                 =         #{storNo}
+                    , AMDR_ID                                 =         #{amdrId}
+                    , AMD_DT                                  =         SYSDATE
+        <include refid="sqlPkConditions"/>
+    </update>
+    <update id="updateDelete">
+               UPDATE CRM_BLLK_CUST_HST /* com.ceragem.api.crm.dao.CrmBllkCustHstDao.updateDelete */
+                  SET DEL_YN                                  =         'Y'
+                    , AMDR_ID                                 =         #{amdrId}
+                    , AMD_DT                                  =         SYSDATE
+        <include refid="sqlPkConditions"/>
+    </update>
+    <update id="updateDeleteStore">
+               UPDATE CRM_BLLK_CUST_HST /* com.ceragem.api.crm.dao.CrmBllkCustHstDao.updateDeleteStore */
+                  SET DEL_YN                                  =         'Y'
+                    , AMDR_ID                                 =         #{amdrId}
+                    , AMD_DT                                  =         SYSDATE
+        		WHERE ITG_CUST_NO                             =         #{itgCustNo}
+        		  AND DEL_YN                                  =         'N'
+        		  AND STOR_NO                                 =         #{storNo}
+        		  AND REG_CHL_CD                              =         #{regChlCd}
+    </update>
+    <update id="updateDeleteChennel">
+               UPDATE CRM_BLLK_CUST_HST /* com.ceragem.api.crm.dao.CrmBllkCustHstDao.updateDeleteChennel */
+                  SET DEL_YN                                  =         'Y'
+                    , AMDR_ID                                 =         #{amdrId}
+                    , AMD_DT                                  =         SYSDATE
+        		WHERE ITG_CUST_NO                             =         #{itgCustNo}
+        		  AND DEL_YN                                  =         'N'
+        		  AND REG_CHL_CD                              =         #{regChlCd}
+    </update>
+    <delete id="delete">
+               DELETE /* com.ceragem.api.crm.dao.CrmBllkCustHstDao.delete */
+                 FROM CRM_BLLK_CUST_HST
+        <include refid="sqlPkConditions"/>
+    </delete>
+    
+    <delete id="deleteCust">
+               DELETE /* com.ceragem.api.crm.dao.CrmBllkCustHstDao.deleteCust */ 
+                 FROM CRM_BLLK_CUST_HST
+                WHERE ITG_CUST_NO                             =         #{itgCustNo}
+    </delete>
+</mapper>

@@ -25,21 +25,21 @@ public class ApiBaseVo {
 	@Schema(description = "수정일시", required = true, example = "20220101121212", hidden = true)
 	private String amdDt;
 
-    /**
-    * 등록채널코드 
-    * 공통코드 : S000 [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS]
-    */
+	/**
+	 * 등록채널코드 공통코드 : S000 [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS]
+	 */
 	@Schema(description = "등록채널코드", required = true, example = "CRM", hidden = false)
 	private String regChlCd;
 	@Schema(description = "등록채널코드명", example = "", hidden = false, required = false, nullable = true, accessMode = AccessMode.READ_ONLY)
 	private String regChlCdNm;
+
 	@Override
 	public String toString() {
 		String className = this.getClass().getSimpleName();
 		Map<String, Object> map = BaseUtilities.beanToMap(this);
 		StringBuffer bf = new StringBuffer();
 		bf.append(className);
-		bf.append(" [");
+		bf.append(" {");
 		int cnt = 0;
 		for (String key : map.keySet()) {
 			if (cnt++ > 0)
@@ -47,8 +47,9 @@ public class ApiBaseVo {
 			bf.append(key);
 			bf.append("=");
 			bf.append(map.get(key));
-			bf.append("]");
+
 		}
+		bf.append("}");
 		return bf.toString();
 	}
 }

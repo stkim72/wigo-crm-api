@@ -141,5 +141,6 @@ private static final long serialVersionUID = 1L;
 
 	private String rcmdrCustNo2;
 	private String orgChitNo;
+	private String rmark;
     
 }

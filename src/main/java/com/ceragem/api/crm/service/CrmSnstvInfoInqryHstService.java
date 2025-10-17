@@ -35,6 +35,7 @@ public class CrmSnstvInfoInqryHstService extends AbstractCrmService {
 
 	public CrmSnstvInfoInqryHstVo getHistVo(Object param) {
 		CrmSnstvInfoInqryHstVo vo = Utilities.beanToBean(param, CrmSnstvInfoInqryHstVo.class);
+		vo.setRegChlCd(Utilities.getSystemCd());
 		return vo;
 	}
 
@@ -179,7 +180,8 @@ public class CrmSnstvInfoInqryHstService extends AbstractCrmService {
 
 	public int addLog(CrmSnstvInfoInqryHstVo vo) {
 		try {
-
+			if (vo != null)
+				vo.setRegChlCdNm(Utilities.getSystemCd());
 			if (!vo.isForceDecrypt())
 				return insert(vo);
 			else

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ceragem.api.crm.dao.CrmMshipLoginHstDao">
+    <sql id="sqlPkConditions">
+                WHERE LOGIN_HST_ID      =       #{loginHstId}
+    </sql>
+    <sql id="sqlCols">
+                      LOGIN_HST_ID                    /*로그인이력ID        */
+                    , ITG_CUST_NO                    /*사용자코드        */
+                    , LOGIN_DT                    /*로그인일시        */
+                    , LOGIN_IP_ADDR                    /*로그인URL        */
+                    , CHL_CD                    /*채널코드        */
+                    , REGR_ID                    /*등록자ID        */
+                    , REG_DT                    /*등록일시        */
+                    , AMDR_ID                    /*수정자ID        */
+                    , AMD_DT                    /*수정일시        */
+    </sql>
+    <sql id="sqlSelectCols">
+                      A.LOGIN_HST_ID                    /*로그인이력ID        */
+                    , A.ITG_CUST_NO                    /*사용자코드        */
+                    , TO_CHAR(A.LOGIN_DT,'YYYYMMDDHH24MISS')    LOGIN_DT                    /*로그인일시        */
+                    , A.LOGIN_IP_ADDR                    /*로그인URL        */
+                    , A.CHL_CD                    /*채널코드        */
+                    , A.REGR_ID                    /*등록자ID        */
+                    , TO_CHAR(A.REG_DT,'YYYYMMDDHH24MISS')    REG_DT                    /*등록일시        */
+                    , A.AMDR_ID                    /*수정자ID        */
+                    , TO_CHAR(A.AMD_DT,'YYYYMMDDHH24MISS')    AMD_DT                    /*수정일시        */
+    </sql>
+    <sql id="sqlConditions">
+        <where>
+            <if test="loginHstId != null and loginHstId != ''">
+                      AND A.LOGIN_HST_ID    =       #{loginHstId}
+            </if>
+            <if test="itgCustNo != null and itgCustNo != ''">
+                      AND A.ITG_CUST_NO     =       #{itgCustNo}
+            </if>
+            <if test="loginDt != null and loginDt != ''">
+                      AND A.LOGIN_DT        =       TO_DATE(#{loginDt},'YYYYMMDDHH24MISS')
+            </if>
+            <if test="loginIpAddr != null and loginIpAddr != ''">
+                      AND A.LOGIN_IP_ADDR       =       #{loginIpAddr}
+            </if>
+            <if test="chlCd != null and chlCd != ''">
+                <choose>
+                    <when test="chlCd instanceof String">
+                        AND A.CHL_CD          =       #{chlCd}
+                    </when>
+                    <otherwise>
+                        AND A.CHL_CD          IN
+                        <foreach item="item" index="index" collection="chlCd" open="(" separator="," close=")">
+                            #{item}
+                        </foreach>
+                    </otherwise>
+                </choose>
+            </if>
+        </where>
+    </sql>
+    <select id="selectListCount" resultType="int">
+                SELECT /* com.ceragem.api.crm.dao.CrmMshipLoginHstDao.selectListCount */ COUNT(1)
+                 FROM CRM_MSHIP_LOGIN_HST A
+        <include refid="sqlConditions"/>
+    </select>
+    <select id="selectList" resultType="com.ceragem.api.crm.model.CrmMshipLoginHstVo">
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingHeader"/>
+               SELECT /* com.ceragem.api.crm.dao.CrmMshipLoginHstDao.selectList */ <include refid="sqlSelectCols"/>
+                 FROM CRM_MSHIP_LOGIN_HST A
+        <include refid="sqlConditions"/>
+               ORDER BY REG_DT DESC
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingFooter"/>
+    </select>
+    <select id="select" resultType="com.ceragem.api.crm.model.CrmMshipLoginHstVo">
+               SELECT /* com.ceragem.api.crm.dao.CrmMshipLoginHstDao.select */ <include refid="sqlSelectCols"/>
+                 FROM CRM_MSHIP_LOGIN_HST A
+        <include refid="sqlPkConditions"/>
+    </select>
+    <insert id="insert">
+                INSERT /* com.ceragem.api.crm.dao.CrmMshipLoginHstDao.insert */ INTO CRM_MSHIP_LOGIN_HST (
+        <include refid="sqlCols"/>
+                 ) VALUES (
+                       FN_CRM_AUTO_SEQ('LH')
+                     , #{itgCustNo}
+                     , NVL(TO_DATE(#{loginDt},'YYYYMMDDHH24MISS'),SYSDATE)
+                     , #{loginIpAddr}
+                     , NVL(#{chlCd},#{regrId})
+                     , #{regrId}
+                     , SYSDATE
+                     , #{amdrId}
+                     , SYSDATE
+                 )
+    </insert>
+    <update id="update">
+               UPDATE /* com.ceragem.api.crm.dao.CrmMshipLoginHstDao.update */ CRM_MSHIP_LOGIN_HST
+                  SET ITG_CUST_NO                             =         #{itgCustNo}
+                    , LOGIN_DT                                =         TO_DATE(#{loginDt},'YYYYMMDDHH24MISS')
+                    , LOGIN_IP_ADDR                               =         #{loginIpAddr}
+                    , CHL_CD                                  =         #{chlCd}
+                    , AMDR_ID                                 =         #{amdrId}
+                    , AMD_DT                                  =         SYSDATE
+        <include refid="sqlPkConditions"/>
+    </update>
+    <delete id="delete">
+               DELETE /* com.ceragem.api.crm.dao.CrmMshipLoginHstDao.delete */
+                 FROM CRM_MSHIP_LOGIN_HST
+        <include refid="sqlPkConditions"/>
+    </delete>
+</mapper>

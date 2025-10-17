@@ -14,10 +14,10 @@ import com.ceragem.api.base.util.Utilities;
 import com.ceragem.api.crm.dao.CrmCustBasDao;
 import com.ceragem.api.crm.dao.CrmCustInfoChngHstDao;
 import com.ceragem.api.crm.dao.ICrmDao;
-import com.ceragem.api.crm.model.CrmCustVo;
-import com.ceragem.crm.common.model.EzApiException;
 import com.ceragem.api.crm.model.CrmCustInfoChngHstVo;
 import com.ceragem.api.crm.model.CrmCustSo;
+import com.ceragem.api.crm.model.CrmCustVo;
+import com.ceragem.crm.common.model.EzApiException;
 
 /**
  * 
@@ -47,6 +47,11 @@ public class CrmCustInfoChngHstService extends AbstractCrmService {
 		FIELD_MAP.put("rcmdStorNo", "추천매장");
 		FIELD_MAP.put("rcmdrCustNo", "추천인");
 		FIELD_MAP.put("marryYn", "결혼여부");
+		FIELD_MAP.put("homeTelNo", "재택전화번호");
+		FIELD_MAP.put("jobTelNo", "직장전화번호");
+		FIELD_MAP.put("instZipCd", "설치지 우편번호");
+		FIELD_MAP.put("instAddr1", "설치지 주소1");
+		FIELD_MAP.put("instAddr2", "설치지 주소2");
 //		FIELD_MAP.put("repHshldNo", "대표가족");
 //		FIELD_MAP.put("smsRcvAgreeYn", "sms동의여부");
 //		FIELD_MAP.put("smsRcvAgreeChlCd", "sms동의채널");
@@ -55,8 +60,8 @@ public class CrmCustInfoChngHstService extends AbstractCrmService {
 //		FIELD_MAP.put("alrmTkRcvAgreeChlCd", "알림수신동의채널");
 //		FIELD_MAP.put("pushRcvAgreeYn", "푸시동의여부");
 //		FIELD_MAP.put("pushRcvAgreeChlCd", "푸시동의채널");
-//		FIELD_MAP.put("ci", "ci");
-//		FIELD_MAP.put("mshipLoginPwd", "로그인암호");
+		FIELD_MAP.put("ci", "ci");
+		FIELD_MAP.put("mshipLoginPwd", "로그인암호");
 //		FIELD_MAP.put("mshipTypeCd", "멤버십유형");
 //		FIELD_MAP.put("mshipGradeCd", "멤버십등급");
 //		FIELD_MAP.put("mshipInfoConfrExecvdempNo", "멤버십확인자");
@@ -76,8 +81,8 @@ public class CrmCustInfoChngHstService extends AbstractCrmService {
 		return dao;
 	}
 
-	public List<CrmCustInfoChngHstVo> getChangeInfoList(String itgCustNo, String chngWhyCtnts, Object param,String indiInfoHandlPrsnNo)
-			throws Exception {
+	public List<CrmCustInfoChngHstVo> getChangeInfoList(String itgCustNo, String chngWhyCtnts, Object param,
+			String indiInfoHandlPrsnNo) throws Exception {
 		CrmCustVo custVo = null;
 		Object srcVo = null;
 		Object destVo = null;
@@ -111,7 +116,8 @@ public class CrmCustInfoChngHstService extends AbstractCrmService {
 			String fieldName = entry.getValue();
 			Object srcVal = src.get(field);
 			Object destVal = dest.get(field);
-			CrmCustInfoChngHstVo vo = getHistVo(itgCustNo, chngWhyCtnts, field, fieldName, srcVal, destVal, indiInfoHandlPrsnNo);
+			CrmCustInfoChngHstVo vo = getHistVo(itgCustNo, chngWhyCtnts, field, fieldName, srcVal, destVal,
+					indiInfoHandlPrsnNo);
 			if (vo != null)
 				list.add(vo);
 
@@ -120,15 +126,23 @@ public class CrmCustInfoChngHstService extends AbstractCrmService {
 	}
 
 	public CrmCustInfoChngHstVo getHistVo(String itgCustNo, String chngWhyCtnts, String field, String fieldName,
-			Object srcVal, Object destVal,String indiInfoHandlPrsnNo) {
+			Object srcVal, Object destVal, String indiInfoHandlPrsnNo) {
 		CrmCustInfoChngHstVo vo = null;
 		String fName = fieldName;
-		
+
 		if (Utilities.isEmpty(field))
 			return null;
 		if (Utilities.isEmpty(fieldName))
 			fName = FIELD_MAP.get(field);
 		if (Utilities.isEmpty(fName))
+			return null;
+		if ("ci".equals(field) && (Utilities.isNotEmpty(srcVal) || Utilities.isEmpty(destVal)))
+			return null;
+
+		if ("gndrCd".equals(field) && (Utilities.isEmpty(destVal)))
+			return null;
+
+		if ("birthday".equals(field) && (Utilities.isEmpty(destVal)))
 			return null;
 
 		if (Utilities.isEmpty(srcVal) && Utilities.isEmpty(destVal))

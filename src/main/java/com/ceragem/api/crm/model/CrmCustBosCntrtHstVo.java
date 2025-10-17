@@ -1255,4 +1255,11 @@ public class CrmCustBosCntrtHstVo extends ApiBaseVo {
 	@Schema(description = "제품상품구분코드", example = "", hidden = false, required = false, nullable = true, maxLength = 200)
 	@MaxByte(max = 200)
 	private String itemPrCdNm;
+
+	@Schema(description = "개인정보필수동의여부", example = "", hidden = false, required = false, nullable = true)
+	private String psnInfoArgeYn;
+
+	@Schema(description = "개인정보필수선택여부", example = "", hidden = false, required = false, nullable = true)
+	private String psnInfoArgeYn2;
+
 }

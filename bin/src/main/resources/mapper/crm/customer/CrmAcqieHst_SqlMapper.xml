@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ceragem.api.crm.dao.CrmAcqieHstDao">
+    <sql id="sqlPkConditions">
+                WHERE ACQIE_HST_SEQ     =       #{acqieHstSeq}
+    </sql>
+    <sql id="sqlCols">
+                      ACQIE_HST_SEQ                    /*지인이력일련번호        */
+                    , ITG_CUST_NO                    /*통합고객번호        */
+                    , ACQIE_ITG_CUST_NO                    /*지인통합고객번호        */
+                    , CNTRT_NO                    /*계약번호        */
+                    , USE_TYPE_CD                    /*사용유형코드        */
+                    , ACQIE_REL_CD                    /*지인관계코드        공통코드 : CU330        [001 : 지인]*/
+                    , AMDR_ID                    /*수정자ID        */
+                    , AMD_DT                    /*수정일시        */
+                    , REGR_ID                    /*등록자ID        */
+                    , REG_DT                    /*등록일시        */
+                    , REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS , BOS : BOS , MEM : 멤버십 , CERA : 세라체크 , DNA : 세라DNA , IoT : IoT]*/
+    </sql>
+    <sql id="sqlSelectCols">
+                      A.ACQIE_HST_SEQ                    /*지인이력일련번호        */
+                    , A.ITG_CUST_NO                    /*통합고객번호        */
+                    , A.ACQIE_ITG_CUST_NO                    /*지인통합고객번호        */
+                    , A.CNTRT_NO                    /*계약번호        */
+                    , A.USE_TYPE_CD                    /*사용유형코드        */
+                    , A.ACQIE_REL_CD                    /*지인관계코드        공통코드 : CU330        [001 : 지인]*/
+                    , A.AMDR_ID                    /*수정자ID        */
+                    , TO_CHAR(A.AMD_DT,'YYYYMMDDHH24MISS')    AMD_DT                    /*수정일시        */
+                    , A.REGR_ID                    /*등록자ID        */
+                    , TO_CHAR(A.REG_DT,'YYYYMMDDHH24MISS')    REG_DT                    /*등록일시        */
+                    , A.REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS , BOS : BOS , MEM : 멤버십 , CERA : 세라체크 , DNA : 세라DNA , IoT : IoT]*/
+                    , B.CUST_NM
+                    , B.MPHON_NO  MPHON_NO 
+<!--                     , C.CUST_NM ACQIE_CUST_NM -->
+<!--                     , C.MPHON_NO  ACQIE_MPHON_NO -->
+<!--                     , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'CU330' AND COMN_CD = A.ACQIE_REL_CD AND  COMN_CD_LVL_NO = 2) ACQIE_REL_CD_NM -->
+    </sql>
+    <sql id="sqlConditions">
+        <where>
+            <if test="acqieHstSeq != null and acqieHstSeq != ''">
+                      AND A.ACQIE_HST_SEQ   =       #{acqieHstSeq}
+            </if>
+            <if test="itgCustNo != null and itgCustNo != ''">
+                      AND A.ITG_CUST_NO     =       #{itgCustNo}
+            </if>
+            <if test="acqieItgCustNo != null and acqieItgCustNo != ''">
+                      AND A.ACQIE_ITG_CUST_NO=       #{acqieItgCustNo}
+            </if>
+<!--             <if test="cntrtNo != null and cntrtNo != ''"> -->
+<!--                       AND A.CNTRT_NO        =       #{cntrtNo} -->
+<!--             </if> -->
+<!--             <if test="useTypeCd != null and useTypeCd != ''"> -->
+<!--                 <choose> -->
+<!--                     <when test="useTypeCd instanceof String"> -->
+<!--                         AND A.USE_TYPE_CD     =       #{useTypeCd} -->
+<!--                     </when> -->
+<!--                     <otherwise> -->
+<!--                         AND A.USE_TYPE_CD     IN -->
+<!--                         <foreach item="item" index="index" collection="useTypeCd" open="(" separator="," close=")"> -->
+<!--                             #{item} -->
+<!--                         </foreach> -->
+<!--                     </otherwise> -->
+<!--                 </choose> -->
+<!--             </if> -->
+<!--             <if test="acqieRelCd != null and acqieRelCd != ''"> -->
+<!--                 <choose> -->
+<!--                     <when test="acqieRelCd instanceof String"> -->
+<!--                         AND A.ACQIE_REL_CD    =       #{acqieRelCd} -->
+<!--                     </when> -->
+<!--                     <otherwise> -->
+<!--                         AND A.ACQIE_REL_CD    IN -->
+<!--                         <foreach item="item" index="index" collection="acqieRelCd" open="(" separator="," close=")"> -->
+<!--                             #{item} -->
+<!--                         </foreach> -->
+<!--                     </otherwise> -->
+<!--                 </choose> -->
+<!--             </if> -->
+            <if test="regChlCd != null and regChlCd != ''">
+                <choose>
+                    <when test="regChlCd instanceof String">
+                        AND A.REG_CHL_CD      =       #{regChlCd}
+                    </when>
+                    <otherwise>
+                        AND A.REG_CHL_CD      IN
+                        <foreach item="item" index="index" collection="regChlCd" open="(" separator="," close=")">
+                            #{item}
+                        </foreach>
+                    </otherwise>
+                </choose>
+            </if>
+        </where>
+    </sql>
+    <select id="selectListCount" resultType="int">
+                SELECT /* com.ceragem.api.crm.dao.CrmAcqieHstDao.selectListCount */ COUNT(1)
+                 FROM CRM_ACQIE_HST A
+                INNER JOIN CRM_CUST_BAS B ON A.ACQIE_ITG_CUST_NO = B.ITG_CUST_NO AND B.CUST_STATUS_CD !=  '003'
+        <include refid="sqlConditions"/>
+    </select>
+    <select id="selectList" resultType="com.ceragem.api.crm.model.CrmAcqieHstVo">
+<!--         <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingHeader"/> -->
+               SELECT /* com.ceragem.api.crm.dao.CrmAcqieHstDao.selectList */ <include refid="sqlSelectCols"/>
+                 FROM CRM_ACQIE_HST A
+                INNER JOIN CRM_CUST_BAS B ON A.ACQIE_ITG_CUST_NO = B.ITG_CUST_NO AND B.CUST_STATUS_CD !=  '003'
+        <include refid="sqlConditions"/>
+               ORDER BY A.REG_DT DESC
+<!--         <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingFooter"/> -->
+    </select>
+    <select id="select" resultType="com.ceragem.api.crm.model.CrmAcqieHstVo">
+               SELECT /* com.ceragem.api.crm.dao.CrmAcqieHstDao.select */ <include refid="sqlSelectCols"/>
+                 FROM CRM_ACQIE_HST A
+                INNER JOIN CRM_CUST_BAS B ON A.ACQIE_ITG_CUST_NO = B.ITG_CUST_NO AND B.CUST_STATUS_CD !=  '003'
+        <include refid="sqlPkConditions"/>
+    </select>
+    <insert id="insert">
+        <selectKey order="BEFORE" keyProperty="acqieHstSeq" resultType="String">
+            SELECT FN_CRM_AUTO_SEQ('ACQ') FROM DUAL
+        </selectKey>
+                INSERT /* com.ceragem.api.crm.dao.CrmAcqieHstDao.insert */ INTO CRM_ACQIE_HST (
+        <include refid="sqlCols"/>
+                 ) VALUES (
+                       #{acqieHstSeq}
+                     , #{itgCustNo}
+                     , #{acqieItgCustNo}
+                     , NULL
+                     , NULL
+                     , '001'
+                     , #{amdrId}
+                     , SYSDATE
+                     , #{regrId}
+                     , SYSDATE
+                     , #{regChlCd}
+                 )
+    </insert>
+    <update id="update">
+               UPDATE /* com.ceragem.api.crm.dao.CrmAcqieHstDao.update */ CRM_ACQIE_HST
+                  SET ITG_CUST_NO                             =         #{itgCustNo}
+                    , ACQIE_ITG_CUST_NO                       =         #{acqieItgCustNo}
+                    , AMDR_ID                                 =         #{amdrId}
+                    , AMD_DT                                  =         SYSDATE
+                    , REG_CHL_CD                              =         #{regChlCd}
+        <include refid="sqlPkConditions"/>
+    </update>
+    <delete id="delete">
+               DELETE /* com.ceragem.api.crm.dao.CrmAcqieHstDao.delete */
+                 FROM CRM_ACQIE_HST
+        <include refid="sqlPkConditions"/>
+    </delete>
+    <delete id="deleteCust">
+               DELETE /* com.ceragem.api.crm.dao.CrmAcqieHstDao.deleteCust */
+                 FROM CRM_ACQIE_HST
+                WHERE #{itgCustNo} IN  (ITG_CUST_NO, ACQIE_ITG_CUST_NO) 
+    </delete>
+</mapper>

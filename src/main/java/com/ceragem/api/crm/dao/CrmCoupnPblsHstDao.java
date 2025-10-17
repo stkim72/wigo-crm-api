@@ -5,6 +5,7 @@ import java.util.List;
 import com.ceragem.api.config.annotation.CrmMapper;
 import com.ceragem.api.crm.model.CrmChlBasVo;
 import com.ceragem.api.crm.model.CrmCouponCustNoSo;
+import com.ceragem.api.crm.model.CrmCouponSo;
 import com.ceragem.api.crm.model.CrmCouponVo;
 import com.ceragem.api.crm.model.CrmGodsBasVo;
 import com.ceragem.api.crm.model.CrmMshipCoupnBasVo;
@@ -39,4 +40,14 @@ public interface CrmCoupnPblsHstDao extends ICrmDao {
 	CrmCouponVo selectMaster(CrmCouponVo cpVo);
 
 	EzMap selectStorCnt(CrmCouponVo vo);
+
+	int insertUseHis(CrmCouponVo coupon);
+
+	List<CrmCouponVo> getCoupnChlList(CrmCouponSo so);
+
+	EzMap selectIssueUser(Object vo);
+
+	CrmCouponVo selectCertfNo(Object so);
+
+	EzMap selectPubCnt(Object cpVo);
 }

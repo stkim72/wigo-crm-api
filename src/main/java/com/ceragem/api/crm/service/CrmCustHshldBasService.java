@@ -42,6 +42,9 @@ public class CrmCustHshldBasService extends AbstractCrmService {
 	public final static String API_CODE_CANNOT_INSERT_005 = "IAR0505";
 	public final static String API_CODE_CANNOT_INSERT_005_MSG = "다른 가족에 소속된 회원입니다.";
 
+	public final static String API_CODE_CANNOT_INSERT_006 = "IAR0506";
+	public final static String API_CODE_CANNOT_INSERT_006_MSG = "다른 가족 구성원을 대표사용자로 지정 할 수 없습니다.";
+
 	@Autowired
 	CrmCustHshldBasDao dao;
 
@@ -78,6 +81,11 @@ public class CrmCustHshldBasService extends AbstractCrmService {
 		}
 
 		so.setItgCustNo(vo.getRepHshldNo());
+		CrmCustHshldBasVo rvo = dao.selectNoDel(so);
+		if (rvo != null && !rvo.getItgCustNo().equals(rvo.getRepHshldNo())) {
+			throw new EzApiException(API_CODE_CANNOT_INSERT_006, API_CODE_CANNOT_INSERT_006_MSG);
+		}
+
 		CrmCustVo custVo = custDao.select(so);
 		if (custVo == null) {
 			throw new EzApiException(API_CODE_CANNOT_INSERT_002, API_CODE_CANNOT_INSERT_002_MSG);

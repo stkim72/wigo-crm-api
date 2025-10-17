@@ -71,6 +71,8 @@ public interface CrmCustBasDao extends ICrmDao {
 
 	int updateToken(Object param) throws Exception;
 
+	int updatePushAgree(Object param);
+
 	CrmCustVo selectMphone(Object vo) throws Exception;
 
 	void updateDormantStatus(Object param) throws Exception;
@@ -78,5 +80,9 @@ public interface CrmCustBasDao extends ICrmDao {
 	CrmCustVo selectExitUser(Object vo) throws Exception;
 
 	CrmCustVo selectRcmdCustInfo(CrmCustVo custVo);
+
+	int updatePointSeq(Object vo);
+
+	int updateAdvPointSeq(Object vo);
 
 }

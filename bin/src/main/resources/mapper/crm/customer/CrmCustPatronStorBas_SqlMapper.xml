@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ceragem.api.crm.dao.CrmCustPatronStorBasDao">
+    <sql id="sqlPkConditions">
+                WHERE PATRON_STOR_SEQ   =       #{patronStorSeq}
+    </sql>
+    <sql id="sqlCols">
+                      PATRON_STOR_SEQ                    /*단골매장일련번호        */
+                    , ITG_CUST_NO                    /*통합고객번호        */
+                    , STOR_NO                    /*매장번호        */
+                    , AMDR_ID                    /*수정자ID        */
+                    , AMD_DT                    /*수정일시        */
+                    , REGR_ID                    /*등록자ID        */
+                    , REG_DT                    /*등록일시        */
+                    , REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS]*/
+    </sql>
+    <sql id="sqlSelectCols">
+                      A.PATRON_STOR_SEQ                    /*단골매장일련번호        */
+                    , A.ITG_CUST_NO                    /*통합고객번호        */
+                    , A.STOR_NO                    /*매장번호        */
+                    , A.AMDR_ID                    /*수정자ID        */
+                    , TO_CHAR(A.AMD_DT,'YYYYMMDDHH24MISS')    AMD_DT                    /*수정일시        */
+                    , A.REGR_ID                    /*등록자ID        */
+                    , TO_CHAR(A.REG_DT,'YYYYMMDDHH24MISS')    REG_DT                    /*등록일시        */
+                    , A.REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS]*/
+                    , (SELECT STOR_NM FROM CRM_STOR_BAS WHERE STOR_NO = A.STOR_NO AND ROWNUM = 1)  STOR_NO_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'S000' AND COMN_CD = A.REG_CHL_CD AND  COMN_CD_LVL_NO = 2) REG_CHL_CD_NM
+    </sql>
+    <sql id="sqlConditions">
+    <where>
+        <if test="patronStorSeq != null and patronStorSeq != ''">
+                  AND A.PATRON_STOR_SEQ =       #{patronStorSeq}
+        </if>
+        <if test="itgCustNo != null and itgCustNo != ''">
+                  AND A.ITG_CUST_NO     =       #{itgCustNo}
+        </if>
+        <if test="storNo != null and storNo != ''">
+                  AND A.STOR_NO         =       #{storNo}
+        </if>
+        <if test="regChlCd != null and regChlCd != ''">
+            <choose>
+                <when test="regChlCd instanceof String">
+                    AND A.REG_CHL_CD      =       #{regChlCd}
+                </when>
+                <otherwise>
+                    AND A.REG_CHL_CD      IN
+                    <foreach item="item" index="index" collection="regChlCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        </where>
+    </sql>
+    <select id="selectListCount" resultType="int">
+                SELECT /* com.ceragem.api.crm.dao.CrmCustPatronStorBasDao.selectListCount */ COUNT(1)
+                 FROM CRM_CUST_PATRON_STOR_BAS A
+        <include refid="sqlConditions"/>
+    </select>
+    <select id="selectList" resultType="com.ceragem.api.crm.model.CrmCustPatronStorBasVo">
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingHeader"/>
+               SELECT /* com.ceragem.api.crm.dao.CrmCustPatronStorBasDao.selectList */ <include refid="sqlSelectCols"/>
+                 FROM CRM_CUST_PATRON_STOR_BAS A
+        <include refid="sqlConditions"/>
+               ORDER BY REG_DT DESC
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingFooter"/>
+    </select>
+    <select id="select" resultType="com.ceragem.api.crm.model.CrmCustPatronStorBasVo">
+               SELECT /* com.ceragem.api.crm.dao.CrmCustPatronStorBasDao.select */ <include refid="sqlSelectCols"/>
+                 FROM CRM_CUST_PATRON_STOR_BAS A
+        <include refid="sqlPkConditions"/>
+    </select>
+    <select id="selectStore" resultType="com.ceragem.api.crm.model.CrmCustPatronStorBasVo">
+               SELECT /* com.ceragem.api.crm.dao.CrmCustPatronStorBasDao.selectStore */ <include refid="sqlSelectCols"/>
+                 FROM CRM_CUST_PATRON_STOR_BAS A
+                WHERE ITG_CUST_NO = #{itgCustNo}
+                  AND STOR_NO = #{storNo}
+                  AND ROWNUM = 1
+    </select>
+    <insert id="insert">
+        <selectKey order="BEFORE" keyProperty="patronStorSeq" resultType="String">
+            SELECT FN_CRM_AUTO_SEQ('PSS') FROM DUAL
+        </selectKey>
+                INSERT INTO /* com.ceragem.api.crm.dao.CrmCustPatronStorBasDao.insert */ CRM_CUST_PATRON_STOR_BAS (
+        <include refid="sqlCols"/>
+                 ) VALUES (
+                       #{patronStorSeq}
+                     , #{itgCustNo}
+                     , #{storNo}
+                     , #{amdrId}
+                     , SYSDATE
+                     , #{regrId}
+                     , SYSDATE
+                     , #{regChlCd}
+                 )
+    </insert>
+    <update id="update">
+               UPDATE /* com.ceragem.api.crm.dao.CrmCustPatronStorBasDao.update */ CRM_CUST_PATRON_STOR_BAS
+                  SET ITG_CUST_NO                             =         #{itgCustNo}
+                    , STOR_NO                                 =         #{storNo}
+                    , AMDR_ID                                 =         #{amdrId}
+                    , AMD_DT                                  =         SYSDATE
+                    , REG_CHL_CD                              =         #{regChlCd}
+        <include refid="sqlPkConditions"/>
+    </update>
+    <delete id="delete">
+               DELETE /* com.ceragem.api.crm.dao.CrmCustPatronStorBasDao.delete */  
+                 FROM CRM_CUST_PATRON_STOR_BAS
+        <include refid="sqlPkConditions"/>
+    </delete>
+    <delete id="deleteStore">
+               DELETE /* com.ceragem.api.crm.dao.CrmCustPatronStorBasDao.delete */  
+                 FROM CRM_CUST_PATRON_STOR_BAS
+                WHERE ITG_CUST_NO = #{itgCustNo}
+                  AND STOR_NO = #{storNo}
+    </delete>
+</mapper>

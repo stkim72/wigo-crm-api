@@ -1,12 +1,13 @@
 package com.ceragem.api.crm.service;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.ceragem.api.base.constant.Constants;
 import com.ceragem.api.base.service.AbstractCrmService;
 import com.ceragem.api.base.util.Utilities;
 import com.ceragem.api.crm.dao.CrmCoupnBookPblsHstDao;
@@ -174,8 +175,10 @@ public class CrmCouponBookService extends AbstractCrmService {
 			throw new EzApiException(API_CODE_REMAINCNT_LACK,
 					"[잔여횟수 " + book.getRemainCnt() + "회]" + API_CODE_REMAINCNT_LACK_MSG);
 		Calendar cal = Calendar.getInstance();
-		String today = Constants._DATE_FORMAT.format(cal.getTime());
-		if ( (book.getUseStaYmd()!=null && today.compareTo(book.getUseStaYmd()) < 0) || ( book.getUseEndYmd() !=null && today.compareTo(book.getUseEndYmd()) > 0)) {
+		SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd", Locale.KOREAN);
+		String today = df.format(cal.getTime());
+		if ((book.getUseStaYmd() != null && today.compareTo(book.getUseStaYmd()) < 0)
+				|| (book.getUseEndYmd() != null && today.compareTo(book.getUseEndYmd()) > 0)) {
 			throw new EzApiException(API_CODE_INVALID_PERIOD,
 					"[사용가능기간-(" + book.getUseStaYmd() + "-" + book.getUseEndYmd() + ")]" + API_CODE_INVALID_PERIOD_MSG);
 		}

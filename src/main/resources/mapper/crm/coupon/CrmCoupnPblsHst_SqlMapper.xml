@@ -90,11 +90,13 @@
                     , A.COUPN_TGT_CD                    /*쿠폰대상코드        */
                     , A.COUPN_APPLY_DIV_CD1                    /*쿠폰적용구분코드1        */
                     , A.COUPN_APPLY_DIV_CD2                    /*쿠폰적용구분코드2        */
-                    , B.FROM_PBLS_STD_DAY                    /*FROM발행기준일        */
-                    , B.TO_PBLS_STD_DAY                    /*TO발행기준일        */
-                    , B.USE_STD_DAY_COND_CD                    /*사용기준일조건코드        */
-                    , B.FROM_USE_STD_DAY                    /*FROM사용기준일        */
-                    , B.TO_USE_STD_DAY                    /*TO사용기준일        */
+                    , A.FROM_PBLS_STD_DAY                    /*FROM발행기준일        */
+                    , A.TO_PBLS_STD_DAY                    /*TO발행기준일        */
+                    , A.USE_STD_DAY_COND_CD                    /*사용기준일조건코드        */
+<!--                     , A.FROM_USE_STD_DAY                    /*FROM사용기준일        */ -->
+<!--                     , A.TO_USE_STD_DAY                    /*TO사용기준일        */ -->
+                    , DECODE(B.USE_STD_DAY_COND_CD , 'Y' , TO_CHAR(A.REG_DT,'YYYYMMDD') , NVL(A.FROM_USE_STD_DAY,B.FROM_USE_STD_DAY)) FROM_USE_STD_DAY                   /*FROM사용기준일        */
+                    , DECODE(B.USE_STD_DAY_COND_CD , 'Y' , TO_CHAR(A.REG_DT+NVL(B.COUPN_USE_POSS_DAY,0),'YYYYMMDD') , NVL(A.TO_USE_STD_DAY,B.TO_USE_STD_DAY))   TO_USE_STD_DAY                /*TO사용기준일        */
                     , A.GIFT_POSS_YN                    /*선물가능여부        */
                     , A.COUPN_ISSUE_METH_CD                    /*쿠폰발급방법코드        */
                     , A.ISSUE_RSTRTN_CNT                    /*발급제한수        */
@@ -116,10 +118,16 @@
                     , A.USE_DT                    /*사용일시        */
                     , B.USE_DIV_CD                    /*사용구분코드        */
                     , A.USE_YN                    /*사용여부        */
-                    , B.COUPN_BAS_NM                    /*쿠폰기본명        */
-                    , B.COUPN_BAS_CTNTS                    /*쿠폰기본내용        */
+<!--                     , CASE WHEN A.STOR_NO IS NOT NULL AND B.MSHIP_COUPN_BAS_NO IN (SELECT COMN_CD FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'W040' AND COMN_CD_LVL_NO = 2 AND USE_YN = 'Y') THEN (SELECT STOR_NM FROM CRM_STOR_BAS WHERE STOR_NO = A.STOR_NO) || ' - ' || B.COUPN_BAS_NM ELSE DECODE(A.REG_CHL_CD,'COM',NVL(A.COUPN_BAS_NM,B.COUPN_BAS_NM), B.COUPN_BAS_NM) END COUPN_BAS_NM                   /*쿠폰기본명        */ -->
+                    , DECODE(A.REG_CHL_CD,'COM',NVL(A.COUPN_BAS_NM,B.COUPN_BAS_NM), B.COUPN_BAS_NM)  COUPN_BAS_NM                   /*쿠폰기본명        */
+                    , DECODE(A.REG_CHL_CD,'COM',NVL(A.COUPN_BAS_CTNTS,B.COUPN_BAS_CTNTS), B.COUPN_BAS_CTNTS)  COUPN_BAS_CTNTS                    /*쿠폰기본내용        */
                     , B.ADMT_METH_CD                    /*정산방법코드        */
                     , A.ADMT_AMT                    /*정산금액        */
+                    , A.USE_STOR_NO
+                    , A.BUY_GODS_CD
+                    , A.ORDR_AMT
+                    , A.PAY_AMT
+                    , A.SALE_AMT
                     , B.COUPN_TYPE_CD                    /*쿠폰유형        */
                     , B.COUPN_USE_POSS_DAY                    /*쿠폰사용가능일        */
                     , B.COUPN_USE_POSS_YN                    /*쿠폰사용가능여부        */
@@ -155,6 +163,10 @@
                     , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'MB120' AND COMN_CD = A.COUPN_CLASS_CD AND  COMN_CD_LVL_NO = 2) COUPN_CLASS_CD_NM
                     , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'S000' AND COMN_CD = A.REG_CHL_CD AND  COMN_CD_LVL_NO = 2) REG_CHL_CD_NM
                     , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'MB120' AND COMN_CD = A.USE_DIV_CD AND  COMN_CD_LVL_NO = 2) USE_DIV_CD_NM
+                    , CASE WHEN A.MSHIP_COUPN_BAS_NO IN (SELECT  COMN_CD FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD IN ('W040','W050') AND COMN_CD_LVL_NO = 2 AND USE_YN = 'Y') THEN 'Y' ELSE 'N' END WELLNESS_YN
+                    , CASE WHEN A.MSHIP_COUPN_BAS_NO IN (SELECT  COMN_CD FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD IN ('W040') AND COMN_CD_LVL_NO = 2 AND USE_YN = 'Y' AND COMN_CD_1_USE_YN = 'Y' ) THEN 'Y' ELSE 'N' END WELLNESS_ID_YN
+                    , CASE WHEN TO_CHAR(SYSDATE,'YYYYMMDD') > DECODE(B.USE_STD_DAY_COND_CD , 'Y' , TO_CHAR(A.REG_DT+NVL(B.COUPN_USE_POSS_DAY,0),'YYYYMMDD') , NVL(A.TO_USE_STD_DAY,B.TO_USE_STD_DAY)) THEN 99999999
+                     ELSE DECODE(B.USE_STD_DAY_COND_CD , 'Y' , TO_CHAR(A.REG_DT+NVL(B.COUPN_USE_POSS_DAY,0),'YYYYMMDD') , NVL(A.TO_USE_STD_DAY,B.TO_USE_STD_DAY)) - TO_CHAR(SYSDATE,'YYYYMMDD') END COUPN_EXP_NO
     </sql>
     <sql id="sqlConditions">
     <where>
@@ -449,19 +461,26 @@
               <choose>
                 <when test="'Y'.toString().equals(availableYn)">
                     AND A.USE_YN = 'N'
-                    <!-- AND ((TRUNC(SYSDATE - A.REG_DT) <![CDATA[<=]]> NVL(B.COUPN_USE_POSS_DAY,0)) OR (TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD') <![CDATA[>=]]> SYSDATE)) -->
+                    AND TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN  DECODE(B.USE_STD_DAY_COND_CD , 'Y' , TO_CHAR(A.REG_DT,'YYYYMMDD') , NVL(A.FROM_USE_STD_DAY,B.FROM_USE_STD_DAY))
+                               AND DECODE(B.USE_STD_DAY_COND_CD , 'Y' , TO_CHAR(A.REG_DT+NVL(B.COUPN_USE_POSS_DAY,0),'YYYYMMDD') , NVL(A.TO_USE_STD_DAY,B.TO_USE_STD_DAY))
+                       
+                     <!-- AND ((TRUNC(SYSDATE - A.REG_DT) <![CDATA[<=]]> NVL(B.COUPN_USE_POSS_DAY,0)) OR (TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD') <![CDATA[>=]]> SYSDATE)) -->
                     <!-- AND (
                     	(TRUNC(SYSDATE - A.REG_DT) <![CDATA[<=]]> NVL(B.COUPN_USE_POSS_DAY,0)) 
                     	OR (TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') <![CDATA[>]]> TO_CHAR(SYSDATE,'YYYY-MM-DD')) 
                     	OR ((TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD')) AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[<]]> TO_CHAR(B.TO_USE_HOUR)))
                     	) -->
-                    AND (TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') <![CDATA[>=]]> TO_CHAR(SYSDATE,'YYYY-MM-DD') 
-	                        OR (B.USE_STD_DAY_COND_CD = 'Y' AND TO_CHAR(TO_DATE (A.REG_DT + NVL(B.COUPN_USE_POSS_DAY,0)),'YYYY-MM-DD') <![CDATA[>=]]> TO_CHAR(SYSDATE,'YYYY-MM-DD'))
-	                        OR (TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD') AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[<=]]> TO_CHAR(B.TO_USE_HOUR)) )
-	                        OR (B.USE_STD_DAY_COND_CD = 'Y' AND TO_CHAR(TO_DATE (A.REG_DT + NVL(B.COUPN_USE_POSS_DAY,0)),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD') AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[<=]]> TO_CHAR(B.TO_USE_HOUR)) )
-                        )
+<!--                     AND (TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') <![CDATA[>=]]> TO_CHAR(SYSDATE,'YYYY-MM-DD')  -->
+<!-- 	                        OR (B.USE_STD_DAY_COND_CD = 'Y' AND TO_CHAR(TO_DATE (A.REG_DT + NVL(B.COUPN_USE_POSS_DAY,0)),'YYYY-MM-DD') <![CDATA[>=]]> TO_CHAR(SYSDATE,'YYYY-MM-DD')) -->
+<!-- 	                        OR (TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD') AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[<=]]> TO_CHAR(B.TO_USE_HOUR)) ) -->
+<!-- 	                        OR (B.USE_STD_DAY_COND_CD = 'Y' AND TO_CHAR(TO_DATE (A.REG_DT + NVL(B.COUPN_USE_POSS_DAY,0)),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD') AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[<=]]> TO_CHAR(B.TO_USE_HOUR)) ) -->
+<!--                         ) -->
                 </when>
                 <otherwise>
+                    AND ( A.USE_YN = 'Y'
+                    OR  TO_CHAR(SYSDATE,'YYYYMMDD') NOT BETWEEN  DECODE(B.USE_STD_DAY_COND_CD , 'Y' , TO_CHAR(A.REG_DT,'YYYYMMDD') , NVL(A.FROM_USE_STD_DAY,B.FROM_USE_STD_DAY))
+                               AND DECODE(B.USE_STD_DAY_COND_CD , 'Y' , TO_CHAR(A.REG_DT+NVL(B.COUPN_USE_POSS_DAY,0),'YYYYMMDD') , NVL(A.TO_USE_STD_DAY,B.TO_USE_STD_DAY))
+                               )
                     <!-- AND ((TRUNC(SYSDATE - A.REG_DT) <![CDATA[>]]> NVL(B.COUPN_USE_POSS_DAY,0)) OR (TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD') <![CDATA[<]]> SYSDATE) OR A.USE_YN = 'Y') -->
                     <!-- AND (
                     	(TRUNC(SYSDATE - A.REG_DT) <![CDATA[>]]> NVL(B.COUPN_USE_POSS_DAY,0)) 
@@ -469,12 +488,12 @@
                     	OR ((TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD')) AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[>]]> TO_CHAR(B.TO_USE_HOUR))) 
                     	OR A.USE_YN = 'Y'
                     	) -->
-                   	AND (TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') <![CDATA[<]]> TO_CHAR(SYSDATE,'YYYY-MM-DD') 
-	                        OR (B.USE_STD_DAY_COND_CD = 'Y' AND TO_CHAR(TO_DATE (A.REG_DT + NVL(B.COUPN_USE_POSS_DAY,0)),'YYYY-MM-DD') <![CDATA[<]]> TO_CHAR(SYSDATE,'YYYY-MM-DD'))
-	                        OR (TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD') AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[>]]> TO_CHAR(B.TO_USE_HOUR)) )
-	                        OR (B.USE_STD_DAY_COND_CD = 'Y' AND TO_CHAR(TO_DATE (A.REG_DT + NVL(B.COUPN_USE_POSS_DAY,0)),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD') AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[>]]> TO_CHAR(B.TO_USE_HOUR)) )
-	                        OR (A.USE_YN = 'Y')
-                        )
+<!--                    	AND (TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') <![CDATA[<]]> TO_CHAR(SYSDATE,'YYYY-MM-DD')  -->
+<!-- 	                        OR (B.USE_STD_DAY_COND_CD = 'Y' AND TO_CHAR(TO_DATE (A.REG_DT + NVL(B.COUPN_USE_POSS_DAY,0)),'YYYY-MM-DD') <![CDATA[<]]> TO_CHAR(SYSDATE,'YYYY-MM-DD')) -->
+<!-- 	                        OR (TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD') AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[>]]> TO_CHAR(B.TO_USE_HOUR)) ) -->
+<!-- 	                        OR (B.USE_STD_DAY_COND_CD = 'Y' AND TO_CHAR(TO_DATE (A.REG_DT + NVL(B.COUPN_USE_POSS_DAY,0)),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD') AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[>]]> TO_CHAR(B.TO_USE_HOUR)) ) -->
+<!-- 	                        OR (A.USE_YN = 'Y') -->
+<!--                         ) -->
                 </otherwise>
               </choose>
         </if>
@@ -482,17 +501,20 @@
         <if test="expiredYn != null and expiredYn != ''">
                   <choose>
                     <when test="'Y'.toString().equals(expiredYn)">
+                            AND A.USE_YN = 'N'
+                            AND TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN  DECODE(B.USE_STD_DAY_COND_CD , 'Y' , TO_CHAR(A.REG_DT,'YYYYMMDD') , NVL(A.FROM_USE_STD_DAY,B.FROM_USE_STD_DAY))
+                               AND DECODE(B.USE_STD_DAY_COND_CD , 'Y' , TO_CHAR(A.REG_DT+NVL(B.COUPN_USE_POSS_DAY,0),'YYYYMMDD') , NVL(A.TO_USE_STD_DAY,B.TO_USE_STD_DAY))
                     	<!-- AND A.USE_YN = 'N' -->
                         <!-- AND ((TRUNC(SYSDATE - A.REG_DT) <![CDATA[<=]]> NVL(B.COUPN_USE_POSS_DAY,0)) OR (TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD') <![CDATA[>=]]> SYSDATE) ) -->
                         <!-- AND (
                         	(TRUNC(SYSDATE - A.REG_DT) <![CDATA[<=]]> NVL(B.COUPN_USE_POSS_DAY,0)) 
                         	OR (TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') <![CDATA[>=]]> TO_CHAR(SYSDATE,'YYYY-MM-DD')) 
                         	) -->
-                        AND (TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') <![CDATA[>=]]> TO_CHAR(SYSDATE,'YYYY-MM-DD') 
-	                        OR (B.USE_STD_DAY_COND_CD = 'Y' AND TO_CHAR(TO_DATE (A.REG_DT + NVL(B.COUPN_USE_POSS_DAY,0)),'YYYY-MM-DD') <![CDATA[>=]]> TO_CHAR(SYSDATE,'YYYY-MM-DD'))
-	                        OR (TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD') AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[<=]]> TO_CHAR(B.TO_USE_HOUR)) )
-	                        OR (B.USE_STD_DAY_COND_CD = 'Y' AND TO_CHAR(TO_DATE (A.REG_DT + NVL(B.COUPN_USE_POSS_DAY,0)),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD') AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[<=]]> TO_CHAR(B.TO_USE_HOUR)) )
-                        )
+<!--                         AND (TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') <![CDATA[>=]]> TO_CHAR(SYSDATE,'YYYY-MM-DD')  -->
+<!-- 	                        OR (B.USE_STD_DAY_COND_CD = 'Y' AND TO_CHAR(TO_DATE (A.REG_DT + NVL(B.COUPN_USE_POSS_DAY,0)),'YYYY-MM-DD') <![CDATA[>=]]> TO_CHAR(SYSDATE,'YYYY-MM-DD')) -->
+<!-- 	                        OR (TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD') AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[<=]]> TO_CHAR(B.TO_USE_HOUR)) ) -->
+<!-- 	                        OR (B.USE_STD_DAY_COND_CD = 'Y' AND TO_CHAR(TO_DATE (A.REG_DT + NVL(B.COUPN_USE_POSS_DAY,0)),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD') AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[<=]]> TO_CHAR(B.TO_USE_HOUR)) ) -->
+<!--                         ) -->
                     </when>
                     <otherwise>
                         <!-- AND ((TRUNC(SYSDATE - A.REG_DT) <![CDATA[>=]]> B.COUPN_USE_POSS_DAY) OR (TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD') <![CDATA[<=]]> SYSDATE)) -->
@@ -501,11 +523,14 @@
                         	(TRUNC(SYSDATE - A.REG_DT) <![CDATA[<]]> NVL(B.COUPN_USE_POSS_DAY,0)) 
                         	OR (TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') <![CDATA[>]]> TO_CHAR(SYSDATE,'YYYY-MM-DD'))
                         	) -->
-                        AND (TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') <![CDATA[<]]> TO_CHAR(SYSDATE,'YYYY-MM-DD') 
-	                        OR (B.USE_STD_DAY_COND_CD = 'Y' AND TO_CHAR(TO_DATE (A.REG_DT + NVL(B.COUPN_USE_POSS_DAY,0)),'YYYY-MM-DD') <![CDATA[<]]> TO_CHAR(SYSDATE,'YYYY-MM-DD'))
-	                        OR (TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD') AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[>]]> TO_CHAR(B.TO_USE_HOUR)) )
-	                        OR (B.USE_STD_DAY_COND_CD = 'Y' AND TO_CHAR(TO_DATE (A.REG_DT + NVL(B.COUPN_USE_POSS_DAY,0)),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD') AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[>]]> TO_CHAR(B.TO_USE_HOUR)) )
-                        )
+<!--                         AND (TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') <![CDATA[<]]> TO_CHAR(SYSDATE,'YYYY-MM-DD')  -->
+<!-- 	                        OR (B.USE_STD_DAY_COND_CD = 'Y' AND TO_CHAR(TO_DATE (A.REG_DT + NVL(B.COUPN_USE_POSS_DAY,0)),'YYYY-MM-DD') <![CDATA[<]]> TO_CHAR(SYSDATE,'YYYY-MM-DD')) -->
+<!-- 	                        OR (TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD') AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[>]]> TO_CHAR(B.TO_USE_HOUR)) ) -->
+<!-- 	                        OR (B.USE_STD_DAY_COND_CD = 'Y' AND TO_CHAR(TO_DATE (A.REG_DT + NVL(B.COUPN_USE_POSS_DAY,0)),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD') AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[>]]> TO_CHAR(B.TO_USE_HOUR)) ) -->
+<!--                         ) -->
+                    AND A.USE_YN = 'N'
+                    AND TO_CHAR(SYSDATE,'YYYYMMDD') > DECODE(B.USE_STD_DAY_COND_CD , 'Y' , TO_CHAR(A.REG_DT+NVL(B.COUPN_USE_POSS_DAY,0),'YYYYMMDD') , NVL(A.TO_USE_STD_DAY,B.TO_USE_STD_DAY))
+                            
                     </otherwise>
                   </choose>
         </if>
@@ -537,40 +562,90 @@
 <!--         		AND A.COUPN_BOOK_HST_SEQ IS  NULL -->
         		</otherwise>
         	</choose>
+            <if test="chlComYn != null and chlComYn != ''">
+            <choose>
+                <when  test="'Y'.toString().equals(chlComYn)">
+                AND A.REG_CHL_CD = 'COM'
+                </when>
+                <when  test="'N'.toString().equals(chlComYn)">
+                AND (A.REG_CHL_CD IS NULL OR A.REG_CHL_CD != 'COM' ) 
+                </when>
+                </choose>
+            </if>
+            <if test="wellnessIdYn != null and wellnessIdYn != ''">
+              AND CASE WHEN A.MSHIP_COUPN_BAS_NO IN (SELECT  COMN_CD FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD IN ('W040','W050') AND COMN_CD_LVL_NO = 2 AND USE_YN = 'Y') THEN 'Y' ELSE 'N' END  = #{wellnessIdYn}
+            </if>
+            <if test="wellnessYn != null and wellnessYn != ''">
+              AND CASE WHEN A.MSHIP_COUPN_BAS_NO IN (SELECT  COMN_CD FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD IN ('W040') AND COMN_CD_LVL_NO = 2 AND USE_YN = 'Y' AND COMN_CD_1_USE_YN = 'Y' ) THEN 'Y' ELSE 'N' END = #{wellnessYn}
+            </if>
+        
+            
+           
             </where>
     </sql>
     <select id="selectListCount" resultType="int">
-                SELECT /* com.ceragem.api.crm.dao.CrmCoupnPblsHstDao.selectListCount */ COUNT(1)
+    /* com.ceragem.api.crm.dao.CrmCoupnPblsHstDao.selectListCount */
+                SELECT  COUNT(1)
                  FROM CRM_COUPN_PBLS_HST A JOIN CRM_MSHIP_COUPN_BAS B
                     ON A.MSHIP_COUPN_BAS_NO = B.MSHIP_COUPN_BAS_NO
-                    AND B.COUPN_TYPE_CD != '013'
+                    AND A.COUPN_BOOK_HST_SEQ IS NULL
+<!--                     AND B.COUPN_TYPE_CD != '013' -->
         <include refid="sqlConditions"/>
     </select>
     <select id="selectList" resultType="com.ceragem.api.crm.model.CrmCouponVo">
+     /* com.ceragem.api.crm.dao.CrmCoupnPblsHstDao.selectList */ 
         <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingHeader"/>
-               SELECT /* com.ceragem.api.crm.dao.CrmCoupnPblsHstDao.selectList */ 
+		SELECT CPN.* 
+		    FROM (
+               SELECT
+               DISTINCT
                	<include refid="sqlSelectCols"/>
+                , CASE 
+                    WHEN (B.USE_STD_DAY_COND_CD = 'Y' AND TO_CHAR(TO_DATE (A.REG_DT + NVL(B.COUPN_USE_POSS_DAY,0)),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD') AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[<=]]> TO_CHAR(B.TO_USE_HOUR)) ) THEN TO_CHAR(B.TO_USE_HOUR)
+                    WHEN (TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD') AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[<=]]> TO_CHAR(B.TO_USE_HOUR)) ) THEN TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD')
+                    WHEN (B.USE_STD_DAY_COND_CD = 'Y' AND TO_CHAR(TO_DATE (A.REG_DT + NVL(B.COUPN_USE_POSS_DAY,0)),'YYYY-MM-DD') <![CDATA[>=]]> TO_CHAR(SYSDATE,'YYYY-MM-DD')) THEN TO_CHAR(TO_DATE (A.REG_DT + NVL(B.COUPN_USE_POSS_DAY,0)),'YYYY-MM-DD')
+                    ELSE TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') END
+                  AS USE_TIME  
                	<!-- , (SELECT LISTAGG(MSHIP_PROM_BAS_NO, ',') AS MSHIP_PROM_BAS_NO FROM  CRM_MSHIP_PROM_BAS WHERE PRV_COUPN_BAS_NO = A.MSHIP_COUPN_BAS_NO) AS MSHIP_PROM_BAS_NOS -->
                 <!-- , (SELECT LISTAGG(CAMP_BAS_NO, ',') AS CAMP_BAS_NO FROM CRM_CAMP_BAS WHERE APPLY_COUPN_BAS_NO = A.MSHIP_COUPN_BAS_NO ) AS CAMP_BAS_NOS -->
-                 FROM CRM_COUPN_PBLS_HST A JOIN CRM_MSHIP_COUPN_BAS B
-                    ON A.MSHIP_COUPN_BAS_NO = B.MSHIP_COUPN_BAS_NO
-                    AND B.COUPN_TYPE_CD != '013'
+                 FROM CRM_COUPN_PBLS_HST A 
+                 INNER JOIN CRM_MSHIP_COUPN_BAS B ON A.MSHIP_COUPN_BAS_NO = B.MSHIP_COUPN_BAS_NO
+                    AND A.COUPN_BOOK_HST_SEQ IS NULL
+<!--                     AND B.COUPN_TYPE_CD != '013' -->
         <include refid="sqlConditions"/>
-               ORDER BY A.REG_DT DESC
+        ) CPN
+          ORDER BY WELLNESS_ID_YN DESC
+              , USE_YN
+              , COUPN_EXP_NO 
+              , REG_DT 
+              , MSHIP_COUPN_BAS_NO
+              , COUPN_PBLS_BAS_NO
         <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingFooter"/>
     </select>
     <select id="select" resultType="com.ceragem.api.crm.model.CrmCouponVo">
-               SELECT /* com.ceragem.api.crm.dao.CrmCoupnPblsHstDao.select */ <include refid="sqlSelectCols"/>
-               		, NVL(#{storNo},NULL) AS USE_STOR_NO
+    /* com.ceragem.api.crm.dao.CrmCoupnPblsHstDao.select */ 
+               SELECT <include refid="sqlSelectCols"/>
+<!--                		, NVL(#{storNo},NULL) AS USE_STOR_NO -->
                  FROM CRM_COUPN_PBLS_HST A JOIN CRM_MSHIP_COUPN_BAS B
                     ON A.MSHIP_COUPN_BAS_NO = B.MSHIP_COUPN_BAS_NO
                 <if test="useChlCd != null and useChlCd != ''">
                     JOIN CRM_MSHIP_APPLY_CHL_REL C ON B.MSHIP_COUPN_BAS_NO =  C.MSHIP_COUPN_BAS_NO 
                     AND C.APPLY_CHL_CD = #{useChlCd}
                 </if>
-                    AND B.COUPN_TYPE_CD != '013'
-                    <!-- AND B.USE_YN = 'Y' -->
+                    AND A.COUPN_BOOK_HST_SEQ IS NULL
+<!--                     AND B.COUPN_TYPE_CD != '013' -->
+                    AND B.USE_YN = 'Y'
         <include refid="sqlPkConditions"/>
+    </select>
+     <select id="selectCertfNo" resultType="com.ceragem.api.crm.model.CrmCouponVo">
+     /* com.ceragem.api.crm.dao.CrmCoupnPblsHstDao.selectCertfNo */
+                 SELECT  <include refid="sqlSelectCols"/>
+                   FROM CRM_COUPN_PBLS_HST A 
+                  INNER JOIN CRM_MSHIP_COUPN_BAS B ON A.MSHIP_COUPN_BAS_NO = B.MSHIP_COUPN_BAS_NO
+                    AND A.COUPN_BOOK_HST_SEQ IS NULL
+                    AND B.COUPN_TYPE_CD != '013'
+                    AND B.USE_YN = 'Y'
+                  WHERE COUPN_PBLS_BAS_NO = FN_NUM_64_TO_10(#{certfNo})
     </select>
     <insert id="insert">
     	<selectKey order="BEFORE" keyProperty="coupnPblsHstSeq,coupnPblsBasNo" resultType="EzMap">
@@ -722,7 +797,7 @@
 					, ORDR_AMT                                =         NVL(#{ordrAmt},ORDR_AMT)
 					, PAY_AMT                                 =         NVL(#{payAmt},PAY_AMT)
 					, SALE_AMT                                =         NVL(#{saleAmt},SALE_AMT)
-					, PROM_NO                                 =         NVL(#{promNo},PROM_NO)
+					, PROM_NO                                 =         NVL(PROM_NO,#{promNo})
 					, CAMP_NO                                 =         NVL(#{campNo},CAMP_NO)
 					<if test="sgntYn != null and sgntYn != '' and 'Y'.toString().equals(sgntYn)">
 					, ITG_CUST_NO							  = 		NVL(#{itgCustNo},NULL)
@@ -746,7 +821,7 @@
 					, ORDR_AMT                                =         NULL
 					, PAY_AMT                                 =         NULL
 					, SALE_AMT                                =         NULL
-					, PROM_NO                                 =         NULL
+<!-- 					, PROM_NO                                 =         NULL -->
 					, CAMP_NO                                 =         NULL
 					<if test="sgntYn != null and sgntYn != '' and 'Y'.toString().equals(sgntYn)">
 					, ITG_CUST_NO							  = 		NULL
@@ -822,12 +897,14 @@
 						, DOW_6_USE_YN
 						, DOW_7_USE_YN
 						, MSHP_GRADE_CD
+                        , CHIT_NO
 						, AMDR_ID
 						, AMD_DT
 						, REGR_ID
 						, REG_DT
 						, REG_CHL_CD 
-						, STOR_NO)
+						, STOR_NO
+                        , PROM_NO)
            
         SELECT  /* crmMshipCoupnBas.insertIssueTem */  
         	FN_CRM_AUTO_SEQ('CPN')
@@ -837,12 +914,12 @@
         	, COUPN_KND_CD
         	, COUPN_TGT_CD
         	, COUPN_APPLY_DIV_CD1
-        	,  COUPN_APPLY_DIV_CD2
+        	, COUPN_APPLY_DIV_CD2
         	, FROM_PBLS_STD_DAY
         	, TO_PBLS_STD_DAY
         	, USE_STD_DAY_COND_CD
-        	, FROM_USE_STD_DAY
-        	, TO_USE_STD_DAY
+        	, NVL(#{fromUseStdDay},TO_CHAR(SYSDATE,'YYYYMMDD')) FROM_USE_STD_DAY
+        	, NVL(#{toUseStdDay}, DECODE(USE_STD_DAY_COND_CD,'Y',TO_CHAR(SYSDATE + COUPN_USE_POSS_DAY ,'YYYYMMDD'),TO_USE_STD_DAY) ) TO_USE_STD_DAY
         	, GIFT_POSS_YN
         	, COUPN_ISSUE_METH_CD
         	, ISSUE_RSTRTN_CNT
@@ -861,8 +938,8 @@
         	, DUP_USE_YN
         	,  '002'
         	, 'N' AS USE_YN
-        	, COUPN_BAS_NM
-        	, COUPN_BAS_CTNTS
+        	, NVL(#{coupnBasNm},COUPN_BAS_NM)
+        	, NVL(#{coupnBasCtnts},COUPN_BAS_CTNTS) 
         	, ADMT_METH_CD
         	, ADMT_AMT
         	, COUPN_TYPE_CD
@@ -878,12 +955,14 @@
         	, DOW_6_USE_YN
         	, DOW_7_USE_YN
         	,  MSHP_GRADE_CD
+            , #{chitNo}
         	, AMDR_ID
         	, AMD_DT
         	, #{regrId}
         	, SYSDATE
         	, REG_CHL_CD 
-        	, '141359'
+        	, NVL(#{storNo},'141359')
+            , #{promNo}
 		  FROM CRM_MSHIP_COUPN_BAS  WHERE MSHIP_COUPN_BAS_NO = #{mshipCoupnBasNo}   
     </insert>
     
@@ -947,7 +1026,7 @@
     <select id="selectJoinStore" resultType="com.ceragem.api.crm.model.CrmCouponVo">
     	SELECT /* com.ceragem.api.crm.dao.CrmCoupnPblsHstDao.selectJoinStore */ 
     		<include refid="sqlSelectCols"/>
-        	, NVL(#{storNo},NULL) AS USE_STOR_NO
+<!--         	, NVL(#{storNo},NULL) AS USE_STOR_NO -->
         	, CASE
                  WHEN (SELECT COUNT(1) FROM CRM_MSHIP_APPLY_STOR_REL WHERE MSHIP_COUPN_BAS_NO = A.MSHIP_COUPN_BAS_NO) = 0 THEN 'A' 					/*등록매장 없음*/
                  ELSE (SELECT COUNT(1) FROM CRM_MSHIP_APPLY_STOR_REL WHERE MSHIP_COUPN_BAS_NO = A.MSHIP_COUPN_BAS_NO AND STOR_NO = #{storNo})||'' 	/*등록매장 있음*/
@@ -962,7 +1041,9 @@
              JOIN CRM_MSHIP_APPLY_STOR_REL D ON D.MSHIP_COUPN_BAS_NO = B.MSHIP_COUPN_BAS_NO 
               AND D.STOR_NO = #{storNo}
           </if>
-             AND B.COUPN_TYPE_CD != '013'
+             AND A.COUPN_BOOK_HST_SEQ IS NULL
+<!--              AND B.COUPN_TYPE_CD != '013' -->
+             AND B.USE_YN = 'Y'
         <include refid="sqlPkConditions"/>
     </select>
     
@@ -1029,15 +1110,106 @@
     </select>
     
     <select id="selectStorCnt" resultType="EzMap">
-    	SELECT /* com.ceragem.api.crm.dao.CrmCoupnPblsHstDao.selectStorCnt */ 
-    		D.MSHIP_COUPN_BAS_NO 
-    		, COUNT(1) AS STOR_CNT
-          FROM CRM_COUPN_PBLS_HST A JOIN CRM_MSHIP_COUPN_BAS B
-             ON A.MSHIP_COUPN_BAS_NO = B.MSHIP_COUPN_BAS_NO
-          	JOIN CRM_MSHIP_APPLY_STOR_REL D ON D.MSHIP_COUPN_BAS_NO = B.MSHIP_COUPN_BAS_NO
-             AND B.COUPN_TYPE_CD != '013'
+    /* com.ceragem.api.crm.dao.CrmCoupnPblsHstDao.selectStorCnt */
+        SELECT B.MSHIP_COUPN_BAS_NO
+             , A.STOR_NO 
+    		 , COUNT(D.MSHIP_COUPN_BAS_NO) AS STOR_CNT
+             , B.USE_YN 
+             , CASE WHEN B.MSHIP_COUPN_BAS_NO IN (SELECT  COMN_CD FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD IN ('W040','W050') AND COMN_CD_LVL_NO = 2 AND USE_YN = 'Y') THEN 'Y' ELSE 'N' END WELLNESS_YN 
+          FROM CRM_COUPN_PBLS_HST A 
+    INNER JOIN CRM_MSHIP_COUPN_BAS B ON A.MSHIP_COUPN_BAS_NO = B.MSHIP_COUPN_BAS_NO
+     LEFT JOIN CRM_MSHIP_APPLY_STOR_REL D ON D.MSHIP_COUPN_BAS_NO = B.MSHIP_COUPN_BAS_NO AND A.COUPN_BOOK_HST_SEQ IS NULL AND B.USE_YN = 'Y'
+<!--              AND B.COUPN_TYPE_CD != '013' -->
+           
         <include refid="sqlPkConditions"/>
-        	GROUP BY D.MSHIP_COUPN_BAS_NO
+        	GROUP BY B.MSHIP_COUPN_BAS_NO, A.STOR_NO ,B.USE_YN
+    </select>
+    
+    <insert id="insertUseHis">
+    	INSERT /* com.ceragem.api.crm.dao.CrmCoupnPblsHstDao.insertUseHis */ INTO CRM_COUPN_CHNG_HST (
+    		COUPN_CHNG_HST_SEQ
+    		, MSHIP_COUPN_BAS_NO
+    		, COUPN_BAS_NM
+    		, COUPN_PBLS_BAS_NO
+    		, ITG_CUST_NO
+    		, STOR_NO
+    		, CHL_CD
+    		, USE_DIV_CD
+    		, USE_YN
+    		, REGR_ID
+    		, AMDR_ID
+    	) VALUES (
+    		FN_CRM_AUTO_SEQ('CPH')
+    		, #{mshipCoupnBasNo}
+    		, #{coupnBasNm}
+    		, #{coupnPblsBasNo}
+    		, #{itgCustNo}
+    		, #{storNo}
+    		, #{chlCd}
+    		, #{useDivCd}
+    		, #{useYn}
+    		, 'CRM'
+    		, 'CRM'
+    	)
+    </insert>
+    
+    <select id="getCoupnChlList" resultType="com.ceragem.api.crm.model.CrmCouponVo">
+    	<include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingHeader"/>
+		SELECT CPN.* 
+		    FROM (
+               SELECT /* com.ceragem.api.crm.dao.CrmCoupnPblsHstDao.selectList */ 
+               DISTINCT
+               	<include refid="sqlSelectCols"/>
+                 FROM CRM_COUPN_PBLS_HST A JOIN CRM_MSHIP_COUPN_BAS B
+                    ON A.MSHIP_COUPN_BAS_NO = B.MSHIP_COUPN_BAS_NO
+                    AND A.COUPN_BOOK_HST_SEQ IS NULL
+<!--                     AND B.COUPN_TYPE_CD != '013' -->
+                    <where>
+				        <if test="itgCustNo != null and itgCustNo != ''">
+				                  AND A.ITG_CUST_NO     =       #{itgCustNo}
+				        </if>
+		                <if test="regChlCd != null and regChlCd != ''">
+		                	AND B.REG_CHL_CD      = #{regChlCd}
+		                	<!-- <choose>
+                				<when test="'COM'.toString().equals(regChlCd)">
+				        			AND B.REG_CHL_CD      =       'COM'
+                				</when>
+                				<when test="'POS'.toString().equals(regChlCd)">
+				        			AND B.REG_CHL_CD      IN       ('MEM','POS')
+                				</when>
+                			</choose> -->	
+		        		</if>
+        			</where>
+        ) CPN
+               ORDER BY CPN.REG_DT DESC
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingFooter"/>
+    </select>
+    <select id="selectIssueUser" resultType="EzMap">
+               SELECT USER_CD                    /*사용자코드        */
+                    , LOGIN_ID                   /*로그인ID        */
+                    , LOGIN_PWD                  /*로그인비밀번호        */
+                    , USER_NM                    /*사용자명        */
+                    , EMAIL_ADDR                 /*이메일주소        */
+                    , MPHON_NO                   /*이동전화번호        */
+                    , USER_GNDR_CD               /*사용자성별코드        */
+                    , USER_BIRTHDAY              /*사용자생년월일        */
+                    , PWD_AMD_DT                 /*비밀번호수정일시        */
+                    , LAST_LOGIN_DT              /*최종로그인일시        */
+                    , PWD_EXP_DT                 /*비밀번호만료일시        */
+                    , LOGIN_FAIL_CNT             /*로그인실패수        */
+                    , DEL_YN                    /*삭제여부        */
+                    , REG_DT                    /*등록일시        */
+                    , AMDR_ID                    /*수정자ID        */
+                    , AMD_DT                    /*수정일시        */
+                    , REGR_ID                    /*등록자ID        */
+                 FROM CRM_USER_BAS
+                WHERE USER_CD          =  #{userCd}
+    </select>
+    <select id="selectPubCnt" resultType="EzMap">
+               SELECT COUNT(1) TOT_CNT
+                    , SUM(DECODE(ITG_CUST_NO,#{itgCustNo},1,0)) ITG_CNT
+                 FROM CRM_COUPN_PBLS_HST
+                WHERE MSHIP_COUPN_BAS_NO=       #{mshipCoupnBasNo}
     </select>
     
 </mapper>

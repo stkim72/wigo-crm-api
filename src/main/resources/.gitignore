@@ -1,3 +1,4 @@
 /application-cspi.yml
 /logback-cspi.xml
 /application-xe.yml
+/application-local.yml

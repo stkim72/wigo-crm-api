@@ -1,6 +1,6 @@
 # server(embbeded tomcat) config
 server:
-  port: 8052
+  port: 8082
 
 # spring config
 spring:
@@ -13,27 +13,56 @@ spring:
     url:    https://files.ceragem.com/crm/
   jwt:
     secret: tpfkwpadnsdudzl
-    auth-validation : false
+    auth-validation : true
   datasource:
     crm:
       driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
-      url: jdbc:log4jdbc:oracle:thin:@S3.MOARA.ORG:6030:ORCL
-      username: CERAGEM
-      password: ceragem
+      url: jdbc:log4jdbc:oracle:thin:@172.23.1.91:8122:DCRMDB
+      username: crmcon
+      password: ENC(wKJa83sqiXSjBc/BKbqULw==)
 #      url: jdbc:log4jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=glcmdb51p)(PORT=51401))(ADDRESS=(PROTOCOL=TCP)(HOST=glcmdb52p)(PORT=51401))(LOAD_BALANCE=OFF)(FAILOVER=ON))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=PCRMDB)))
 #      username: CRMCON
 #      password: ENC(tXsLiMFNX9RxlhodmsaY15Pgi9GF15rb)
       # Pool
       hikari:
         connection-timeout: 10000
-        maximum-pool-size: 100
+        maximum-pool-size: 3
+    ctc:
+      driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+      url: jdbc:log4jdbc:oracle:thin:@172.23.1.91:8122:DCRMDB
+      #username: CTCOWN
+      #password: ENC(K7u4MmQG4WKvlJiY8dIzdQ==)
+      username: CTCCON
+      password: ENC(UEzHXZnCU8zn755/ookVew==)
+      # Pool
+      hikari:
+        connection-timeout: 10000
+        maximum-pool-size: 3
+    as:
+      driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+      url: jdbc:log4jdbc:oracle:thin:@172.23.1.91:8122:DCRMDB
+      username: ASMCON
+      password: ENC(YHP59cgXLwFFJyoQcLY97w==)
+      # Pool
+      hikari:
+        connection-timeout: 10000
+        maximum-pool-size: 3
+    pos:
+      driver-class-name: oracle.jdbc.driver.OracleDriver
+      url: jdbc:oracle:thin:@172.23.1.91:8122:DCRMDB
+      username: PBOOWN
+      password: PBOOWN
+      # Pool
+      hikari:
+        connection-timeout: 10000
+        maximum-pool-size: 3
   eon:
     sms-sender-no:  15775570
-    sms-sender-name: 위고
+    sms-sender-name: 세라젬
     talk-sender-key : senderkey_001
     user: crm_1
     mail-addr: noreply@creagem.com
-    mail-name: 위고        
+    mail-name: 세라젬        
 # log config
 logging:
   #  file: logs/application.log
@@ -44,16 +73,48 @@ springdoc:
   version: '@project.version@'
   api-docs:
     path: /api-docs
-  server-url : http://localhost:8052/
+  server-url : http://localhost:8082/
   swagger-ui:
-    path: /mrcrm/
+    path: /ceragem/
     enabled: true
+    operations-sorter: alpha
+    tags-sorter: alpha
   
-
+# as config
+as:
+  api:
+    rest-url: http://localhost:80
     
 jasypt:
   encryptor:
     bean: jasyptStringEncryptor    
     
+# sap config
+sap:
+  api:
+    rest-url: http://cedev.ceragem.co.kr:8010/sap/opu/odata/sap
+       
 
-
+# bos config
+bos:
+  api:
+    rest-url: https://mapone.ceragem.com
+    rental-url: https://vhcgzds4ci.pce.ceragem.com:44300/api/web?sap-client=200
+    rental-id: ENC(WaAHyP8Iq1t5h9SqqF5ONA==)
+    rental_pwd: ENC(E3Szr9liKfsziIBcIOuL0Sop7VFsAWbvX12DEtVMLZReXpTviCcakmRnvusFvWz6OMV+ZU9aYaw=)
+  use-event: true
+crm:
+  event:
+    lab-url: https://dev-parent-api.ceragem.com/membership/%s/sync/%s
+    com-url: https://api.ceragemmall.co.kr/crm/membership.php?itgCustNo=%s&eventNo=%s
+    chk-url: https://devchkapi.ceragem.com/api/external/crm/exit?itgCustNo=%s&eventNo=%s
+    mem-url: https://dev-mem.ceragem.com/api/external/crm/exit?itgCustNo=%s&eventNo=%s
+    
+# mindfit config
+mindfit:
+  access_key: Po5yEJ3DoJQAHiZpzOep
+  secret_key: DBFmA2hc2W74WF8xtIDb8qhCv9mdIO
+  api:    
+    base-url: https://phr-storage.stg.ybrainlab.com
+    path: /ceragem/v1/mindfit/device/logs
+    

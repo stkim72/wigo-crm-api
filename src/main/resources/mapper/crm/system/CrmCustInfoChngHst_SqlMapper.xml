@@ -24,8 +24,8 @@
                     , A.CHNG_CLUS_CTNTS                    /*변경항목내용        */
                     , A.CHNG_WHY_CTNTS                    /*변경사유내용        */
                     , A.KEEP_PERD                    /*보존기간        */
-                    , A.CHNG_PRE_CTNTS   CHNG_PRE_CTNTS                  /*변경전내용        */
-                    , A.CHNG_CTNTS CHNG_CTNTS                    /*변경내용        */
+                    , DAMO.DECRYPT_VAR_B64('AES_256',A.CHNG_PRE_CTNTS,'')   CHNG_PRE_CTNTS                  /*변경전내용        */
+                    , DAMO.DECRYPT_VAR_B64('AES_256',A.CHNG_CTNTS,'') CHNG_CTNTS                    /*변경내용        */
                     , A.AMDR_ID                    /*수정자ID        */
                     , TO_CHAR(A.AMD_DT,'YYYYMMDDHH24MISS')    AMD_DT                    /*수정일시        */
                     , A.REGR_ID                    /*등록자ID        */
@@ -51,10 +51,10 @@
                   AND A.KEEP_PERD       =       #{keepPerd}
         </if>
         <if test="chngPreCtnts != null and chngPreCtnts != ''">
-                  AND A.CHNG_PRE_CTNTS  =       #{chngPreCtnts}
+                  AND A.CHNG_PRE_CTNTS  =       DAMO.ENCRYPT_VAR_B64('AES_256',#{chngPreCtnts},'')
         </if>
         <if test="chngCtnts != null and chngCtnts != ''">
-                  AND A.CHNG_CTNTS      =       #{chngCtnts}
+                  AND A.CHNG_CTNTS      =       DAMO.ENCRYPT_VAR_B64('AES_256',#{chngCtnts},'')
         </if>
         <if test="regChlCd != null and regChlCd != ''">
             <choose>
@@ -101,8 +101,8 @@
                      , #{chngClusCtnts}
                      , #{chngWhyCtnts}
                      , #{keepPerd}
-                     , #{chngPreCtnts} 
-                     , #{chngCtnts} 
+                     , DAMO.ENCRYPT_VAR_B64('AES_256',#{chngPreCtnts},'') 
+                     , DAMO.ENCRYPT_VAR_B64('AES_256',#{chngCtnts},'') 
                      , #{amdrId}
                      , SYSDATE
                      , #{regrId}
@@ -116,8 +116,8 @@
                     , CHNG_CLUS_CTNTS                         =         #{chngClusCtnts}
                     , CHNG_WHY_CTNTS                          =         #{chngWhyCtnts}
                     , KEEP_PERD                               =         #{keepPerd}
-                    , CHNG_PRE_CTNTS                          =         #{chngPreCtnts}
-                    , CHNG_CTNTS                              =         #{chngCtnts} 
+                    , CHNG_PRE_CTNTS                          =         DAMO.ENCRYPT_VAR_B64('AES_256',#{chngPreCtnts},'')
+                    , CHNG_CTNTS                              =         DAMO.ENCRYPT_VAR_B64('AES_256',#{chngCtnts},'') 
                     , AMDR_ID                                 =         #{amdrId}
                     , AMD_DT                                  =         SYSDATE
         <include refid="sqlPkConditions"/>

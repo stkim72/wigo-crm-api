@@ -1,7 +1,6 @@
 package com.ceragem.api.base.model;
 
 import com.ceragem.api.base.constant.Constants;
-import com.ceragem.api.base.util.Utilities;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -13,7 +12,6 @@ import lombok.Setter;
 public class ApiResultVo<T> extends ApiVoidResultVo /* extends ResponseEntity<T> */
 {
 
-	private String timestamp = Utilities.getTimeStamp();
 	@Schema(description = "결과데이터", required = false)
 	private T payload;
 

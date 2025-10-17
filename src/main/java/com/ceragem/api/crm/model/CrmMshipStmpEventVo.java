@@ -68,4 +68,10 @@ public class CrmMshipStmpEventVo extends ApiBaseVo {
 	@Schema(description = "스탬프적립수", example = "", hidden = false, required = true, nullable = true)
 	private Integer stmpQnty;
 
+	/**
+	 * 멤버십
+	 */
+	@Schema(description = "멤버십스탬프기본번호", example = "", hidden = false, required = true, nullable = true)
+	private String mshipStmpBasNo;
+
 }

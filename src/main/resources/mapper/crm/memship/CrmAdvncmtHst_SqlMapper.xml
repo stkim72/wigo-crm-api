@@ -52,6 +52,7 @@
                     , ACCUM_YN                    /*적립여부        */
                     , RCMDR_CUST_NO
                     , ORG_CHIT_NO
+                    , RMARK
     </sql>
     <sql id="sqlSelectCols">
                       A.ADVNCMT_HST_SEQ                    /*승급이력일련번호        */
@@ -86,6 +87,7 @@
                     , A.REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS]*/
                     , A.ACCUM_YN                    /*적립여부        */
                     , A.ORG_CHIT_NO
+                    , A.RMARK
     </sql>
     <sql id="sqlConditions">
     <where>
@@ -349,12 +351,64 @@
     </select>
     
     <select id="selectAdvnCmt" resultType="com.ceragem.api.crm.model.CrmAdvncmtHstVo">
-               SELECT /* com.ceragem.api.crm.dao.CrmAdvncmtHstDao.select */ <include refid="sqlSelectCols"/>
-               	   , (SELECT SUM(  NVL(OCCUR_ADVNCMT_SCORE,0)) FROM CRM_ADVNCMT_HST B WHERE B.ITG_CUST_NO = A.ITG_CUST_NO  AND PBLS_DIV_CD = '901' ) TOTAL_ADVNCMT  
-               	   , (SELECT DECODE(COUNT(*), 0, 'N', 'Y') FROM CRM_ADVNCMT_HST C WHERE C.ITG_CUST_NO = A.ITG_CUST_NO  AND PBLS_DIV_CD = '901' AND C.ORG_CHIT_NO = A.CHIT_NO    ) CANCEL_YN  
-                 FROM CRM_ADVNCMT_HST A                 
-        <include refid="sqlPkConditions"/>
-        		 AND PBLS_DIV_CD = '901' /* 22.10.17 구매자만 취소 처리 */
+<!--                SELECT /* com.ceragem.api.crm.dao.CrmAdvncmtHstDao.select */ <include refid="sqlSelectCols"/> -->
+<!--                	   , (SELECT SUM(  NVL(OCCUR_ADVNCMT_SCORE,0)) FROM CRM_ADVNCMT_HST B WHERE B.ITG_CUST_NO = A.ITG_CUST_NO  AND PBLS_DIV_CD = '901' ) TOTAL_ADVNCMT   -->
+<!--                	   , (SELECT DECODE(COUNT(*), 0, 'N', 'Y') FROM CRM_ADVNCMT_HST C WHERE C.ITG_CUST_NO = A.ITG_CUST_NO  AND PBLS_DIV_CD = '901' AND C.ORG_CHIT_NO = A.CHIT_NO    ) CANCEL_YN   -->
+<!--                  FROM CRM_ADVNCMT_HST A                  -->
+<!--         <include refid="sqlPkConditions"/> -->
+<!--         		 AND PBLS_DIV_CD = '901' /* 22.10.17 구매자만 취소 처리 */ -->
+                 
+                 
+                 
+               SELECT A.ADVNCMT_HST_SEQ                    /*승급이력일련번호        */
+                    , A.ITG_CUST_NO                    /*통합고객번호        */
+                    , A.MSHIP_GRADE_CD                    /*멤버십등급코드        */
+                    , A.STOR_NO                    /*매장번호        */
+                    , A.CHIT_NO                    /*전표번호        */
+                    , A.BUY_GODS_NO                    /*구매제품번호        */
+                    , A.ORDR_AMT                    /*주문금액        */
+                    , A.APPLY_AMT                    /*적용금액        */
+                    , A.PAY_AMT                    /*결제금액        */
+                    , A.PBLS_DIV_CD                    /*발행구분코드        */
+                    , B.OCCUR_ADVNCMT_SCORE                    /*발생승급점수        */
+                    , A.REMAIN_ADVNCMT_SCORE                    /*잔여포인트점수        */
+                    , NULL      VALID_PERD_STA_YMD             /*유효기간시작년월일        */
+                    , NULL      VALID_PERD_END_YMD              /*유효기간종료년월일        */
+                    , TO_CHAR(A.PBLS_DT,'YYYYMMDDHH24MISS')    PBLS_DT                    /*발행일시        */
+                    , TO_CHAR(A.EXTNC_DT,'YYYYMMDDHH24MISS')    EXTNC_DT                    /*소멸일시        */
+                    , '취소'     TXN               /*내역        */
+                    , 'CRM'     PBLS_CHL_CD               /*발행채널코드        */
+                    , A.CARD_PBLS_HST_SEQ                    /*카드발행이력일련번호        */
+                    , A.USE_TYPE_CD                    /*사용유형코드        */
+                    , A.DEAL_NO                    /*거래번호        */
+                    , A.PROM_NO                    /*프로모션번호        */
+                    , A.CAMP_NO                    /*캠페인번호        */
+                    , A.COUPN_NO                    /*쿠폰번호        */
+                    , TO_CHAR(A.USE_DT,'YYYYMMDDHH24MISS')    USE_DT                    /*사용일시        */
+                    , A.AMDR_ID                    /*수정자ID        */
+                    , TO_CHAR(A.AMD_DT,'YYYYMMDDHH24MISS')    AMD_DT                    /*수정일시        */
+                    , A.REGR_ID                    /*등록자ID        */
+                    , TO_CHAR(A.REG_DT,'YYYYMMDDHH24MISS')    REG_DT                    /*등록일시        */
+                    , A.REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS]*/
+                    , A.ACCUM_YN                    /*적립여부        */
+                    , A.ORG_CHIT_NO
+                    , B.CANCEL_YN
+                    , (SELECT SUM(  NVL(OCCUR_ADVNCMT_SCORE,0)) FROM CRM_ADVNCMT_HST  WHERE ITG_CUST_NO = A.ITG_CUST_NO  ) TOTAL_ADVNCMT  
+                    , '취소'     RMARK               /*내역        */
+                 FROM ( SELECT A.*
+                             , ROW_NUMBER() OVER (PARTITION BY A.ITG_CUST_NO, A.CHIT_NO ORDER BY A.REG_DT , A.ADVNCMT_HST_SEQ  ) RNUM
+                          FROM CRM_ADVNCMT_HST A
+                         WHERE A.CHIT_NO = #{chitNo} 
+                           AND A.ITG_CUST_NO = #{itgCustNo} ) A 
+                         INNER JOIN ( SELECT A.ITG_CUST_NO
+                                           , A.CHIT_NO
+                                           , SUM(  NVL(OCCUR_ADVNCMT_SCORE,0)) OCCUR_ADVNCMT_SCORE 
+                                           , DECODE(SUM(OCCUR_ADVNCMT_SCORE), 0, 'Y', 'N') CANCEL_YN 
+                                        FROM CRM_ADVNCMT_HST A
+                                       WHERE A.CHIT_NO = #{chitNo} 
+                                         AND A.ITG_CUST_NO = #{itgCustNo}
+                                       GROUP BY A.ITG_CUST_NO
+                                              , A.CHIT_NO ) B ON A.ITG_CUST_NO = B.ITG_CUST_NO AND A.CHIT_NO = B.CHIT_NO AND A.RNUM = 1 AND B.CANCEL_YN = 'N'
         	  
     </select>
     
@@ -407,12 +461,11 @@
                      , #{payAmt}
                      , #{pblsDivCd}
                      , #{occurAdvncmtScore}
-                     , #{remainAdvncmtScore}
+                     , NVL((SELECT SUM(OCCUR_ADVNCMT_SCORE) FROM CRM_ADVNCMT_HST WHERE ITG_CUST_NO =#{itgCustNo} ),0) + NVL(#{occurAdvncmtScore},0)   
                      , #{validPerdStaYmd}
                      , #{validPerdEndYmd}
                      , TO_DATE(#{pblsDt},  'YYYY-MM-DD HH24:MI:SS')
                      , TO_DATE(#{extncDt}, 'YYYY-MM-DD HH24:MI:SS')
-                    
                      , #{txn}
                      , NVL(#{pblsChlCd}, 'CRM' ) 
                      , #{cardPblsHstSeq}
@@ -422,18 +475,31 @@
                      , #{campNo}
                      , #{coupnNo}
                      , NULL
-                     , #{amdrId}
+                     , NVL(#{amdrId},'CRM')
                      ,  SYSDATE
-                     , #{regrId}
+                     , NVL(#{regrId},'CRM')
                      , SYSDATE
                      , #{regChlCd}
                      , NVL(#{accumYn},'N')
                      , #{rcmdrCustNo2}
                      , #{orgChitNo}
+                     , #{rmark}
                  );
-                 
-               UPDATE /* com.ceragem.crm.memship.dao.CrmAdvncmtHstDao.saveAdvncmtHst  회원 승급점수 업데이트 */  
-                 	CRM_CUST_BAS SET MSHIP_ADVNCMT_SCORE = NVL( #{remainAdvncmtScore}, 0)
+
+            MERGE INTO CRM_ADVNCMT_HST A
+            USING ( SELECT * 
+                      FROM ( SELECT A.*
+                                  , SUM(A.OCCUR_ADVNCMT_SCORE) OVER (PARTITION BY ITG_CUST_NO ORDER BY REG_DT,ADVNCMT_HST_SEQ) SUBSUM
+                               FROM CRM_ADVNCMT_HST A 
+                              WHERE ITG_CUST_NO = #{itgCustNo}
+                               ) A 
+                      WHERE SUBSUM != REMAIN_ADVNCMT_SCORE ) B ON ( A.ADVNCMT_HST_SEQ = B.ADVNCMT_HST_SEQ )
+             WHEN MATCHED THEN
+           UPDATE SET A.REMAIN_ADVNCMT_SCORE = B.SUBSUM;
+           
+           
+           UPDATE  CRM_CUST_BAS 
+              SET MSHIP_ADVNCMT_SCORE = NVL((SELECT SUM(OCCUR_ADVNCMT_SCORE) FROM CRM_ADVNCMT_HST WHERE ITG_CUST_NO =#{itgCustNo} ),0) 
                  WHERE ITG_CUST_NO = #{itgCustNo};
                  
         END;

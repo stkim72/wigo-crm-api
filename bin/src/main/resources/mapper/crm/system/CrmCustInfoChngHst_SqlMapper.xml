@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ceragem.api.crm.dao.CrmCustInfoChngHstDao">
+    <sql id="sqlPkConditions">
+                WHERE CUST_INFO_CHNG_HST_SEQ=       #{custInfoChngHstSeq}
+    </sql>
+    <sql id="sqlCols">
+                      CUST_INFO_CHNG_HST_SEQ                    /*고객정보변경이력일련번호        */
+                    , ITG_CUST_NO                    /*통합고객번호        */
+                    , CHNG_CLUS_CTNTS                    /*변경항목내용        */
+                    , CHNG_WHY_CTNTS                    /*변경사유내용        */
+                    , KEEP_PERD                    /*보존기간        */
+                    , CHNG_PRE_CTNTS                    /*변경전내용        */
+                    , CHNG_CTNTS                    /*변경내용        */
+                    , AMDR_ID                    /*수정자ID        */
+                    , AMD_DT                    /*수정일시        */
+                    , REGR_ID                    /*등록자ID        */
+                    , REG_DT                    /*등록일시        */
+                    , REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP]*/
+    </sql>
+    <sql id="sqlSelectCols">
+                      A.CUST_INFO_CHNG_HST_SEQ                    /*고객정보변경이력일련번호        */
+                    , A.ITG_CUST_NO                    /*통합고객번호        */
+                    , A.CHNG_CLUS_CTNTS                    /*변경항목내용        */
+                    , A.CHNG_WHY_CTNTS                    /*변경사유내용        */
+                    , A.KEEP_PERD                    /*보존기간        */
+                    , A.CHNG_PRE_CTNTS   CHNG_PRE_CTNTS                  /*변경전내용        */
+                    , A.CHNG_CTNTS CHNG_CTNTS                    /*변경내용        */
+                    , A.AMDR_ID                    /*수정자ID        */
+                    , TO_CHAR(A.AMD_DT,'YYYYMMDDHH24MISS')    AMD_DT                    /*수정일시        */
+                    , A.REGR_ID                    /*등록자ID        */
+                    , TO_CHAR(A.REG_DT,'YYYYMMDDHH24MISS')    REG_DT                    /*등록일시        */
+                    , A.REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP]*/
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'S000' AND COMN_CD = A.REG_CHL_CD AND  COMN_CD_LVL_NO = 2) REG_CHL_CD_NM
+    </sql>
+    <sql id="sqlConditions">
+    <where>
+        <if test="custInfoChngHstSeq != null and custInfoChngHstSeq != ''">
+                  AND A.CUST_INFO_CHNG_HST_SEQ=       #{custInfoChngHstSeq}
+        </if>
+        <if test="itgCustNo != null and itgCustNo != ''">
+                  AND A.ITG_CUST_NO     =       #{itgCustNo}
+        </if>
+        <if test="chngClusCtnts != null and chngClusCtnts != ''">
+                  AND A.CHNG_CLUS_CTNTS =       #{chngClusCtnts}
+        </if>
+        <if test="chngWhyCtnts != null and chngWhyCtnts != ''">
+                  AND A.CHNG_WHY_CTNTS  =       #{chngWhyCtnts}
+        </if>
+        <if test="keepPerd != null and keepPerd != ''">
+                  AND A.KEEP_PERD       =       #{keepPerd}
+        </if>
+        <if test="chngPreCtnts != null and chngPreCtnts != ''">
+                  AND A.CHNG_PRE_CTNTS  =       #{chngPreCtnts}
+        </if>
+        <if test="chngCtnts != null and chngCtnts != ''">
+                  AND A.CHNG_CTNTS      =       #{chngCtnts}
+        </if>
+        <if test="regChlCd != null and regChlCd != ''">
+            <choose>
+                <when test="regChlCd instanceof String">
+                    AND A.REG_CHL_CD      =       #{regChlCd}
+                </when>
+                <otherwise>
+                    AND A.REG_CHL_CD      IN
+                    <foreach item="item" index="index" collection="regChlCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+       </where>
+    </sql>
+    <select id="selectListCount" resultType="int">
+                SELECT /* com.ceragem.api.crm.dao.CrmCustInfoChngHstDao.selectListCount */ COUNT(1)
+                 FROM CRM_CUST_INFO_CHNG_HST A
+        <include refid="sqlConditions"/>
+    </select>
+    <select id="selectList" resultType="com.ceragem.api.crm.model.CrmCustInfoChngHstVo">
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingHeader"/>
+               SELECT /* com.ceragem.api.crm.dao.CrmCustInfoChngHstDao.selectList */ <include refid="sqlSelectCols"/>
+                 FROM CRM_CUST_INFO_CHNG_HST A
+        <include refid="sqlConditions"/>
+               ORDER BY REG_DT DESC
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingFooter"/>
+    </select>
+    <select id="select" resultType="com.ceragem.api.crm.model.CrmCustInfoChngHstVo">
+               SELECT /* com.ceragem.api.crm.dao.CrmCustInfoChngHstDao.select */ <include refid="sqlSelectCols"/>
+                 FROM CRM_CUST_INFO_CHNG_HST A
+        <include refid="sqlPkConditions"/>
+    </select>
+    <insert id="insert">
+	    <selectKey order="BEFORE" keyProperty="custInfoChngHstSeq" resultType="String">
+    		SELECT FN_CRM_AUTO_SEQ('ICH') FROM DUAL
+    	</selectKey>
+                INSERT /* com.ceragem.api.crm.dao.CrmCustInfoChngHstDao.insert */ INTO CRM_CUST_INFO_CHNG_HST (
+        <include refid="sqlCols"/>
+                 ) VALUES (
+                       #{custInfoChngHstSeq}
+                     , #{itgCustNo}
+                     , #{chngClusCtnts}
+                     , #{chngWhyCtnts}
+                     , #{keepPerd}
+                     , #{chngPreCtnts} 
+                     , #{chngCtnts} 
+                     , #{amdrId}
+                     , SYSDATE
+                     , #{regrId}
+                     , SYSDATE
+                     , NVL(#{regChlCd},'000')
+                 )
+    </insert>
+    <update id="update">
+               UPDATE CRM_CUST_INFO_CHNG_HST /* com.ceragem.api.crm.dao.CrmCustInfoChngHstDao.update */
+                  SET ITG_CUST_NO                             =         #{itgCustNo}
+                    , CHNG_CLUS_CTNTS                         =         #{chngClusCtnts}
+                    , CHNG_WHY_CTNTS                          =         #{chngWhyCtnts}
+                    , KEEP_PERD                               =         #{keepPerd}
+                    , CHNG_PRE_CTNTS                          =         #{chngPreCtnts}
+                    , CHNG_CTNTS                              =         #{chngCtnts} 
+                    , AMDR_ID                                 =         #{amdrId}
+                    , AMD_DT                                  =         SYSDATE
+        <include refid="sqlPkConditions"/>
+    </update>
+    <delete id="delete">
+               DELETE /* com.ceragem.api.crm.dao.CrmCustInfoChngHstDao.delete */ 
+                 FROM CRM_CUST_INFO_CHNG_HST
+        <include refid="sqlPkConditions"/>
+    </delete>
+</mapper>

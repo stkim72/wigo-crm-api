@@ -149,6 +149,8 @@ public class CrmCustCntplcBasService extends AbstractCrmService {
 				rVo.setZipCd(vo.getZipCd());
 				rVo.setAddr1Ctnts(vo.getAddr1Ctnts());
 				rVo.setAddr2Ctnts(vo.getAddr2Ctnts());
+				rVo.setRegrId(vo.getAmdrId());
+				rVo.setAmdrId(vo.getAmdrId());
 				dao.update(rVo);
 			}
 			dao.updateRepCntplc(rVo);
@@ -165,6 +167,8 @@ public class CrmCustCntplcBasService extends AbstractCrmService {
 			rVo.setZipCd(vo.getZipCd());
 			rVo.setAddr1Ctnts(vo.getAddr1Ctnts());
 			rVo.setAddr2Ctnts(vo.getAddr2Ctnts());
+			rVo.setRegrId(vo.getAmdrId());
+			rVo.setAmdrId(vo.getAmdrId());
 			dao.insert(rVo);
 			dao.updateRepCntplc(rVo);
 		}
@@ -207,6 +211,8 @@ public class CrmCustCntplcBasService extends AbstractCrmService {
 		inst.setZipCd(vo.getInstZipCd());
 		inst.setAddr1Ctnts(vo.getInstAddr1());
 		inst.setAddr2Ctnts(vo.getInstAddr2());
+		inst.setRegrId(vo.getAmdrId());
+		inst.setAmdrId(vo.getAmdrId());
 
 		CrmCustCntplcBasVo job = new CrmCustCntplcBasVo();
 		job.setItgCustNo(vo.getItgCustNo());
@@ -217,6 +223,8 @@ public class CrmCustCntplcBasService extends AbstractCrmService {
 		job.setZipCd(vo.getJobZipCd());
 		job.setAddr1Ctnts(vo.getJobAddr1());
 		job.setAddr2Ctnts(vo.getJobAddr2());
+		job.setRegrId(vo.getAmdrId());
+		job.setAmdrId(vo.getAmdrId());
 
 		CrmCustCntplcBasVo home = new CrmCustCntplcBasVo();
 		home.setItgCustNo(vo.getItgCustNo());
@@ -227,6 +235,8 @@ public class CrmCustCntplcBasService extends AbstractCrmService {
 		home.setDistrctCd(vo.getHomeDistrctCd());
 		home.setAddr1Ctnts(vo.getHomeAddr1());
 		home.setAddr2Ctnts(vo.getHomeAddr2());
+		home.setRegrId(vo.getAmdrId());
+		home.setAmdrId(vo.getAmdrId());
 		updateLastContact(instOld, inst);
 		updateLastContact(jobOld, job);
 		updateLastContact(homeOld, home);
@@ -236,7 +246,7 @@ public class CrmCustCntplcBasService extends AbstractCrmService {
 		if (contactOld == null && contact == null)
 			return 0;
 		if (contact == null)
-			return 0;//super.delete(contactOld);
+			return 0;// super.delete(contactOld);
 
 		String distrctCd = Utilities.nullCheck(contact.getDistrctCd());
 		String ziopCd = Utilities.nullCheck(contact.getZipCd());
@@ -252,9 +262,9 @@ public class CrmCustCntplcBasService extends AbstractCrmService {
 			contact.setAddr2Ctnts(addr2);
 		}
 		if (Utilities.isEmpty(telNo) && Utilities.isEmpty(ziopCd) && Utilities.isEmpty(addr1)
-				&& Utilities.isEmpty(addr2) && Utilities.isEmpty(distrctCd) &&contactOld == null) {
+				&& Utilities.isEmpty(addr2) && Utilities.isEmpty(distrctCd) && contactOld == null) {
 //			if (contactOld == null)
-				return 0;
+			return 0;
 //			else
 //				super.delete(contactOld);
 		}

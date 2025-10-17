@@ -457,6 +457,26 @@ public class CrmCustVo extends ApiBaseVo {
 	@Schema(description = "민감정보동의채널코드명", example = "", hidden = false, required = false, nullable = true)
 	private String infoAgreeChlCdNm;
 
+	@Schema(description = "개인정보수집동의여부 [Y/N]", example = "N", hidden = false, required = false, nullable = true, maxLength = 1, accessMode = AccessMode.READ_ONLY)
+//	@YnValue
+//	@MaxByte(max = 1)
+	private String collectAgreeYn;
+	/**
+	 * SMS수신동의일시
+	 */
+	@Schema(description = "개인정보수집동의여부일시 (YYYYMMDDHH24MISS)", example = "20220408130044", hidden = false, required = false, nullable = true, accessMode = AccessMode.READ_ONLY)
+//	@DatetimeValue
+	private String collectAgreeDt;
+
+	@Schema(description = "개인정보수집동의여부코드  [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP]", example = "CRM", hidden = false, required = false, nullable = true, maxLength = 3, accessMode = AccessMode.READ_ONLY)
+//	@CodeValue(codeId = "S000", codes = { "CRM", "CTC", "AS",
+//			"SAP" }, message = "[CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP] 등록된 코드가 아닙니다. ")
+	@MaxByte(max = 3)
+	private String collectAgreeChlCd;
+
+	@Schema(description = "개인정보수집동의여부채널코드명", example = "", hidden = false, required = false, nullable = true)
+	private String collectAgreeChlCdNm;
+
 	/**
 	 * CI인증여부
 	 */
@@ -566,8 +586,16 @@ public class CrmCustVo extends ApiBaseVo {
 			"006" }, message = "[001 : 일반 , 002 : 화이트 , 003 : 브론즈 , 004 : 실버 , 005 : 골드 , 006 : VIP] 등록된 코드가 아닙니다. ")
 	@MaxByte(max = 3)
 	private String mshipGradeCd;
+	/**
+	 * 멤버십 등급명
+	 */
 	@Schema(description = "멤버십등급코드명", example = "", hidden = false, required = false, nullable = true)
 	private String mshipGradeCdNm;
+	/**
+	 * 멤버십 등급컬러
+	 */
+	@Schema(description = "멤버십등급컬러", example = "", hidden = false, required = false, nullable = true)
+	private String mshipGradeColor;
 	/**
 	 * 멤버십등급변경일시
 	 */
@@ -674,46 +702,67 @@ public class CrmCustVo extends ApiBaseVo {
 //	@Schema(description = "설치처암호화전화번호", example = "", hidden = false, required = false, nullable = true)
 //	private String instTelNoEncVal;
 	@Schema(description = "설치처전화번호", example = "", hidden = false, required = false, nullable = true)
+	@MaxByte(max = 20)
 	private String instTelNo;
 	@Schema(description = "설치처지역코드", example = "", hidden = false, required = false, nullable = true)
+	@MaxByte(max = 3)
+	@Pattern(regexp = "^[0-9]*$", message = "지역코드는 숫자만 가능합니다")
 	private String instDistrctCd;
 	@Schema(description = "설치처지역코드명", example = "", hidden = false, required = false, nullable = true, accessMode = AccessMode.READ_ONLY)
 	private String instDistrctCdNm;
 	@Schema(description = "설치처우편번호", example = "", hidden = false, required = false, nullable = true)
+	@Pattern(regexp = "^[0-9]*$", message = "우편번호는 숫자만 가능합니다")
+	@MaxByte(max = 5)
 	private String instZipCd;
 	@Schema(description = "설치처주소1", example = "", hidden = false, required = false, nullable = true)
+	@MaxByte(max = 1000)
 	private String instAddr1;
 	@Schema(description = "설치처주소2", example = "", hidden = false, required = false, nullable = true)
+	@MaxByte(max = 1000)
 	private String instAddr2;
 
 //	@Schema(description = "직장암호화전화번호", example = "", hidden = false, required = false, nullable = true)
 //	private String jobTelNoEncVal;
 	@Schema(description = "직장전화번호", example = "", hidden = false, required = false, nullable = true)
+	@MaxByte(max = 20)
 	private String jobTelNo;
 	@Schema(description = "직장지역코드", example = "", hidden = false, required = false, nullable = true)
+	@Pattern(regexp = "^[0-9]*$", message = "지역코드는 숫자만 가능합니다")
+	@MaxByte(max = 3)
 	private String jobDistrctCd;
 	@Schema(description = "직장지역코드명", example = "", hidden = false, required = false, nullable = true, accessMode = AccessMode.READ_ONLY)
 	private String jobDistrctCdNm;
 	@Schema(description = "직장우편번호", example = "", hidden = false, required = false, nullable = true)
+	@Pattern(regexp = "^[0-9]*$", message = "우편번호는 숫자만 가능합니다")
+	@MaxByte(max = 5)
 	private String jobZipCd;
 	@Schema(description = "직장주소1", example = "", hidden = false, required = false, nullable = true)
+	@MaxByte(max = 1000)
 	private String jobAddr1;
 	@Schema(description = "직장주소2", example = "", hidden = false, required = false, nullable = true)
+	@MaxByte(max = 1000)
 	private String jobAddr2;
 
 //	@Schema(description = "자택암호화전화번호", example = "", hidden = false, required = false, nullable = true)
 //	private String homeTelNoEncVal;
 	@Schema(description = "자택전화번호", example = "", hidden = false, required = false, nullable = true)
+	@MaxByte(max = 20)
 	private String homeTelNo;
 	@Schema(description = "자택지역코드", example = "", hidden = false, required = false, nullable = true)
+	@Pattern(regexp = "^[0-9]*$", message = "지역코드는 숫자만 가능합니다")
+	@MaxByte(max = 3)
 	private String homeDistrctCd;
 	@Schema(description = "자택지역코드명", example = "", hidden = false, required = false, nullable = true, accessMode = AccessMode.READ_ONLY)
 	private String homeDistrctCdNm;
 	@Schema(description = "자택우편번호", example = "", hidden = false, required = false, nullable = true)
+	@Pattern(regexp = "^[0-9]*$", message = "우편번호는 숫자만 가능합니다")
+	@MaxByte(max = 5)
 	private String homeZipCd;
 	@Schema(description = "자택주소1", example = "", hidden = false, required = false, nullable = true)
+	@MaxByte(max = 1000)
 	private String homeAddr1;
 	@Schema(description = "자택주소2", example = "", hidden = false, required = false, nullable = true)
+	@MaxByte(max = 1000)
 	private String homeAddr2;
 
 	@Schema(description = "주의고객등록횟수", example = "", hidden = false, required = false, nullable = true, accessMode = AccessMode.READ_ONLY)
@@ -771,13 +820,17 @@ public class CrmCustVo extends ApiBaseVo {
 	@Schema(description = "다운로드사유", example = "", hidden = true, accessMode = AccessMode.WRITE_ONLY)
 	private String dnldTxn;
 
+	@Schema(description = "변경 사유", example = "", hidden = true, accessMode = AccessMode.WRITE_ONLY)
+	@MaxByte(max = 1000)
+	private String indiInfoAmdTxn;
+
 	@Schema(description = "app토큰", hidden = false)
 	private String appPushTokn;
 
 	/**
 	 * 앱PUSHOS코드 공통코드 : MB220 [1 : Android , 2 : iOs]
 	 */
-	@CodeValue(codeId = "MB220", codes = { "1", "2" }, message = "[1 : Android , 2 : iOs] 등록된 코드가 아닙니다. ")
+	@CodeValue(codeId = "MB220", codes = { "1", "2", "3" }, message = "[1 : Android , 2 : iOs, 3:Web] 등록된 코드가 아닙니다. ")
 	@MaxByte(max = 2)
 	@Schema(description = "앱PUSHOS코드", hidden = false)
 	private String appPushOsCd;
@@ -790,8 +843,9 @@ public class CrmCustVo extends ApiBaseVo {
 	private String decryptYn = "N";
 
 	@Schema(description = "휴면기간코드[1:1년,3:3년,5:5년,99:탈퇴시까지]")
-	@CodeValue(codeId = "S160")
-	private String dormPerdCd = "1";
+	@Deprecated
+//	@CodeValue(codeId = "S160")
+	private String dormPerdCd = "99";
 	@Schema(description = "등록채널코드  [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS , BOS : BOS , MEM : 멤버십 , CRA : 세라체크 , DNA : 세라DNA , IoT : IoT]", hidden = true)
 	private String pblsChlCd; // 등록채널 코드
 
@@ -811,10 +865,13 @@ public class CrmCustVo extends ApiBaseVo {
 	@MaxByte(max = 30)
 	private String orgItgCustNo;
 
-	@Schema(description = "통합고객번호", example = "001", hidden = true, required = false, nullable = false, maxLength = 30)
+	@Schema(description = "고객등급코드", example = "001", hidden = true, required = false, nullable = false, maxLength = 30)
 	@MaxByte(max = 30)
 	private String orgMshipGradeCd;
 
+	@Schema(description = "고객정책코드", example = "", hidden = true, required = false, nullable = false, maxLength = 30, accessMode = AccessMode.READ_ONLY)
+	private String mshipPlcyBasNo;
+	@Schema(description = "등급별고객정책코드", example = "", hidden = true, required = false, nullable = false, maxLength = 30, accessMode = AccessMode.READ_ONLY)
 	private String orgMshipPlcyBasNo;
 	/**
 	 * 추천인고객번호
@@ -832,6 +889,86 @@ public class CrmCustVo extends ApiBaseVo {
 
 	@Schema(description = "멤버십회원가입 추가지급여부", example = "Y/N", hidden = true, required = false, nullable = true, maxLength = 30)
 	private String cpnPblsAddYn;
+	@Schema(description = "메시지코드", hidden = true)
+	private String codeCd;
+	@Schema(description = "유입경로코드[001 : TV,홈쇼핑광고 , 002 : 인터넷검색 , 003 : 홍보활동 , 004 : 지인추천 , 005 : 자연방문 , 006 : POS]", example = "001", hidden = false, required = false, nullable = true, maxLength = 3)
+	@MaxByte(max = 3)
+	private String ingrsPathCd;
+
+	@Schema(description = "멤버십앱 푸시 안읽은 메시지수", hidden = false, required = false, nullable = true, accessMode = AccessMode.READ_ONLY)
+	private Integer mshipPushUnreadCnt;
+
+	@Schema(description = "의료가전건수", hidden = false, accessMode = AccessMode.READ_ONLY)
+	private String medicalHomeCnt;
+	@Schema(description = "안마의자건수", hidden = false, accessMode = AccessMode.READ_ONLY)
+	private String massageChairCnt;
+	@Schema(description = "프리미엄 안마의자건수", hidden = false, accessMode = AccessMode.READ_ONLY)
+	private String premiumMassageChairCnt;
+
+	@Schema(description = "유리듬건수", hidden = false, accessMode = AccessMode.READ_ONLY)
+	private String youridmCnt;
+
+	@Schema(description = "레이디건수", hidden = false, accessMode = AccessMode.READ_ONLY)
+	private String raydCnt;
+
+	@Schema(description = "밸런스워터 건수", hidden = false, accessMode = AccessMode.READ_ONLY)
+	private String balanceCnt;
+
+	@Schema(description = "셀루닉 건수", hidden = false, accessMode = AccessMode.READ_ONLY)
+	private String cellunicCnt;
+
+	@Schema(description = "의료가전주문일자", hidden = false, accessMode = AccessMode.READ_ONLY)
+	private String medicalHomeOrdDe;
+	@Schema(description = "안마의자주문일자", hidden = false, accessMode = AccessMode.READ_ONLY)
+	private String massageChairOrdDe;
+	@Schema(description = "프리미엄 안마의자주문일자", hidden = false, accessMode = AccessMode.READ_ONLY)
+	private String premiumMassageChairOrdDe;
+	@Schema(description = "유리듬주문일자", hidden = false, accessMode = AccessMode.READ_ONLY)
+	private String youridmOrdDe;
+	@Schema(description = "레이디주문일자", hidden = false, accessMode = AccessMode.READ_ONLY)
+	private String raydOrdDe;
+
+	@Schema(description = "밸런스워터 주문일자", hidden = false, accessMode = AccessMode.READ_ONLY)
+	private String balanceOrdDe;
+	@Schema(description = "셀루닉 주문일자", hidden = false, accessMode = AccessMode.READ_ONLY)
+	private String cellunicOrdDe;
+
+	@Schema(description = "의료가전설치일자", hidden = false, accessMode = AccessMode.READ_ONLY)
+	private String medicalHomeIstDcsDe;
+	@Schema(description = "안마의자설치일자", hidden = false, accessMode = AccessMode.READ_ONLY)
+	private String massageChairIstDcsDe;
+	@Schema(description = "프리미엄 안마의자설치일자", hidden = false, accessMode = AccessMode.READ_ONLY)
+	private String premiumMassageChairIstDcsDe;
+	@Schema(description = "유리듬설치일자", hidden = false, accessMode = AccessMode.READ_ONLY)
+	private String youridmIstDcsDe;
+	@Schema(description = "레이디설치일자", hidden = false, accessMode = AccessMode.READ_ONLY)
+	private String raydIstDcsDe;
+
+	@Schema(description = "밸런스워터설치일자", hidden = false, accessMode = AccessMode.READ_ONLY)
+	private String balanceIstDcsDe;
+	@Schema(description = "셀루닉설치일자", hidden = false, accessMode = AccessMode.READ_ONLY)
+	private String cellunicIstDcsDe;
+
+	@Schema(description = "최초구매일", hidden = false, accessMode = AccessMode.READ_ONLY)
+	private String firstBuyDe;
+	@Schema(description = "체험합계", hidden = false, accessMode = AccessMode.READ_ONLY)
+	private String tot;
+	@Schema(description = "구매후체험", hidden = false, accessMode = AccessMode.READ_ONLY)
+	private String upCnt;
+	@Schema(description = "구매전체험", hidden = false, accessMode = AccessMode.READ_ONLY)
+	private String dwCnt;
+	@Schema(description = "최초체험일", hidden = false, accessMode = AccessMode.READ_ONLY)
+	private String firstDe;
+	@Schema(description = "마지막체험일", hidden = false, accessMode = AccessMode.READ_ONLY)
+	private String lastDe;
+	@Schema(description = "최초구매매장", hidden = false, accessMode = AccessMode.READ_ONLY)
+	private String firstStore;
+	@Schema(description = "최초구매매장명", hidden = false, accessMode = AccessMode.READ_ONLY)
+	private String firstStoreNm;
+	@Schema(description = "마지막체험매장", hidden = false, accessMode = AccessMode.READ_ONLY)
+	private String lastStore;
+	@Schema(description = "마지막체험매장명", hidden = false, accessMode = AccessMode.READ_ONLY)
+	private String lastStoreNm;
 
 	public String getDistrctCd() {
 		if (Utilities.isNotEmpty(distrctCd))
@@ -839,6 +976,50 @@ public class CrmCustVo extends ApiBaseVo {
 		return Utilities.getLocationCd(zipCd);
 	}
 
+	@Schema(description = "관심분야코드 - MB240[01 : 스킨케어 , 02 : 영양케어 , 03 : 멘탈케어 , 04 : 운동케어]", example = "01, 03", hidden = false, required = false, nullable = true)
+	private String hlthIntrstFildCd;
+
+	@Schema(description = "관심분야코드명 - MB240[01 : 스킨케어 , 02 : 영양케어 , 03 : 멘탈케어 , 04 : 운동케어]", example = "스킨케어, 멘탈케어", hidden = false, required = false, nullable = true)
+	private String hlthIntrstFildCdNm;
+
+	/**
+	 * 체험 정보 동의 여부
+	 */
+	@Schema(description = "체험 정보 동의 여부[Y/N]", example = "N", hidden = false, required = false, nullable = true, maxLength = 1, accessMode = AccessMode.READ_ONLY)
+	private String exprnInfoAgreeYn;
+
+	/**
+	 * 체험 정보 동의 일시
+	 */
+	@Schema(description = "체험 정보 동의 일시 (YYYYMMDDHH24MISS)", example = "20231016150045", hidden = false, required = false, nullable = true, accessMode = AccessMode.READ_ONLY)
+	private String exprnInfoAgreeDt;
+	/**
+	 * 체험 정보 동의 채널 코드 공통코드 : S000 [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP]
+	 */
+	@Schema(description = "체험 정보 동의 채널 코드 [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP]", example = "CRM", hidden = false, required = false, nullable = true, maxLength = 3, accessMode = AccessMode.READ_ONLY)
+	private String exprnInfoAgreeChlCd;
+
+	@Schema(description = "익월멤버십등급코드  [001 : 일반 , 002 : 화이트 , 003 : 브론즈 , 004 : 실버 , 005 : 골드 , 006 : VIP]", example = "001", hidden = false, required = false, nullable = true, maxLength = 3, accessMode = AccessMode.READ_ONLY)
+	@CodeValue(codeId = "MB020", codes = { "001", "002", "003", "004", "005",
+			"006" }, message = "[001 : 일반 , 002 : 화이트 , 003 : 브론즈 , 004 : 실버 , 005 : 골드 , 006 : VIP] 등록된 코드가 아닙니다. ")
+	@MaxByte(max = 3)
+	private String nextMshipGradeCd;
+
+	/**
+	 * 멤버십 등급명
+	 */
+	@Schema(description = "익월멤버십등급코드명", example = "", hidden = false, required = false, nullable = true, accessMode = AccessMode.READ_ONLY)
+	private String nextMshipGradeCdNm;
+
+	@Schema(description = "익월멤버십등급변경코드", example = "", hidden = false, required = false, nullable = true, accessMode = AccessMode.READ_ONLY)
+	private String nextMshipGradeTypeCd;
+	@Schema(description = "익월멤버십등급변경코드명", example = "", hidden = false, required = false, nullable = true, accessMode = AccessMode.READ_ONLY)
+	private String nextMshipGradeTypeCdNm;
+//	
+
 //	@Schema(description = "구매금액", accessMode = AccessMode.READ_ONLY)
 //	private int purchaseAmt = 0;
+
+	@Schema(description = "로그인패스워드변경일", hidden = false, accessMode = AccessMode.READ_ONLY)
+	private String mshipLoginPwdChngDt;
 }

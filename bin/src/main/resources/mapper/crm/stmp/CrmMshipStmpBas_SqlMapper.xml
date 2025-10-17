@@ -1,0 +1,660 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ceragem.api.crm.dao.CrmMshipStmpBasDao">
+    
+    <sql id="sqlPkConditions">
+                WHERE MSHIP_STMP_BAS_NO =       #{mshipStmpBasNo}
+    </sql>
+    <sql id="sqlCols">
+                      MSHIP_STMP_BAS_NO                    /*스탬프발행기본번호        */
+                    , STMP_BAS_NM                    /*스탬프기본명        */
+                    , STMP_TYPE_CD                    /*스탬프유형코드        */
+                    , STMP_EVENT_CD                    /*스탬프이벤트코드        */
+                    , FROM_USE_POSS_DT                    /*FROM사용가능일시        */
+                    , TO_USE_POSS_DT                    /*TO사용가능일시        */
+                    , VALID_YN                    /*유효여부        */
+                    , VALID_PERD                    /*유효기간        */
+                    , STMP_MAX_YN                    /*스탬프최대여부        */
+                    , STMP_MAX_CNT                    /*스탬프최대수        */
+                    , STMP_QNTY                    /*스탬프수량        */
+                    , USE_YN                    /*사용여부        */
+                    , COND_YN                    /*조건여부        */
+                    , COND_AMT                    /*조건금액        */
+                    , COUPN_ACCUM_DC_YN                    /*쿠폰적립할인여부        */
+                    , ACCUM_CNT                    /*적립수        */
+                    , ORDR_YN                    /*주문여부        */
+                    , ORDR_AMT                    /*주문금액        */
+                    , BNFIT_CD                    /*혜택코드        */
+                    , POINT_SCORE                    /*포인트점수        */
+                    , COUPN_NO                    /*쿠폰번호        */
+                    , AMDR_ID                    /*수정자ID        */
+                    , AMD_DT                    /*수정일시        */
+                    , REGR_ID                    /*등록자ID        */
+                    , REG_DT                    /*등록일시        */
+                    , REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS]*/
+                    , MSHIP_GRADE_CD                    /*멤버십등급코드        */
+                    , MSHP_GRADE_CD                    /*회원등급코드        */
+                    , CPRT_CMP_NO                    /*제휴회사번호        */
+    </sql>
+    <sql id="sqlSelectCols">
+                      A.MSHIP_STMP_BAS_NO                    /*스탬프발행기본번호        */
+                    , A.STMP_BAS_NM                    /*스탬프기본명        */
+                    , A.STMP_TYPE_CD                    /*스탬프유형코드        */
+                    , A.STMP_EVENT_CD                    /*스탬프이벤트코드        */
+                    , TO_CHAR(A.FROM_USE_POSS_DT,'YYYYMMDDHH24MISS')    FROM_USE_POSS_DT                    /*FROM사용가능일시        */
+                    , TO_CHAR(A.TO_USE_POSS_DT,'YYYYMMDDHH24MISS')    TO_USE_POSS_DT                    /*TO사용가능일시        */
+                    , A.VALID_YN                    /*유효여부        */
+                    , A.VALID_PERD                    /*유효기간        */
+                    , A.STMP_MAX_YN                    /*스탬프최대여부        */
+                    , A.STMP_MAX_CNT                    /*스탬프최대수        */
+                    , A.STMP_QNTY                    /*스탬프수량        */
+                    , A.USE_YN                    /*사용여부        */
+                    , A.COND_YN                    /*조건여부        */
+                    , A.COND_AMT                    /*조건금액        */
+                    , A.COUPN_ACCUM_DC_YN                    /*쿠폰적립할인여부        */
+                    , A.ACCUM_CNT                    /*적립수        */
+                    , A.ORDR_YN                    /*주문여부        */
+                    , A.ORDR_AMT                    /*주문금액        */
+                    , A.ACCUM_CHL_TXN                    /*적립채널내역        */
+                    , A.BNFIT_CD                    /*혜택코드        */
+                    , A.POINT_SCORE                    /*포인트점수        */
+                    , A.COUPN_NO                    /*쿠폰번호        */
+                    , A.AMDR_ID                    /*수정자ID        */
+                    , TO_CHAR(A.AMD_DT,'YYYYMMDDHH24MISS')    AMD_DT                    /*수정일시        */
+                    , A.REGR_ID                    /*등록자ID        */
+                    , TO_CHAR(A.REG_DT,'YYYYMMDDHH24MISS')    REG_DT                    /*등록일시        */
+                    , A.REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS]*/
+                    , A.MSHIP_GRADE_CD                    /*멤버십등급코드        */
+                    , A.MSHP_GRADE_CD                    /*회원등급코드        */
+                    , A.CPRT_CMP_NO                    /*제휴회사번호        */
+    </sql>
+    <sql id="sqlConditions">
+        <where>
+        <if test="mshipStmpBasNo != null and mshipStmpBasNo != ''">
+                  AND A.MSHIP_STMP_BAS_NO=       #{mshipStmpBasNo}
+        </if>
+        <if test="stmpBasNm != null and stmpBasNm != ''">
+                  AND A.STMP_BAS_NM     =       #{stmpBasNm}
+        </if>
+        <if test="stmpTypeCd != null and stmpTypeCd != ''">
+            <choose>
+                <when test="stmpTypeCd instanceof String">
+                    AND A.STMP_TYPE_CD    =       #{stmpTypeCd}
+                </when>
+                <otherwise>
+                    AND A.STMP_TYPE_CD    IN
+                    <foreach item="item" index="index" collection="stmpTypeCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="fromUsePossDt != null and fromUsePossDt != ''">
+                  AND A.FROM_USE_POSS_DT=       TO_DATE(#{fromUsePossDt},'YYYYMMDDHH24MISS')
+        </if>
+        <if test="toUsePossDt != null and toUsePossDt != ''">
+                  AND A.TO_USE_POSS_DT  =       TO_DATE(#{toUsePossDt},'YYYYMMDDHH24MISS')
+        </if>
+        <if test="validYn != null and validYn != ''">
+                  AND A.VALID_YN        =       #{validYn}
+        </if>
+        <if test="validPerd != null and validPerd != ''">
+                  AND A.VALID_PERD      =       #{validPerd}
+        </if>
+        <if test="stmpMaxYn != null and stmpMaxYn != ''">
+                  AND A.STMP_MAX_YN     =       #{stmpMaxYn}
+        </if>
+        <if test="stmpMaxCnt != null and stmpMaxCnt != ''">
+                  AND A.STMP_MAX_CNT    =       #{stmpMaxCnt}
+        </if>
+        <if test="stmpQnty != null and stmpQnty != ''">
+                  AND A.STMP_QNTY       =       #{stmpQnty}
+        </if>
+        <if test="useYn != null and useYn != ''">
+                  AND A.USE_YN          =       #{useYn}
+        </if>
+        <if test="condYn != null and condYn != ''">
+                  AND A.COND_YN         =       #{condYn}
+        </if>
+        <if test="condAmt != null and condAmt != ''">
+                  AND A.COND_AMT        =       #{condAmt}
+        </if>
+        <if test="coupnAccumDcYn != null and coupnAccumDcYn != ''">
+                  AND A.COUPN_ACCUM_DC_YN=       #{coupnAccumDcYn}
+        </if>
+        <if test="accumCnt != null and accumCnt != ''">
+                  AND A.ACCUM_CNT       =       #{accumCnt}
+        </if>
+        <if test="ordrYn != null and ordrYn != ''">
+                  AND A.ORDR_YN         =       #{ordrYn}
+        </if>
+        <if test="ordrAmt != null and ordrAmt != ''">
+                  AND A.ORDR_AMT        =       #{ordrAmt}
+        </if>
+        <if test="accumChlTxn != null and accumChlTxn != ''">
+                  AND A.ACCUM_CHL_TXN   =       #{accumChlTxn}
+        </if>
+        <if test="bnfitCd != null and bnfitCd != ''">
+            <choose>
+                <when test="bnfitCd instanceof String">
+                    AND A.BNFIT_CD        =       #{bnfitCd}
+                </when>
+                <otherwise>
+                    AND A.BNFIT_CD        IN
+                    <foreach item="item" index="index" collection="bnfitCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="pointScore != null and pointScore != ''">
+                  AND A.POINT_SCORE     =       #{pointScore}
+        </if>
+        <if test="coupnNo != null and coupnNo != ''">
+                  AND A.COUPN_NO        =       #{coupnNo}
+        </if>
+        <if test="regChlCd != null and regChlCd != ''">
+            <choose>
+                <when test="regChlCd instanceof String">
+                    AND A.REG_CHL_CD      =       #{regChlCd}
+                </when>
+                <otherwise>
+                    AND A.REG_CHL_CD      IN
+                    <foreach item="item" index="index" collection="regChlCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="mshipGradeCd != null and mshipGradeCd != ''">
+            <choose>
+                <when test="mshipGradeCd instanceof String">
+                    AND A.MSHIP_GRADE_CD  =       #{mshipGradeCd}
+                </when>
+                <otherwise>
+                    AND A.MSHIP_GRADE_CD  IN
+                    <foreach item="item" index="index" collection="mshipGradeCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="mshpGradeCd != null and mshpGradeCd != ''">
+            <choose>
+                <when test="mshpGradeCd instanceof String">
+                    AND A.MSHP_GRADE_CD   =       #{mshpGradeCd}
+                </when>
+                <otherwise>
+                    AND A.MSHP_GRADE_CD   IN
+                    <foreach item="item" index="index" collection="mshpGradeCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="cprtCmpNo != null and cprtCmpNo != ''">
+                  AND A.CPRT_CMP_NO     =       #{cprtCmpNo}
+        </if>
+        </where>
+    </sql>
+    <select id="selectListCount" resultType="int">
+                SELECT /* com.ceragem.api.crm.dao.CrmMshipStmpBasDao.selectListCount */ COUNT(1)
+                 FROM CRM_MSHIP_STMP_BAS A
+        <include refid="sqlConditions"/>
+    </select>
+    <select id="selectList" resultType="com.ceragem.api.crm.model.CrmMshipStmpBasVo">
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingHeader"/>
+               SELECT /* com.ceragem.api.crm.dao.CrmMshipStmpBasDao.selectList */ <include refid="sqlSelectCols"/>
+                 FROM CRM_MSHIP_STMP_BAS A
+        <include refid="sqlConditions"/>
+               ORDER BY REG_DT DESC
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingFooter"/>
+    </select>
+    <select id="select" resultType="com.ceragem.api.crm.model.CrmMshipStmpBasVo">
+               SELECT /* com.ceragem.api.crm.dao.CrmMshipStmpBasDao.select */ <include refid="sqlSelectCols"/>
+                 FROM CRM_MSHIP_STMP_BAS A
+        <include refid="sqlPkConditions"/>
+    </select>
+    <insert id="insert">
+                INSERT /* com.ceragem.api.crm.dao.CrmMshipStmpBasDao.insert */ INTO CRM_MSHIP_STMP_BAS (
+        <include refid="sqlCols"/>
+                 ) VALUES (
+                       #{mshipStmpBasNo}
+                     , #{stmpBasNm}
+                     , #{stmpTypeCd}
+                     , #{stmpEventCd}
+                     , TO_DATE(#{fromUsePossDt},'YYYYMMDDHH24MISS')
+                     , TO_DATE(#{toUsePossDt},'YYYYMMDDHH24MISS')
+                     , NVL(#{validYn},'N')
+                     , #{validPerd}
+                     , NVL(#{stmpMaxYn},'N')
+                     , #{stmpMaxCnt}
+                     , #{stmpQnty}
+                     , NVL(#{useYn},'N')
+                     , NVL(#{condYn},'N')
+                     , #{condAmt}
+                     , NVL(#{coupnAccumDcYn},'N')
+                     , #{accumCnt}
+                     , NVL(#{ordrYn},'N')
+                     , #{ordrAmt}
+                     , #{accumChlTxn}
+                     , #{bnfitCd}
+                     , #{pointScore}
+                     , #{coupnNo}
+                     , #{amdrId}
+                     , SYSDATE
+                     , #{regrId}
+                     , SYSDATE
+                     , #{regChlCd}
+                     , #{mshipGradeCd}
+                     , #{mshpGradeCd}
+                     , #{cprtCmpNo}
+                 )
+    </insert>
+    <update id="update">
+               UPDATE /* com.ceragem.api.crm.dao.CrmMshipStmpBasDao.update */ CRM_MSHIP_STMP_BAS
+                  SET STMP_BAS_NM                             =         #{stmpBasNm}
+                    , STMP_TYPE_CD                            =         #{stmpTypeCd}
+                    , STMP_EVENT_CD                            =         #{stmpEventCd}
+                    , FROM_USE_POSS_DT                        =         TO_DATE(#{fromUsePossDt},'YYYYMMDDHH24MISS')
+                    , TO_USE_POSS_DT                          =         TO_DATE(#{toUsePossDt},'YYYYMMDDHH24MISS')
+                    , VALID_YN                                =         NVL(#{validYn},'N')
+                    , VALID_PERD                              =         #{validPerd}
+                    , STMP_MAX_YN                             =         NVL(#{stmpMaxYn},'N')
+                    , STMP_MAX_CNT                            =         #{stmpMaxCnt}
+                    , STMP_QNTY                               =         #{stmpQnty}
+                    , USE_YN                                  =         NVL(#{useYn},'N')
+                    , COND_YN                                 =         NVL(#{condYn},'N')
+                    , COND_AMT                                =         #{condAmt}
+                    , COUPN_ACCUM_DC_YN                       =         NVL(#{coupnAccumDcYn},'N')
+                    , ACCUM_CNT                               =         #{accumCnt}
+                    , ORDR_YN                                 =         NVL(#{ordrYn},'N')
+                    , ORDR_AMT                                =         #{ordrAmt}
+                    , ACCUM_CHL_TXN                           =         #{accumChlTxn}
+                    , BNFIT_CD                                =         #{bnfitCd}
+                    , POINT_SCORE                             =         #{pointScore}
+                    , COUPN_NO                                =         #{coupnNo}
+                    , AMDR_ID                                 =         #{amdrId}
+                    , AMD_DT                                  =         SYSDATE
+                    , REG_CHL_CD                              =         #{regChlCd}
+                    , MSHIP_GRADE_CD                          =         #{mshipGradeCd}
+                    , MSHP_GRADE_CD                           =         #{mshpGradeCd}
+                    , CPRT_CMP_NO                             =         #{cprtCmpNo}
+        <include refid="sqlPkConditions"/>
+    </update>
+    <delete id="delete">
+               DELETE /* com.ceragem.api.crm.dao.CrmMshipStmpBasDao.delete */
+                 FROM CRM_MSHIP_STMP_BAS
+        <include refid="sqlPkConditions"/>
+    </delete>
+    
+    <select id="getStmpMarstList" resultType="String">
+    	SELECT /*getStmpMarstList*/
+		    A.MSHIP_STMP_BAS_NO 
+		 FROM CRM_MSHIP_STMP_BAS A 
+		    JOIN CRM_MSHIP_APPLY_STOR_REL B 
+		    ON A.MSHIP_STMP_BAS_NO = B.MSHIP_STMP_BAS_NO
+		        AND B.STOR_NO = #{storNo}
+		        AND A.STMP_TYPE_CD = 0
+		    JOIN CRM_MSHIP_APPLY_CHL_REL C
+		    ON B.MSHIP_STMP_BAS_NO = C.MSHIP_STMP_BAS_NO
+		        AND C.APPLY_CHL_CD = #{chlCd}
+		    JOIN CRM_MSHIP_APPLY_GODS_REL D
+		    ON B.MSHIP_STMP_BAS_NO = D.MSHIP_STMP_BAS_NO
+                AND D.GODS_NO IN 
+                <foreach item="item" index="index" collection="itemList" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+                    GROUP BY A.MSHIP_STMP_BAS_NO
+    </select>
+    
+    <!-- temp  -->
+    <select id="getStmpMarstList2" resultType="EzMap">
+    	SELECT /*getStmpMarstList2*/
+		    A.MSHIP_STMP_BAS_NO ,COUNT(D.GODS_NO) AS CANCEL_CNT
+		 FROM CRM_MSHIP_STMP_BAS A 
+		    JOIN CRM_MSHIP_APPLY_STOR_REL B 
+		    ON A.MSHIP_STMP_BAS_NO = B.MSHIP_STMP_BAS_NO
+		        AND B.STOR_NO = #{storNo}
+		        AND A.STMP_TYPE_CD = 0
+		    JOIN CRM_MSHIP_APPLY_CHL_REL C
+		    ON B.MSHIP_STMP_BAS_NO = C.MSHIP_STMP_BAS_NO
+		        AND C.APPLY_CHL_CD = #{chlCd}
+		    JOIN CRM_MSHIP_APPLY_GODS_REL D
+		    ON B.MSHIP_STMP_BAS_NO = D.MSHIP_STMP_BAS_NO
+                AND D.GODS_NO IN 
+                <foreach item="item" index="index" collection="itemList" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+                    GROUP BY A.MSHIP_STMP_BAS_NO
+    </select>
+    
+    <select id="getStmpHistoryList" resultType="EzMap">
+    	SELECT 
+	        STMP_HST_SEQ
+	        , STMP_ACCUM_QNTY
+	        , COUPN_NO
+	        , POINT_SCORE
+	    FROM CRM_STMP_HST 
+	        WHERE MSHIP_STMP_BAS_NO = #{mshipStmpBasNo}
+	            AND ITG_CUST_NO = #{itgCustNo}
+	        ORDER BY STMP_HST_SEQ DESC 
+    </select>
+    
+    <!-- 오류테스트 -->
+    <select id="getStmpInfoList" resultType="EzMap">
+    	SELECT /*getStmpInfoList*/
+		    MSHIP_STMP_BAS_NO    
+		    , STMP_BAS_NM
+		    , STMP_TYPE_CD
+		    , STMP_EVENT_CD
+		   	, FROM_USE_POSS_DT
+		    , TO_DATE(TO_CHAR(TO_USE_POSS_DT,'YYYY-MM-DD')||' 23:59:59','YYYY-MM-DD HH24:MI:SS') AS TO_USE_POSS_DT
+		    , VALID_YN
+		    , VALID_PERD
+		    , STMP_MAX_YN
+		    , STMP_MAX_CNT
+		    , STMP_QNTY
+		    , USE_YN
+		    , MSHIP_GRADE_CD
+		    , MSHP_GRADE_CD
+		    , CPRT_CMP_NO
+		    , COND_YN
+		    , COND_AMT
+		    , COUPN_ACCUM_DC_YN
+		    , ACCUM_CNT
+		    , ORDR_YN
+		    , ORDR_AMT
+		    , ACCUM_CHL_TXN
+		    , BNFIT_CD
+		    , POINT_SCORE
+		    , COUPN_NO
+		    , APPLY_MSHP_GRADE_CTNTS
+		    , MSHIP_TYPE_CDS
+		    , COND_CNT
+		FROM CRM_MSHIP_STMP_BAS
+		    WHERE MSHIP_STMP_BAS_NO IN 
+		    <foreach item="item" index="index" collection="stmpList" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            	AND USE_YN = 'Y'
+    </select>
+    
+    <select id="getStmpTotalHist" resultType="int">
+    	SELECT COUNT(1)
+    		FROM CRM_STMP_HST
+    			WHERE MSHIP_STMP_BAS_NO = #{mshipStmpBasNo}
+    				AND ITG_CUST_NO = #{itgCustNo}
+    </select>
+    
+   	<select id="getStmpGodsList" resultType="EzMap">
+    	SELECT /*getStmpGodsList*/ * FROM (
+    	
+  		<foreach collection="itemList" item="item" index="index" separator="  UNION ALL " open=" " close=" ">
+			SELECT 
+		    GODS_NO
+		    , MIN_BUY_AMT
+		    , ITEM_ACCUM_CNT
+		    , #{item.ordrAmt} AS ORDR_AMT
+		    , #{item.payAmt} AS PAY_AMT
+		    , #{item.coupnYn} AS COUPN_YN
+		    , #{item.applyYn} AS APPLY_YN
+		    , #{item.applyQnty} AS APPLY_QNTY
+		    FROM CRM_MSHIP_APPLY_GODS_REL
+		        WHERE MSHIP_STMP_BAS_NO = #{mshipStmpBasNo}
+		            AND GODS_NO	= #{item.buyGodsNo}
+	     </foreach>
+    	
+    	)
+    
+    	  
+    </select>
+    
+    <select id="getStmpMaxSeq" resultType="EzMap">
+    	SELECT STMP_ACCUM_QNTY,ISSUE_CNT,ACCUM_DT FROM CRM_STMP_HST
+		    WHERE STMP_HST_SEQ = #{stmpHstSeq}
+    </select>
+    
+    <select id="getStmpHisSeq" resultType="String">
+    	SELECT MAX(STMP_HST_SEQ) AS HST_SEQ FROM 	CRM_STMP_HST
+    		WHERE MSHIP_STMP_BAS_NO = #{mshipStmpBasNo}
+			        AND ITG_CUST_NO = #{itgCustNo}
+    </select>
+    
+    <insert id="insertStmpHis" >
+    	<selectKey order="BEFORE" keyProperty="stmpHstSeq" resultType="EzMap">
+    		SELECT FN_CRM_AUTO_SEQ('STM') AS  STMP_HST_SEQ  FROM DUAL
+    	</selectKey>
+    	INSERT /* insertStmpHis */ INTO CRM_STMP_HST (
+        	STMP_HST_SEQ		
+			, MSHIP_STMP_BAS_NO	
+			, ITG_CUST_NO			
+			, MSHIP_GRADE_CD		
+			, STOR_NO				
+			, ACCUM_DT			
+			, STMP_BAS_NM			
+			, FROM_USE_POSS_DT	
+			, TO_USE_POSS_DT		
+			, BUY_GODS_NO			
+			, STMP_ACCUM_QNTY		
+			, ISSUE_CNT			
+			, ORDR_QNTY			
+			, ORDR_AMT			
+			, PAY_AMT				
+			, PAY_CHL_CD					
+			, STATUS_CD			
+			, CHIT_NO			
+			, COUPN_NO			
+			, POINT_SCORE			
+			, AMDR_ID				
+			, AMD_DT				
+			, REGR_ID				
+			, REG_DT				
+         ) VALUES (
+         	#{stmpHstSeq}
+             , #{mshipStmpBasNo}
+             , #{itgCustNo}
+             , #{mshipGradeCd}
+             , #{storNo}
+             , SYSDATE
+             , #{stmpBasNm}
+             , TO_DATE(TO_CHAR(#{fromUsePossDt},'YYYY-MM-DD'),'YYYY-MM-DD')
+             , TO_DATE(TO_CHAR(#{toUsePossDt},'YYYY-MM-DD'),'YYYY-MM-DD')
+             , #{buyGodsNo}
+             , #{stmpAccumQnty}
+             , NVL(#{issueCnt},0)
+             , 1
+             , #{ordrAmt}
+             , #{payAmt}
+             , #{payChlCd}
+             , '0'
+             , #{chitNo}
+             , #{coupnNo}
+             , #{pointScore}
+             , #{amdrId}
+             , SYSDATE
+             , #{regrId}
+             , SYSDATE
+         )
+    </insert>
+	
+	<update id="updateStmpHis">
+		UPDATE /*updateStmpHis*/ CRM_STMP_HST
+			SET USE_DT						= SYSDATE
+			, COUPN_NO						= #{coupnNo}
+			, POINT_SCORE					= #{pointScore}
+		WHERE STMP_HST_SEQ = #{stmpHstSeq}
+	</update>
+	
+	<select id="getStmpMarstListForChitNo" resultType="String">
+		SELECT MSHIP_STMP_BAS_NO FROM CRM_STMP_HST WHERE CHIT_NO = #{chitNo}  GROUP BY MSHIP_STMP_BAS_NO
+	</select>
+	
+	<select id="getStmpMarstInfo" resultType="EzMap">
+		SELECT /*getStmpMarstInfo*/
+		    <include refid="sqlCols"/>
+		    , (SELECT COUNT(*) FROM CRM_STMP_HST WHERE MSHIP_STMP_BAS_NO = #{mshipStmpBasNo} AND ITG_CUST_NO = #{itgCustNo}) AS HIS_CNT
+		FROM CRM_MSHIP_STMP_BAS
+		    <include refid="sqlPkConditions"/> 
+            	AND USE_YN = 'Y'
+	</select>
+	
+	<delete id="deleteStmpHis">
+		DELETE FROM CRM_STMP_HST WHERE STMP_HST_SEQ = #{stmpHstSeq} 
+		 <if test="chitNo != null and chitNo != ''">
+			AND CHIT_NO =#{chitNo}
+        </if>
+	</delete>
+	
+	<select id="getStmpMarstListForEvent" resultType="EzMap">
+		
+		SELECT DISTINCT /*com.ceragem.api.crm.dao.CrmMshipStmpBasDao.getStmpMarstListForEvent*/
+		    A.MSHIP_STMP_BAS_NO
+		    ,A.STMP_BAS_NM
+		    ,A.STMP_TYPE_CD
+		    ,A.STMP_EVENT_CD
+		    ,A.FROM_USE_POSS_DT
+		    ,A.TO_USE_POSS_DT
+		    ,A.VALID_YN
+		    ,A.VALID_PERD
+		    ,A.STMP_MAX_YN
+		    ,A.STMP_MAX_CNT
+		    ,A.STMP_QNTY
+		    ,A.USE_YN
+		    ,A.MSHIP_GRADE_CD
+		    ,A.MSHP_GRADE_CD
+		    ,A.CPRT_CMP_NO
+		    ,A.COND_YN
+		    ,A.COND_AMT
+		    ,A.COUPN_ACCUM_DC_YN
+		    ,A.ACCUM_CNT
+		    ,A.ORDR_YN
+		    ,A.ORDR_AMT
+		    ,A.ACCUM_CHL_TXN
+		    ,A.BNFIT_CD
+		    ,A.POINT_SCORE
+		    ,A.COUPN_NO 
+		    FROM CRM_MSHIP_STMP_BAS A JOIN CRM_MSHIP_APPLY_STOR_REL B
+		            ON A.MSHIP_STMP_BAS_NO = B.MSHIP_STMP_BAS_NO
+		            AND A.STMP_TYPE_CD = 1
+		            AND A.USE_YN = 'Y'
+					AND A.ACCUM_CHL_TXN LIKE '%'||  #{chlCd} ||'%'
+		            <if test="stmpEventCd != null and stmpEventCd != ''">
+						AND A.STMP_EVENT_CD = #{stmpEventCd}
+			        </if>
+		            <if test="storNo != null and storNo != ''">
+						AND B.STOR_NO = #{storNo}
+			        </if>
+		            <if test="mshpGradeCd != null and mshpGradeCd != ''">
+						AND A.APPLY_MSHP_GRADE_CTNTS LIKE '%'||  #{mshpGradeCd} ||'%'
+			        </if>
+		            
+	</select>
+	
+	<select id="checkStoreCnt" resultType="int">
+		SELECT COUNT(1) AS CNT FROM CRM_STOR_BAS WHERE STOR_NO = #{storNo}
+	</select>
+	
+	<select id="checkMemberCnt" resultType="int">
+		SELECT COUNT(1) AS CNT FROM CRM_CUST_BAS WHERE ITG_CUST_NO = #{itgCustNo}
+	</select>
+	
+	<select id="checkChlCnt" resultType="int">
+		SELECT COUNT(1) AS CNT FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'ST040' AND COMN_CD_LVL_NO = 2 AND COMN_CD = #{chlNo}
+	</select>
+	
+	<select id="getStmpIssueList" resultType="com.ceragem.api.crm.model.CrmMshipStmpIssueVo">
+		SELECT C.*,D.STMP_ACCUM_QNTY FROM (
+		    SELECT 
+		        A.MSHIP_STMP_BAS_NO
+		        , A.STMP_TYPE_CD
+		        , A.STMP_BAS_NM 
+		        , A.FROM_USE_POSS_DT AS FROM_USE_STD_DAY
+		        , A.TO_USE_POSS_DT AS TO_USE_STD_DAY
+		        , A.STMP_MAX_CNT AS STMP_BOARD_CNT
+		        , A.STMP_QNTY
+		        , MAX(B.STMP_HST_SEQ) AS STMP_HST_SEQ
+		        , CASE
+		            WHEN COUNT(B.COUPN_NO) > 0 THEN '쿠폰'
+		            WHEN COUNT(B.POINT_SCORE) > 0 THEN '포인트'
+		        END AS ACCUM_TYPE
+		        , CASE
+		            WHEN COUNT(B.COUPN_NO) > 0 THEN COUNT(B.COUPN_NO)
+		            WHEN COUNT(B.POINT_SCORE) > 0 THEN COUNT(B.POINT_SCORE)
+		            ELSE 0
+		        END AS ACCUM_CNT
+		    FROM CRM_MSHIP_STMP_BAS A JOIN CRM_STMP_HST B ON A.MSHIP_STMP_BAS_NO = B.MSHIP_STMP_BAS_NO
+		        AND B.ITG_CUST_NO = #{itgCustNo}
+		        <if test="storNo != null and storNo != ''">
+			        AND B.STOR_NO = #{storNo}
+		        </if>
+		        <if test="mshipStmpBasNo != null and mshipStmpBasNo != ''">
+		            <choose>
+		                <when test="mshipStmpBasNo instanceof String">
+		                    AND B.MSHIP_STMP_BAS_NO = #{mshipStmpBasNo}
+		                </when>
+		                <otherwise>
+		                    AND B.MSHIP_STMP_BAS_NO    IN
+		                    <foreach item="item" index="index" collection="mshipStmpBasNo" open="(" separator="," close=")">
+		                        #{item}
+		                    </foreach>
+		                </otherwise>
+		            </choose>
+		        </if>
+		        <if test="availableYn != null and availableYn != ''">
+		        	<choose>
+		        		<when test="'Y'.toString().equals(availableYn)">
+		        			AND A.USE_YN = 'Y'
+		        			AND (A.TO_USE_POSS_DT <![CDATA[ >= ]]> SYSDATE)
+		        		</when>
+		        		<otherwise>
+		        			AND ((A.TO_USE_POSS_DT <![CDATA[ < ]]> SYSDATE) OR A.USE_YN = 'N')
+		        		</otherwise>
+		        	</choose>
+		        </if>
+		        GROUP BY A.MSHIP_STMP_BAS_NO 
+		            , A.STMP_BAS_NM 
+		            , A.FROM_USE_POSS_DT 
+		            , A.TO_USE_POSS_DT
+		            , A.STMP_QNTY
+		            , A.STMP_TYPE_CD
+		            , A.STMP_MAX_CNT
+		) C JOIN CRM_STMP_HST D
+		ON C.STMP_HST_SEQ = D.STMP_HST_SEQ  
+	</select>
+	
+	<select id="getStmpIssueLast" resultType="EzMap">
+	SELECT * FROM CRM_STMP_HST WHERE STMP_HST_SEQ = (
+    	SELECT 
+	        MAX(STMP_HST_SEQ) AS STMP_HST_SEQ
+	    FROM CRM_STMP_HST 
+	        WHERE MSHIP_STMP_BAS_NO = #{mshipStmpBasNo}
+	            AND ITG_CUST_NO = #{itgCustNo}
+	)
+    </select>
+	
+	<select id="checkChitNoCheck" resultType="int">
+		SELECT COUNT(1) AS CNT /*checkChitNoCheck*/ FROM CRM_STMP_HST WHERE CHIT_NO = #{chitNo}
+	</select>
+	
+	<select id="getStmpCancelData" resultType="EzMap">
+		SELECT /*getStmpCancelData*/ 
+			STMP_HST_SEQ
+			, STMP_ACCUM_QNTY
+			, COUPN_NO
+			, POINT_SCORE
+			, ISSUE_CNT 
+		FROM (
+			SELECT 
+				STMP_HST_SEQ
+				, STMP_ACCUM_QNTY
+				, NVL(COUPN_NO,0) AS COUPN_NO
+				, NVL(POINT_SCORE,0) AS POINT_SCORE
+				, ISSUE_CNT 
+			FROM CRM_STMP_HST 
+				WHERE MSHIP_STMP_BAS_NO = #{mshipStmpBasNo} 
+					AND ITG_CUST_NO = #{itgCustNo}
+				ORDER BY ISSUE_CNT DESC, STMP_ACCUM_QNTY DESC
+			)  WHERE ROWNUM <![CDATA[ <= ]]> #{cancelCnt} 
+	</select>
+</mapper>

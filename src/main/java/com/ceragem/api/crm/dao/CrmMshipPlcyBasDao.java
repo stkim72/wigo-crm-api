@@ -5,7 +5,6 @@ import com.ceragem.api.crm.model.CrmMshipApplyAdvncmtRelVo;
 import com.ceragem.api.crm.model.CrmMshipApplyPointRelVo;
 import com.ceragem.api.crm.model.CrmMshipPlcyBasVo;
 
-
 @CrmMapper
 public interface CrmMshipPlcyBasDao extends ICrmDao {
 
@@ -16,5 +15,7 @@ public interface CrmMshipPlcyBasDao extends ICrmDao {
 	CrmMshipApplyPointRelVo selectEventPointInfo(CrmMshipPlcyBasVo plcyInfo);
 
 	CrmMshipApplyAdvncmtRelVo selectEventAdvnInfo(CrmMshipPlcyBasVo custVo);
+
+	CrmMshipApplyPointRelVo selectEventPointCnt(CrmMshipPlcyBasVo plcyInfo);
 
 }

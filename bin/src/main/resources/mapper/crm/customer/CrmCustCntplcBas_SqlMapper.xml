@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ceragem.api.crm.dao.CrmCustCntplcBasDao">
+    <sql id="sqlPkConditions">
+                WHERE CNTPLC_SEQ        =       #{cntplcSeq}
+    </sql>
+    <sql id="sqlCols">
+                      CNTPLC_SEQ                    /*연락처일련번호        */
+                    , ITG_CUST_NO                    /*통합고객번호        */
+                    , CNTPLC_TYPE_CD                    /*연락처유형코드        공통코드 : CU300        [001 : 설치장소 , 002 : 직장 , 003 : 자택 , 004 : 휴대전화]*/
+                    , REP_CNTPLC_YN                    /*대표연락처여부        */
+                    , TEL_NO                    /*전화번호        */
+                    , TEL_BK_DGT_NO                    /*전화뒤자리번호        */
+                    , DISTRCT_CD
+                    , ZIP_CD                    /*우편번호        */
+                    , ADDR_1_CTNTS                    /*주소1내용        */
+                    , ADDR_2_CTNTS                    /*주소2내용        */
+                    , EMAIL_ADDR                    /*이메일주소        */
+                    , DEL_YN                    /*삭제여부        */
+                    , AMDR_ID                    /*수정자ID        */
+                    , AMD_DT                    /*수정일시        */
+                    , REGR_ID                    /*등록자ID        */
+                    , REG_DT                    /*등록일시        */
+                    , REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP]*/
+    </sql>
+    <sql id="sqlSelectCols">
+                      A.CNTPLC_SEQ                    /*연락처일련번호        */
+                    , A.ITG_CUST_NO                    /*통합고객번호        */
+                    , A.CNTPLC_TYPE_CD                    /*연락처유형코드        공통코드 : CU300        [001 : 설치장소 , 002 : 직장 , 003 : 자택 , 004 : 휴대전화]*/
+                    , A.REP_CNTPLC_YN                    /*대표연락처여부        */
+                    , A.TEL_BK_DGT_NO                    /*전화뒤자리번호        */
+                    , A.DISTRCT_CD
+                    , A.ZIP_CD                    /*우편번호        */
+                    , A.ADDR_1_CTNTS                    /*주소1내용        */
+                    , A.DEL_YN                    /*삭제여부        */
+                    , A.AMDR_ID                    /*수정자ID        */
+                    , TO_CHAR(A.AMD_DT,'YYYYMMDDHH24MISS')    AMD_DT                    /*수정일시        */
+                    , A.REGR_ID                    /*등록자ID        */
+                    , TO_CHAR(A.REG_DT,'YYYYMMDDHH24MISS')    REG_DT                    /*등록일시        */
+                    , A.REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP]*/
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'S000' AND COMN_CD = A.REG_CHL_CD AND  COMN_CD_LVL_NO = 2) REG_CHL_CD_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'CU300' AND COMN_CD = A.CNTPLC_TYPE_CD AND  COMN_CD_LVL_NO = 2) CNTPLC_TYPE_CD_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'CU100' AND COMN_CD = A.DISTRCT_CD AND  COMN_CD_LVL_NO = 2) DISTRCT_CD_NM
+                    , (SELECT CUST_NM FROM CRM_CUST_BAS WHERE ITG_CUST_NO = A.ITG_CUST_NO) CUST_NM
+                    , A.EMAIL_ADDR EMAIL_ADDR                    /*이메일주소        */
+                    , A.TEL_NO   TEL_NO                    /*전화번호        */
+                    , A.ADDR_2_CTNTS ADDR_2_CTNTS                    /*주소2내용        */
+<!--     <choose> -->
+<!--             <when test="'Y'.toString().equals(decryptYn) "><include refid="sqlSelectDecCols"></include></when> -->
+<!--             <otherwise><include refid="sqlSelectEncCols"></include></otherwise> -->
+<!--         </choose> -->
+    </sql>
+<!--     <sql id="sqlSelectEncCols"> -->
+                      
+<!--                     , '010-****-' || A.TEL_BK_DGT_NO   TEL_NO                    /*전화번호        */ -->
+<!--                     , A.ADDR_2_CTNTS                    /*주소2내용        */ -->
+
+<!--     </sql> -->
+<!--     <sql id="sqlSelectDecCols"> -->
+    
+<!--                     , A.TEL_NO   TEL_NO                    /*전화번호        */ -->
+<!--                     , A.ADDR_2_CTNTS ADDR_2_CTNTS                    /*주소2내용        */ -->
+                    
+<!--     </sql> -->
+    <sql id="sqlConditions">
+    <where>
+        <if test="cntplcSeq != null and cntplcSeq != ''">
+                  AND A.CNTPLC_SEQ      =       #{cntplcSeq}
+        </if>
+        <if test="itgCustNo != null and itgCustNo != ''">
+                  AND A.ITG_CUST_NO     =       #{itgCustNo}
+        </if>
+        <if test="cntplcTypeCd != null and cntplcTypeCd != ''">
+            <choose>
+                <when test="cntplcTypeCd instanceof String">
+                    AND A.CNTPLC_TYPE_CD  =       #{cntplcTypeCd}
+                </when>
+                <otherwise>
+                    AND A.CNTPLC_TYPE_CD  IN
+                    <foreach item="item" index="index" collection="cntplcTypeCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        
+        <if test="repCntplcYn != null and repCntplcYn != ''">
+                  AND A.REP_CNTPLC_YN   =       #{repCntplcYn}
+        </if>
+        <if test="telNo != null and telNo != ''">
+                  AND A.TEL_NO          =       #{telNo}
+        </if>
+        <if test="telNo != null and telNo != ''">
+                  AND A.TEL_NO         =        #{telNo}
+        </if>
+        <if test="telBkDgtNo != null and telBkDgtNo != ''">
+                  AND A.TEL_BK_DGT_NO   =       #{telBkDgtNo}
+        </if>
+        <if test="distrctCd != null and distrctCd != ''">
+            <choose>
+                <when test="distrctCd instanceof String">
+                    AND A.DISTRCT_CD          =       #{distrctCd}
+                </when>
+                <otherwise>
+                    AND A.DISTRCT_CD          IN
+                    <foreach item="item" index="index" collection="distrctCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="zipCd != null and zipCd != ''">
+            <choose>
+                <when test="zipCd instanceof String">
+                    AND A.ZIP_CD          =       #{zipCd}
+                </when>
+                <otherwise>
+                    AND A.ZIP_CD          IN
+                    <foreach item="item" index="index" collection="zipCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="addr1Ctnts != null and addr1Ctnts != ''">
+                  AND A.ADDR_1_CTNTS    =       #{addr1Ctnts}
+        </if>
+        <if test="addr2Ctnts != null and addr2Ctnts != ''">
+                  AND A.ADDR_2_CTNTS    =       #{addr2Ctnts}
+        </if>
+        <if test="emailAddr != null and emailAddr != ''">
+                  AND A.EMAIL_ADDR      =       #{emailAddr}
+        </if>
+        <if test="delYn != null and delYn != ''">
+                  AND A.DEL_YN          =       #{delYn}
+        </if>
+        <if test="regChlCd != null and regChlCd != ''">
+            <choose>
+                <when test="regChlCd instanceof String">
+                    AND A.REG_CHL_CD      =       #{regChlCd}
+                </when>
+                <otherwise>
+                    AND A.REG_CHL_CD      IN
+                    <foreach item="item" index="index" collection="regChlCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        </where>
+    </sql>
+    <select id="selectListCount" resultType="int">
+                SELECT /* com.ceragem.api.crm.dao.CrmCustCntplcBasDao.selectListCount */ COUNT(1)
+                 FROM CRM_CUST_CNTPLC_BAS A
+        <include refid="sqlConditions"/>
+    </select>
+    <select id="selectList" resultType="com.ceragem.api.crm.model.CrmCustCntplcBasVo">
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingHeader"/>
+               SELECT /* com.ceragem.api.crm.dao.CrmCustCntplcBasDao.selectList */ <include refid="sqlSelectCols"/>
+                 FROM CRM_CUST_CNTPLC_BAS A
+        <include refid="sqlConditions"/>
+               ORDER BY REP_CNTPLC_YN DESC
+                   , CNTPLC_TYPE_CD
+                   , REG_DT DESC
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingFooter"/>
+    </select>
+    
+    <select id="select" resultType="com.ceragem.api.crm.model.CrmCustCntplcBasVo">
+               SELECT /* com.ceragem.api.crm.dao.CrmCustCntplcBasDao.select */ <include refid="sqlSelectCols"/>
+                 FROM CRM_CUST_CNTPLC_BAS A
+        <include refid="sqlPkConditions"/>
+    </select>
+    <select id="selectLastList" resultType="com.ceragem.api.crm.model.CrmCustCntplcBasVo">
+            SELECT A.*
+              FROM (
+               SELECT /* com.ceragem.api.crm.dao.CrmCustCntplcBasDao.selectLastList */ <include refid="sqlSelectCols"/>
+                    , ROW_NUMBER() OVER (PARTITION BY A.ITG_CUST_NO, A.CNTPLC_TYPE_CD ORDER BY A.AMD_DT DESC, A.REG_DT DESC) RNUM
+                 FROM CRM_CUST_CNTPLC_BAS A
+                WHERE A.ITG_CUST_NO = #{itgCustNo}
+                    ) A
+             WHERE RNUM = 1
+             ORDER BY A.CNTPLC_TYPE_CD
+    </select>
+    <insert id="insert">
+    	<selectKey order="BEFORE" keyProperty="cntplcSeq" resultType="String">
+    		SELECT FN_CRM_AUTO_SEQ('CNT') FROM DUAL
+    	</selectKey>
+		
+		
+                INSERT /* com.ceragem.api.crm.dao.CrmCustCntplcBasDao.insert */ INTO CRM_CUST_CNTPLC_BAS (
+        <include refid="sqlCols"/>
+                 ) VALUES (
+                       #{cntplcSeq}
+                     , #{itgCustNo}
+                     , #{cntplcTypeCd}
+                     , NVL(#{repCntplcYn},'N')
+                     , #{telNo} 
+                     , #{telBkDgtNo}
+                     , #{distrctCd}
+                     , #{zipCd}
+                     , #{addr1Ctnts}
+                     , #{addr2Ctnts} 
+                     , #{emailAddr} 
+                     , NVL(#{delYn},'N')
+                     , #{amdrId}
+                     , SYSDATE
+                     , #{regrId}
+                     , SYSDATE
+                     , NVL(#{regChlCd},#{regrId})
+                 )
+    </insert>
+    <update id="update">
+               UPDATE CRM_CUST_CNTPLC_BAS /* com.ceragem.api.crm.dao.CrmCustCntplcBasDao.update */
+                  SET CNTPLC_TYPE_CD                          =         #{cntplcTypeCd}
+                    , REP_CNTPLC_YN                           =         NVL(#{repCntplcYn},'N')
+                    , TEL_NO                                  =         #{telNo} 
+                    , TEL_BK_DGT_NO                           =         #{telBkDgtNo}
+                    , DISTRCT_CD                              =         #{distrctCd}
+                    , ZIP_CD                                  =         #{zipCd}
+                    , ADDR_1_CTNTS                            =         #{addr1Ctnts}
+                    , ADDR_2_CTNTS                            =         #{addr2Ctnts} 
+                    , EMAIL_ADDR                              =         #{emailAddr}
+                    , DEL_YN                                  =         NVL(#{delYn},'N')
+                    , AMDR_ID                                 =         #{amdrId}
+                    , AMD_DT                                  =         SYSDATE
+        <include refid="sqlPkConditions"/>
+    </update>
+    <delete id="delete">
+               DELETE /* com.ceragem.api.crm.dao.CrmCustCntplcBasDao.delete */ 
+                 FROM CRM_CUST_CNTPLC_BAS
+        <include refid="sqlPkConditions"/>
+    </delete>
+    
+    
+    <update id="updateRepCntplc">
+               UPDATE CRM_CUST_CNTPLC_BAS /* com.ceragem.api.crm.dao.CrmCustCntplcBasDao.updateRepCntplc */
+                  SET REP_CNTPLC_YN                           =         DECODE(CNTPLC_SEQ,#{cntplcSeq},'Y','N')
+<!--                     , AMDR_ID                                 =         #{amdrId} -->
+<!--                     , AMD_DT                                  =         SYSDATE -->
+                WHERE ITG_CUST_NO                             =         #{itgCustNo}
+                  AND DEL_YN                                  =         'N'
+    </update>
+
+	<delete id="deleteCust">
+               DELETE /* com.ceragem.api.crm.dao.CrmCustCntplcBasDao.deleteCust */ 
+                 FROM CRM_CUST_CNTPLC_BAS
+                WHERE ITG_CUST_NO                             =         #{itgCustNo}
+    </delete>
+</mapper>

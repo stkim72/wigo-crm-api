@@ -1,0 +1,362 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ceragem.api.crm.dao.CrmMshipAppToknBasDao">
+    <sql id="sqlPkConditions">
+                WHERE APP_PUSH_TOKN     =       #{appPushTokn}
+    </sql>
+    <sql id="sqlCols">
+                      APP_PUSH_TOKN                    /*앱PUSH토큰        */
+                    , APP_PUSH_OS_CD                    /*앱PUSHOS코드        */
+                    , ITG_CUST_NO                    /*통합고객번호        */
+                    , AGREE_YN                    /*동의여부        */
+                    , AGREE_DT                    /*동의일시        */
+                    , RFSL_DT                    /*거부일시        */
+                    , REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS , BOS : BOS , MEM : 멤버십 , CRA : 세라체크 , DNA : 세라DNA , IoT : IoT , PRC : 부모님연구소 , EON : 발송 , COM : 직영몰 , PUB : 공유사업자]*/
+                    , TGT_APP_ID                  /* 대상앱ID */
+                    , USE_YN                     /*사용여부*/
+                    , REGR_ID                    /*등록자ID        */
+                    , REG_DT                    /*등록일시        */
+                    , AMDR_ID                    /*수정자ID        */
+                    , AMD_DT                    /*수정일시        */
+    </sql>
+    <sql id="sqlSelectCols">
+                      A.APP_PUSH_TOKN                    /*앱PUSH토큰        */
+                    , A.APP_PUSH_OS_CD                    /*앱PUSHOS코드        */
+                    , A.ITG_CUST_NO                    /*통합고객번호        */
+                    , A.AGREE_YN                    /*동의여부        */
+                    , TO_CHAR(A.AGREE_DT,'YYYYMMDDHH24MISS')    AGREE_DT                    /*동의일시        */
+                    , TO_CHAR(A.RFSL_DT,'YYYYMMDDHH24MISS')    RFSL_DT                    /*거부일시        */
+                    , A.REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS , BOS : BOS , MEM : 멤버십 , CRA : 세라체크 , DNA : 세라DNA , IoT : IoT , PRC : 부모님연구소 , EON : 발송 , COM : 직영몰 , PUB : 공유사업자]*/
+                    , A.TGT_APP_ID
+                    , A.REGR_ID                    /*등록자ID        */
+                    , A.USE_YN                     /*사용여부*/
+                    , TO_CHAR(A.REG_DT,'YYYYMMDDHH24MISS')    REG_DT                    /*등록일시        */
+                    , A.AMDR_ID                    /*수정자ID        */
+                    , TO_CHAR(A.AMD_DT,'YYYYMMDDHH24MISS')    AMD_DT                    /*수정일시        */
+    </sql>
+    <sql id="sqlConditions">
+        <where>
+            <if test="appPushTokn != null and appPushTokn != ''">
+                      AND A.APP_PUSH_TOKN   =       #{appPushTokn}
+            </if>
+            <if test="appPushOsCd != null and appPushOsCd != ''">
+                <choose>
+                    <when test="appPushOsCd instanceof String">
+                        AND A.APP_PUSH_OS_CD  =       #{appPushOsCd}
+                    </when>
+                    <otherwise>
+                        AND A.APP_PUSH_OS_CD  IN
+                        <foreach item="item" index="index" collection="appPushOsCd" open="(" separator="," close=")">
+                            #{item}
+                        </foreach>
+                    </otherwise>
+                </choose>
+            </if>
+            <if test="itgCustNo != null and itgCustNo != ''">
+                      AND A.ITG_CUST_NO     =       #{itgCustNo}
+            </if>
+            <if test="tgtAppId != null and tgtAppId != ''">
+                      AND A.TGT_APP_ID     =       #{tgtAppId}
+            </if>
+            <if test="agreeYn != null and agreeYn != ''">
+                      AND A.AGREE_YN        =       #{agreeYn}
+            </if>
+            <if test="agreeDt != null and agreeDt != ''">
+                      AND A.AGREE_DT        =       TO_DATE(#{agreeDt},'YYYYMMDDHH24MISS')
+            </if>
+            <if test="rfslDt != null and rfslDt != ''">
+                      AND A.RFSL_DT         =       TO_DATE(#{rfslDt},'YYYYMMDDHH24MISS')
+            </if>
+            <if test="useYn != null and useYn != ''">
+                      AND A.USE_YN         =       #{useYn}
+            </if>
+            <if test="regChlCd != null and regChlCd != ''">
+                <choose>
+                    <when test="regChlCd instanceof String">
+                        AND A.REG_CHL_CD      =       #{regChlCd}
+                    </when>
+                    <otherwise>
+                        AND A.REG_CHL_CD      IN
+                        <foreach item="item" index="index" collection="regChlCd" open="(" separator="," close=")">
+                            #{item}
+                        </foreach>
+                    </otherwise>
+                </choose>
+            </if>
+        </where>
+    </sql>
+    <select id="selectListCount" resultType="int">
+                SELECT /* com.ceragem.api.crm.dao.CrmMshipAppToknBasDao.selectListCount */ COUNT(1)
+                 FROM CRM_MSHIP_APP_TOKN_BAS A
+        <include refid="sqlConditions"/>
+    </select>
+    <select id="selectList" resultType="com.ceragem.api.crm.model.CrmMshipAppToknBasVo">
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingHeader"/>
+               SELECT /* com.ceragem.api.crm.dao.CrmMshipAppToknBasDao.selectList */ <include refid="sqlSelectCols"/>
+                 FROM CRM_MSHIP_APP_TOKN_BAS A
+        <include refid="sqlConditions"/>
+               ORDER BY REG_DT DESC
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingFooter"/>
+    </select>
+    <select id="select" resultType="com.ceragem.api.crm.model.CrmMshipAppToknBasVo">
+               SELECT /* com.ceragem.api.crm.dao.CrmMshipAppToknBasDao.select */ <include refid="sqlSelectCols"/>
+                 FROM CRM_MSHIP_APP_TOKN_BAS A
+        <include refid="sqlPkConditions"/>
+    </select>
+    <insert id="insert">
+                INSERT /* com.ceragem.api.crm.dao.CrmMshipAppToknBasDao.insert */ INTO CRM_MSHIP_APP_TOKN_BAS (
+        <include refid="sqlCols"/>
+                 ) SELECT
+                       #{appPushTokn}
+                     , #{appPushOsCd}
+                     , #{itgCustNo}
+                     , NVL(#{agreeYn},'N')
+                     , TO_DATE(#{agreeDt},'YYYYMMDDHH24MISS')
+                     , TO_DATE(#{rfslDt},'YYYYMMDDHH24MISS')
+                     , #{regChlCd}
+                     , NVL(#{tgtAppId}, (SELECT COMN_CD FROM CRM_COMN_CD_BAS  WHERE TOP_COMN_CD = 'PS030' AND COMN_CD_LVL_NO = 2 AND RFRN_1_COMN_CD = #{regChlCd} AND ROWNUM = 1 ) )
+                     , NVL(#{useYn},'Y')
+                     , #{regrId}
+                     , SYSDATE
+                     , #{amdrId}
+                     , SYSDATE
+                 FROM  DUAL
+                 WHERE NVL(#{tgtAppId}, (SELECT COMN_CD FROM CRM_COMN_CD_BAS  WHERE TOP_COMN_CD = 'PS030' AND COMN_CD_LVL_NO = 2 AND RFRN_1_COMN_CD = #{regChlCd} AND ROWNUM = 1 ) ) IS NOT NULL
+    </insert>
+    <update id="update">
+               UPDATE /* com.ceragem.api.crm.dao.CrmMshipAppToknBasDao.update */ CRM_MSHIP_APP_TOKN_BAS
+                  SET APP_PUSH_OS_CD                          =         #{appPushOsCd}
+                    , ITG_CUST_NO                             =         #{itgCustNo}
+                    , AGREE_YN                                =         NVL(NVL(#{agreeYn},AGREE_YN),'N')
+                    , AGREE_DT                                =         NVL(TO_DATE(#{agreeDt},'YYYYMMDDHH24MISS'),AGREE_DT)
+                    , RFSL_DT                                 =         DECODE(NVL(NVL(#{agreeYn},AGREE_YN),'N'),'N',NVL(TO_DATE(#{rfslDt},'YYYYMMDDHH24MISS'),RFSL_DT),NULL)
+                    , REG_CHL_CD                              =         NVL(#{regChlCd},REG_CHL_CD)
+                    , TGT_APP_ID                              =         NVL(#{tgtAppId},TGT_APP_ID)
+                    , USE_YN                                  =         NVL(#{useYn},'Y')
+                    , AMDR_ID                                 =         #{amdrId}
+                    , AMD_DT                                  =         SYSDATE
+        <include refid="sqlPkConditions"/>
+    </update>
+    <update id="updateTokenUseYn">
+    /* com.ceragem.api.crm.dao.CrmMshipAppToknBasDao.updateTokenUseYn */ 
+               UPDATE CRM_MSHIP_APP_TOKN_BAS
+                  SET USE_YN                                  =         'N'
+<!--                     , AMDR_ID                                 =         #{amdrId} -->
+<!--                     , AMD_DT                                  =         SYSDATE                           -->
+                WHERE TGT_APP_ID                              =         NVL(#{tgtAppId}, (SELECT COMN_CD FROM CRM_COMN_CD_BAS  WHERE TOP_COMN_CD = 'PS030' AND COMN_CD_LVL_NO = 2 AND RFRN_1_COMN_CD = #{regChlCd} AND ROWNUM = 1 ) )
+                  AND ITG_CUST_NO                             =         #{itgCustNo} 
+    </update>
+    <delete id="delete">
+               DELETE /* com.ceragem.api.crm.dao.CrmMshipAppToknBasDao.delete */
+                 FROM CRM_MSHIP_APP_TOKN_BAS
+        <include refid="sqlPkConditions"/>
+    </delete>
+    <delete id="deleteAppId">
+            DELETE /* com.ceragem.api.crm.dao.CrmMshipAppToknBasDao.deleteAppId */
+                 FROM CRM_MSHIP_APP_TOKN_BAS
+                WHERE ITG_CUST_NO                             =         #{itgCustNo}
+                  AND TGT_APP_ID                              =         #{tgtAppId}
+    </delete>
+    <select id="selectDispatch" resultType="EzMap">
+               SELECT TRM_HST_ID                    /*전송이력ID        */
+                    , DSP_HST_ID                    /*발송이력ID        */
+                    , ITG_CUST_NO                    /*통합고객번호        */
+                    , APP_PUSH_TOKN                    /*앱PUSH토큰        */
+                    , APP_PUSH_OS_CD                    /*앱PUSHOS코드        */
+                    , PUSH_NM                    /*푸시제목        */
+                    , PUSH_MSG_TXN                    /*푸시메세지        */
+                    , PUSH_IMG_URL                    /*푸시이미지URL        */
+                    , PUSH_CNCT_URL                    /*푸시연결URL        */
+                    , PUSH_DATA_TXN                    /*푸시데이터내역        */
+                    , PUSH_TRM_DT                    /*푸시전송일시        */
+                    , PUSH_RCV_AGREE_YN                    /*푸시수신동의여부        */
+                    , CANCEL_YN                    /*취소여부        */
+                    , CNCLR_ID                    /*취소자ID        */
+                    , CANCEL_DT                    /*취소일시        */
+                    , PUSH_STATUS_CD
+                    , TGT_APP_ID                 /*대상앱ID*/
+                    , REG_CHL_CD                /*등록채널코드*/
+                    , REGR_ID                    /*등록자ID        */
+                    , REG_DT                    /*등록일시        */
+                    , AMDR_ID                    /*수정자ID        */
+                    , AMD_DT                    /*수정일시        */
+                 FROM CRM_APP_PUSH_TRM_HST
+                WHERE DSP_HST_ID = #{dspHstId}
+                 AND APP_PUSH_TOKN = #{appPushTokn} 
+                  <if test="itgCustNo != null and itgCustNo != ''">
+                 AND ITG_CUST_NO     =       #{itgCustNo}
+                  </if>    
+    </select>
+    <select id="selectPushTrm" resultType="com.ceragem.api.crm.model.CrmAppPushTrmHstVo">
+     /* com.ceragem.api.crm.dao.CrmMshipAppToknBasDao.selectPushTrm */ 
+               SELECT A.TRM_HST_ID                    /*전송이력ID        */
+                    , A.DSP_HST_ID                    /*발송이력ID        */
+                    , A.ITG_CUST_NO                    /*통합고객번호        */
+                    , A.TGT_APP_ID                    /*대상앱ID        */
+                    , A.APP_PUSH_TOKN                    /*앱PUSH토큰        */
+                    , A.APP_PUSH_OS_CD                    /*앱PUSHOS코드        */
+                    , A.PUSH_NM                    /*푸시명        */
+                    , A.PUSH_MSG_TXN                    /*푸시메시지내역        */
+                    , A.PUSH_IMG_URL                    /*푸시이미지URL        */
+                    , A.PUSH_CNCT_URL                    /*푸시연결URL        */
+                    , A.PUSH_DATA_TXN                    /*푸시데이터내역        */
+                    , A.PUSH_TRM_DT                    /*푸시전송일시        */
+                    , A.PUSH_RCV_AGREE_YN                    /*푸시수신동의여부        */
+                    , A.CANCEL_YN                    /*취소여부        */
+                    , A.CNCLR_ID                    /*취소자ID        */
+                    , A.CANCEL_DT                    /*취소일시        */
+                    , A.TRM_STATUS_CD                    /*전송상태코드        */
+                    , A.PUSH_STATUS_CD                    /*푸시상태코드        */
+                    , A.ERR_MSG_CD                    /*오류메시지코드        */
+                    , A.ERR_MSG_TXN                    /*오류메시지내역        */
+                    , A.REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS , BOS : BOS , MEM : 멤버십 , CRA : 세라체크 , DNA : 세라DNA , IoT : IoT , PRC : 부모님연구소 , EON : 발송 , COM : 직영몰 , PUB : 공유사업자 , EXP : QR체험신청]*/
+                    , A.REGR_ID                    /*등록자ID        */
+                    , A.REG_DT                    /*등록일시        */
+                    , A.AMDR_ID                    /*수정자ID        */
+                    , A.AMD_DT                    /*수정일시        */
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'MB220' AND COMN_CD = A.APP_PUSH_OS_CD AND  COMN_CD_LVL_NO = 2) APP_PUSH_OS_CD_NM                    /*앱PUSHOS코드        */
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'PS090' AND COMN_CD = A.TRM_STATUS_CD AND  COMN_CD_LVL_NO = 2)  TRM_STATUS_CD_NM                    /*전송상태코드        */
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'PS070' AND COMN_CD = A.PUSH_STATUS_CD AND  COMN_CD_LVL_NO = 2) PUSH_STATUS_CD_NM                    /*푸시상태코드        */
+                 FROM CRM_APP_PUSH_TRM_HST A
+                WHERE A.DSP_HST_ID = #{dspHstId}
+                  AND A.APP_PUSH_TOKN = #{appPushTokn}
+                  <if test="itgCustNo != null and itgCustNo != ''">
+                 AND A.ITG_CUST_NO     =       #{itgCustNo}
+                  </if>    
+    </select>
+    <select id="selectPushTrmList" resultType="com.ceragem.api.crm.model.CrmAppPushTrmHstVo">
+      /* com.ceragem.api.crm.dao.CrmMshipAppToknBasDao.selectPushTrmList */
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingHeader"/>
+               SELECT A.TRM_HST_ID                    /*전송이력ID        */
+                    , A.DSP_HST_ID                    /*발송이력ID        */
+                    , A.ITG_CUST_NO                    /*통합고객번호        */
+                    , A.TGT_APP_ID                    /*대상앱ID        */
+                    , A.APP_PUSH_TOKN                    /*앱PUSH토큰        */
+                    , A.APP_PUSH_OS_CD                    /*앱PUSHOS코드        */
+                    , A.PUSH_NM                    /*푸시명        */
+                    , A.PUSH_MSG_TXN                    /*푸시메시지내역        */
+                    , A.PUSH_IMG_URL                    /*푸시이미지URL        */
+                    , A.PUSH_CNCT_URL                    /*푸시연결URL        */
+                    , A.PUSH_DATA_TXN                    /*푸시데이터내역        */
+                    , A.PUSH_TRM_DT                    /*푸시전송일시        */
+                    , A.PUSH_RCV_AGREE_YN                    /*푸시수신동의여부        */
+                    , A.CANCEL_YN                    /*취소여부        */
+                    , A.CNCLR_ID                    /*취소자ID        */
+                    , A.CANCEL_DT                    /*취소일시        */
+                    , A.TRM_STATUS_CD                    /*전송상태코드        */
+                    , A.PUSH_STATUS_CD                    /*푸시상태코드        */
+                    , A.ERR_MSG_CD                    /*오류메시지코드        */
+                    , A.ERR_MSG_TXN                    /*오류메시지내역        */
+                    , A.REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS , BOS : BOS , MEM : 멤버십 , CRA : 세라체크 , DNA : 세라DNA , IoT : IoT , PRC : 부모님연구소 , EON : 발송 , COM : 직영몰 , PUB : 공유사업자 , EXP : QR체험신청]*/
+                    , A.REGR_ID                    /*등록자ID        */
+                    , A.REG_DT                    /*등록일시        */
+                    , A.AMDR_ID                    /*수정자ID        */
+                    , A.AMD_DT                    /*수정일시        */
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'MB220' AND COMN_CD = A.APP_PUSH_OS_CD AND  COMN_CD_LVL_NO = 2) APP_PUSH_OS_CD_NM                    /*앱PUSHOS코드        */
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'PS090' AND COMN_CD = A.TRM_STATUS_CD AND  COMN_CD_LVL_NO = 2)  TRM_STATUS_CD_NM                    /*전송상태코드        */
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'PS070' AND COMN_CD = A.PUSH_STATUS_CD AND  COMN_CD_LVL_NO = 2) PUSH_STATUS_CD_NM                    /*푸시상태코드        */
+                 FROM CRM_APP_PUSH_TRM_HST A
+                INNER JOIN CRM_APP_PUSH_DSP_HST B ON A.DSP_HST_ID = B.DSP_HST_ID AND B.DSP_STATUS_CD = '002'
+                WHERE A.ITG_CUST_NO     =       #{itgCustNo}
+                  AND B.TGT_APP_ID IN (SELECT COMN_CD FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'PS030' AND RFRN_1_COMN_CD = #{chlCd} AND  COMN_CD_LVL_NO = 2  )
+                  AND NVL(A.PUSH_TRM_DT , A.AMD_DT) >= TRUNC(SYSDATE) -30
+                  AND A.TRM_STATUS_CD = '001'  
+<!--                 <if test="successYn != null and successYn != ''"> -->
+<!--                     <choose> -->
+<!--                         <when test="'Y'.toString().equals(successYn)"> -->
+<!--                             AND A.TRM_STATUS_CD = '001' -->
+<!--                         </when> -->
+<!--                         <when test="'N'.toString().equals(successYn)"> -->
+<!--                             AND A.TRM_STATUS_CD != '001' -->
+<!--                         </when> -->
+<!--                     </choose> -->
+<!--                </if> -->
+               
+               <if test="pushStatusCd != null and pushStatusCd != ''">
+                   <choose>
+                    <when test="pushStatusCd instanceof String">
+                        AND A.PUSH_STATUS_CD      =       #{pushStatusCd}
+                    </when>
+                    <otherwise>
+                        AND A.PUSH_STATUS_CD      IN
+                        <foreach item="item" index="index" collection="pushStatusCd" open="(" separator="," close=")">
+                            #{item}
+                        </foreach>
+                    </otherwise>
+                </choose>
+               </if>
+               <if test="readYn != null and readYn != ''">
+                    <choose>
+                        <when test="'Y'.toString().equals(readYn)">
+                            AND A.PUSH_STATUS_CD = '001'
+                        </when>
+                        <when test="'N'.toString().equals(readYn)">
+                            AND A.PUSH_STATUS_CD != '001'
+                        </when>
+                    </choose>
+               </if>
+                ORDER BY NVL(A.PUSH_TRM_DT , A.AMD_DT) DESC
+            <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingFooter"/>
+    </select>
+    <select id="selectPushTrmListCount" resultType="int">
+      /* com.ceragem.api.crm.dao.CrmMshipAppToknBasDao.selectPushTrmListCount */
+               SELECT COUNT(1) CNT
+                FROM CRM_APP_PUSH_TRM_HST A
+                INNER JOIN CRM_APP_PUSH_DSP_HST B ON A.DSP_HST_ID = B.DSP_HST_ID AND B.DSP_STATUS_CD = '002'
+                WHERE A.ITG_CUST_NO     =       #{itgCustNo}
+                  AND B.TGT_APP_ID IN (SELECT COMN_CD FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'PS030' AND RFRN_1_COMN_CD = NVL(#{chlCd},'MEM') AND  COMN_CD_LVL_NO = 2  )
+                  AND NVL(A.PUSH_TRM_DT , A.AMD_DT) >= TRUNC(SYSDATE) -30
+                  AND A.TRM_STATUS_CD = '001'      
+<!--                 <if test="successYn != null and successYn != ''"> -->
+<!--                     <choose> -->
+<!--                         <when test="'Y'.toString().equals(successYn)"> -->
+<!--                             AND A.TRM_STATUS_CD = '001' -->
+<!--                         </when> -->
+<!--                         <when test="'N'.toString().equals(successYn)"> -->
+<!--                             AND A.TRM_STATUS_CD != '001' -->
+<!--                         </when> -->
+<!--                     </choose> -->
+<!--                </if> -->
+               <if test="pushStatusCd != null and pushStatusCd != ''">
+                   <choose>
+                    <when test="pushStatusCd instanceof String">
+                        AND A.PUSH_STATUS_CD      =       #{pushStatusCd}
+                    </when>
+                    <otherwise>
+                        AND A.PUSH_STATUS_CD      IN
+                        <foreach item="item" index="index" collection="pushStatusCd" open="(" separator="," close=")">
+                            #{item}
+                        </foreach>
+                    </otherwise>
+                </choose>
+               </if>
+               <if test="readYn != null and readYn != ''">
+                    <choose>
+                        <when test="'Y'.toString().equals(readYn)">
+                            AND A.PUSH_STATUS_CD = '001'
+                        </when>
+                        <when test="'N'.toString().equals(readYn)">
+                            AND A.PUSH_STATUS_CD != '001'
+                        </when>
+                    </choose>
+               </if>
+    </select>
+    <update id="updatePushRead">
+            UPDATE CRM_APP_PUSH_TRM_HST
+               SET PUSH_STATUS_CD = '001'
+             WHERE DSP_HST_ID = #{dspHstId}
+               AND APP_PUSH_TOKN = #{appPushTokn} 
+              <if test="itgCustNo != null and itgCustNo != ''">
+               AND ITG_CUST_NO     =       #{itgCustNo}
+              </if>
+    </update>
+    <update id="updatePushReadAll">
+            UPDATE CRM_APP_PUSH_TRM_HST
+               SET PUSH_STATUS_CD = '002'
+             WHERE ITG_CUST_NO     =       #{itgCustNo}
+               AND PUSH_STATUS_CD = '000'
+               AND TRM_STATUS_CD = '001' 
+               AND DSP_HST_ID IN (SELECT DSP_HST_ID FROM CRM_APP_PUSH_DSP_HST WHERE DSP_STATUS_CD = '002') 
+               AND TGT_APP_ID IN (SELECT COMN_CD FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'PS030' AND RFRN_1_COMN_CD = NVL(#{chlCd},'MEM') AND  COMN_CD_LVL_NO = 2  )
+    </update>
+</mapper>

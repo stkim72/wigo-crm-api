@@ -47,7 +47,7 @@ public class CrmUrlMatchService {
 
 			if (matcher.match(vo.getApiUrl(), url)
 					&& (Utilities.isEmpty(vo.getCallMthdCd()) || vo.getCallMthdCd().equals(method))) {
-				return vo;
+				return new ApiExecHstVo(vo);
 			}
 		}
 		return null;

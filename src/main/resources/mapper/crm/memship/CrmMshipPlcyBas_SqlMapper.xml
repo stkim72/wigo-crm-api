@@ -398,7 +398,10 @@
     
     
     <select id="selectPlcyInfo" resultType="com.ceragem.api.crm.model.CrmMshipPlcyBasVo">
-               SELECT /* com.ceragem.api.crm.dao.CrmMshipPlcyBasDao.selectPlcyInfo   멤버십 정책 가져오기 */
+    /* com.ceragem.api.crm.dao.CrmMshipPlcyBasDao.selectPlcyInfo   멤버십 정책 가져오기 */
+            SELECT A.*
+             FROM (
+               SELECT 
 				        A.ITG_CUST_NO
 					  , A.CUST_NM
 					  , NVL(#{rcmdrCustNo}, NULL) RCMDR_CUST_NO
@@ -409,7 +412,7 @@
 					  , A.MSHIP_GRADE_CD
 					  , B.MSHIP_PLCY_BAS_NO 
 					  , B.MSHIP_PLCY_NM
-					  , B.MSHIP_GRADE_CD
+<!-- 					  , B.MSHIP_GRADE_CD -->
 					  , B.MSHP_GRADE_CD
 					  , B.APPLY_STD_STA_YMD
 					  , B.APPLY_STD_END_YMD
@@ -419,8 +422,8 @@
 					  , B.BUY_RCMD_POINT_RATE
 					  , NVL(B.ACCUM_LMT_POINT_SCORE, 0) ACCUM_LMT_POINT_SCORE
 					  , NVL(B.USE_LMT_POINT_SCORE, 0) USE_LMT_POINT_SCORE
-					  , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS C WHERE C.TOP_COMN_CD = 'MB010' and C.COMN_CD = A.MSHIP_TYPE_CD ) MSHIP_GRADE_CD    /* 맴버십등급코드명 */
-					  , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS C WHERE C.TOP_COMN_CD = 'MB020' and C.COMN_CD = A.MSHIP_GRADE_CD ) MSHP_GRADE_CD    /* 회원등급코드명 */
+					  , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS C WHERE C.TOP_COMN_CD = 'MB010' and C.COMN_CD = A.MSHIP_TYPE_CD ) MSHIP_GRADE_CD_NM    /* 맴버십등급코드명 */
+					  , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS C WHERE C.TOP_COMN_CD = 'MB020' and C.COMN_CD = A.MSHIP_GRADE_CD ) MSHP_GRADE_CD_NM    /* 회원등급코드명 */
 					  , (SELECT COUNT(*)  FROM CRM_MSHIP_APPLY_GODS_REL C WHERE C.MSHIP_PLCY_BAS_NO = B.MSHIP_PLCY_BAS_NO AND C.GODS_NO = #{buyGodsNo} ) MSHIP_GODS_CHK   /* 포인트제외제품여부 */
 					  , (SELECT COUNT(*)  FROM CRM_MSHIP_APPLY_STOR_REL C WHERE C.MSHIP_PLCY_BAS_NO = B.MSHIP_PLCY_BAS_NO AND C.STOR_NO = #{storNo}  ) MSHIP_STORE_CHK    /* 포인트제외매장여부 */
 					  , (SELECT MSHIP_GRADE_CD FROM CRM_CUST_BAS C WHERE C.ITG_CUST_NO = NVL(#{rcmdrCustNo}, NULL) ) RCMDR_MSHIP_GRADE_CD    /* A.RCMDR_CUST_NO 추천인 맴버십등급코드 - 08.02 추천인을 직접 받아온걸로 처리형식으로 수정 */
@@ -428,7 +431,7 @@
 				 	 , NVL( (SELECT /* 고객 1일 적립 포인트 */ NVL(SUM(OCCUR_POINT_SCORE), 0) FROM CRM_POINT_HST M 
                      		LEFT JOIN CRM_CUST_BAS C ON M.ITG_CUST_NO = C.ITG_CUST_NO 
                      	   WHERE  M.ITG_CUST_NO = #{itgCustNo}   AND M.MSHIP_GRADE_CD = C.MSHIP_GRADE_CD AND TO_CHAR(M.REG_DT, 'YYYYMMDD') = TO_CHAR(SYSDATE, 'YYYYMMDD')  ), 0) TODAY_PBLS_PNT 
-                     	   	
+                      , ROW_NUMBER() OVER (ORDER BY B.APPLY_STD_STA_YMD DESC, B.APPLY_STD_END_YMD DESC , B.AMD_DT DESC ) RNUM 	   	
 				FROM 
 				CRM_CUST_BAS A
 				
@@ -436,9 +439,25 @@
 				 2022.06.08 멤버십등급은 체크 안하고 회원등급만 체크하기로 함
 				LEFT JOIN CRM_MSHIP_PLCY_BAS B ON A.MSHIP_TYPE_CD = B.MSHIP_GRADE_CD AND A.MSHIP_GRADE_CD = B.MSHP_GRADE_CD
 				*/
-				
+				/*
+                2023.06.27 올바른 정책가져오기
 				LEFT JOIN CRM_MSHIP_PLCY_BAS B ON A.MSHIP_GRADE_CD = B.MSHP_GRADE_CD
-            
+            */
+            <choose>
+                <when test="useGradeYn != null and 'Y'.toString().equals(useGradeYn)">
+                INNER JOIN CRM_MSHIP_PLCY_BAS B ON A.MSHIP_GRADE_CD = B.MSHP_GRADE_CD 
+                                               AND B.STATUS_CD = 'Y'
+                                               AND TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN B.APPLY_STD_STA_YMD AND B.APPLY_STD_END_YMD
+                </when>
+                <otherwise>
+                INNER JOIN CRM_MSHIP_PLCY_BAS B ON NVL(A.MSHIP_TYPE_CD,'003') = DECODE(NVL(A.MSHIP_TYPE_CD,'003'),'003',NVL(A.MSHIP_TYPE_CD,'003'),B.MSHIP_GRADE_CD) 
+                                               AND A.MSHIP_GRADE_CD = DECODE(NVL(A.MSHIP_TYPE_CD,'003'),'003',B.MSHP_GRADE_CD,A.MSHIP_GRADE_CD)
+                                               AND NVL(B.CPRT_CMP_NO,'1') = NVL(DECODE(NVL(A.MSHIP_TYPE_CD,'003'),'002',(SELECT CPRT_CMP_NO FROM CRM_CRPT_CMP_EXECVDEMP_BAS WHERE ITG_CUST_NO = A.ITG_CUST_NO AND ROWNUM = 1), B.CPRT_CMP_NO),'1')
+                                               AND B.STATUS_CD = 'Y'
+                                               AND TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN B.APPLY_STD_STA_YMD AND B.APPLY_STD_END_YMD
+                </otherwise>
+            </choose>
+              
        			WHERE A.ITG_CUST_NO = #{itgCustNo}
        			
        			/*
@@ -447,6 +466,9 @@
        			 
        			AND ( B.APPLY_STD_STA_YMD  <![CDATA[<=]]>  TO_CHAR(SYSDATE, 'YYYYMMDD')  AND  B.APPLY_STD_END_YMD  <![CDATA[>=]]>  TO_CHAR(SYSDATE, 'YYYYMMDD') )
        			AND B.STATUS_CD = 'Y'
+                ) A
+                WHERE RNUM = 1
+                
     </select>
     
     
@@ -461,6 +483,7 @@
                     , NVL(D.DAY_APPNT_CNT , 0) DAY_APPNT_CNT                    /*일지정수        */
                     , NVL(D.MONTH_APPNT_CNT, 0) MONTH_APPNT_CNT                     /*월지정수        */
                     , A.VALID_PERD                    /*유효기간        */
+                    , A.VALID_PERD_CD                       /*기간코드*/
                     , A.GIFT_POSS_YN                    /*선물가능여부        */
                     , A.AMDR_ID                    /*수정자ID        */
                     , TO_CHAR(A.AMD_DT,'YYYY.MM.DD')    AMD_DT                    /*수정일시        */
@@ -470,21 +493,21 @@
                     
                      , (SELECT  /* 고객 1일 적립횟수 */ COUNT(*) FROM CRM_POINT_HST M 
                      		LEFT JOIN CRM_CUST_BAS D ON M.ITG_CUST_NO = D.ITG_CUST_NO 
-                     		WHERE M.RCMDR_CUST_NO = #{rcmdrCustNo2}  AND M.PBLS_DIV_CD = A.EVENT_COMN_CD AND M.MSHIP_GRADE_CD = D.MSHIP_GRADE_CD  
+                     		WHERE M.RCMDR_CUST_NO = #{rcmdrCustNo2}  AND M.PBLS_DIV_CD = A.EVENT_COMN_CD /* AND M.MSHIP_GRADE_CD = D.MSHIP_GRADE_CD */  
                      		AND TO_CHAR(M.REG_DT, 'YYYYMMDD') = TO_CHAR(SYSDATE, 'YYYYMMDD') ) TODAY_PNT_PLBS_CNT
                     
                      , (SELECT  /* 고객 이번달 적립횟수 */ COUNT(*) FROM CRM_POINT_HST M 
 							LEFT JOIN CRM_CUST_BAS D ON M.ITG_CUST_NO = D.ITG_CUST_NO 
-                     		WHERE M.RCMDR_CUST_NO = #{rcmdrCustNo2}  AND M.PBLS_DIV_CD = A.EVENT_COMN_CD  AND M.MSHIP_GRADE_CD = D.MSHIP_GRADE_CD  
+                     		WHERE M.RCMDR_CUST_NO = #{rcmdrCustNo2}  AND M.PBLS_DIV_CD = A.EVENT_COMN_CD  /* AND M.MSHIP_GRADE_CD = D.MSHIP_GRADE_CD  */
                      		AND TO_CHAR(M.REG_DT, 'YYYYMM') = TO_CHAR(SYSDATE, 'YYYYMM') ) MONTH_PNT_PLBS_CNT
                     
                      , (SELECT  /* 고객 전체 적립횟수 */ COUNT(*) FROM CRM_POINT_HST M 
 						LEFT JOIN CRM_CUST_BAS D ON M.ITG_CUST_NO = D.ITG_CUST_NO 
-                     		WHERE M.RCMDR_CUST_NO = #{rcmdrCustNo2}  AND M.PBLS_DIV_CD = A.EVENT_COMN_CD  AND M.MSHIP_GRADE_CD = D.MSHIP_GRADE_CD ) ALL_PNT_PLBS_CNT
+                     		WHERE M.RCMDR_CUST_NO = #{rcmdrCustNo2}  AND M.PBLS_DIV_CD = A.EVENT_COMN_CD  /* AND M.MSHIP_GRADE_CD = D.MSHIP_GRADE_CD */ ) ALL_PNT_PLBS_CNT
                      		
                      , NVL( (SELECT /* 고객 1일 적립 포인트 */ SUM(OCCUR_POINT_SCORE) FROM CRM_POINT_HST M 
                      		LEFT JOIN CRM_CUST_BAS D ON M.ITG_CUST_NO = D.ITG_CUST_NO 
-                     	   WHERE  M.ITG_CUST_NO = #{itgCustNo} AND M.MSHIP_GRADE_CD = D.MSHIP_GRADE_CD AND TO_CHAR(M.REG_DT, 'YYYYMMDD') = TO_CHAR(SYSDATE, 'YYYYMMDD')  ), 0) TODAY_PBLS_PNT 
+                     	   WHERE  M.ITG_CUST_NO = #{itgCustNo} AND M.MSHIP_GRADE_CD = D.MSHIP_GRADE_CD AND M.REG_DT BETWEEN TRUNC(SYSDATE) AND TRUNC(SYSDATE + 1)  ), 0) TODAY_PBLS_PNT 
                      	   
                       , NVL( C.ACCUM_LMT_POINT_SCORE, 0) ACCUM_LMT_POINT_SCORE
                       
@@ -496,10 +519,30 @@
                 FROM CRM_COMN_CD_BAS B
                 LEFT JOIN CRM_MSHIP_APPLY_POINT_REL A ON   A.EVENT_COMN_CD = B.COMN_CD AND B.TOP_COMN_CD = 'EV100'
                 LEFT JOIN CRM_MSHIP_PLCY_BAS C ON A.MSHIP_PLCY_BAS_NO = C.MSHIP_PLCY_BAS_NO
-                LEFT JOIN CRM_MSHIP_APPLY_POINT_REL D ON D.MSHIP_PLCY_BAS_NO = #{orgMshipPlcyBasNo} and D.EVENT_COMN_CD = B.COMN_CD AND B.TOP_COMN_CD = 'EV100'
+                LEFT JOIN CRM_MSHIP_APPLY_POINT_REL D ON D.MSHIP_PLCY_BAS_NO = C.MSHIP_PLCY_BAS_NO and D.EVENT_COMN_CD = B.COMN_CD AND B.TOP_COMN_CD = 'EV100'
                  
 	                WHERE  COMN_CD_2_USE_YN='Y' AND A.MSHIP_PLCY_BAS_NO=  #{mshipPlcyBasNo} AND A.EVENT_COMN_CD = #{pblsDivCd}
 	               	 AND ( C.APPLY_STD_STA_YMD  <![CDATA[<=]]>  TO_CHAR(SYSDATE, 'YYYYMMDD')  AND  C.APPLY_STD_END_YMD  <![CDATA[>=]]>  TO_CHAR(SYSDATE, 'YYYYMMDD') )
+     </select>
+     
+     <select id="selectEventPointCnt" resultType="com.ceragem.api.crm.model.CrmMshipApplyPointRelVo">
+     		SELECT /* com.ceragem.api.crm.dao.CrmMshipPlcyBas.selectEventPointCnt */ 
+     			#{itgCustNo} AS ITG_CUST_NO
+     			, (SELECT  /* 고객 1일 적립횟수 */ COUNT(*) FROM CRM_POINT_HST M 
+                     		LEFT JOIN CRM_CUST_BAS D ON M.ITG_CUST_NO = D.ITG_CUST_NO 
+                     		WHERE M.RCMDR_CUST_NO = #{itgCustNo} AND M.PBLS_DIV_CD =#{pblsDivCd} AND M.MSHIP_GRADE_CD = D.MSHIP_GRADE_CD  
+                     		AND TO_CHAR(M.REG_DT, 'YYYYMMDD') = TO_CHAR(SYSDATE, 'YYYYMMDD') ) TODAY_PNT_PLBS_CNT
+                , (SELECT  /* 고객 이번달 적립횟수 */ COUNT(*) FROM CRM_POINT_HST M 
+							LEFT JOIN CRM_CUST_BAS D ON M.ITG_CUST_NO = D.ITG_CUST_NO 
+                     		WHERE M.RCMDR_CUST_NO = #{itgCustNo} AND M.PBLS_DIV_CD =#{pblsDivCd} AND M.MSHIP_GRADE_CD = D.MSHIP_GRADE_CD  
+                     		AND TO_CHAR(M.REG_DT, 'YYYYMM') = TO_CHAR(SYSDATE, 'YYYYMM') ) MONTH_PNT_PLBS_CNT
+                , (SELECT  /* 고객 전체 적립횟수 */ COUNT(*) FROM CRM_POINT_HST M 
+						LEFT JOIN CRM_CUST_BAS D ON M.ITG_CUST_NO = D.ITG_CUST_NO 
+                     		WHERE M.RCMDR_CUST_NO = #{itgCustNo} AND M.PBLS_DIV_CD =#{pblsDivCd} AND M.MSHIP_GRADE_CD = D.MSHIP_GRADE_CD ) ALL_PNT_PLBS_CNT
+                , NVL( (SELECT /* 고객 1일 적립 포인트 */ SUM(OCCUR_POINT_SCORE) FROM CRM_POINT_HST M 
+                     		LEFT JOIN CRM_CUST_BAS D ON M.ITG_CUST_NO = D.ITG_CUST_NO 
+                     	   WHERE  M.ITG_CUST_NO = #{itgCustNo} AND M.PBLS_DIV_CD =#{pblsDivCd} AND TO_CHAR(M.REG_DT, 'YYYYMMDD') = TO_CHAR(SYSDATE, 'YYYYMMDD')  ), 0) TODAY_PBLS_PNT 
+             FROM DUAL
      </select>
      
     

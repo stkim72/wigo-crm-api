@@ -3,6 +3,7 @@ package com.ceragem.api.crm.service;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -35,8 +36,8 @@ import com.ceragem.crm.common.model.EzMap;
  */
 @Service
 public class EonMessageService {
-	private final SimpleDateFormat DATETIME_FORMAT_ORG = new SimpleDateFormat("yyyyMMddHHmmss", Locale.KOREAN);
-	private final SimpleDateFormat DATETIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.KOREAN);
+//	private final SimpleDateFormat DATETIME_FORMAT_ORG = new SimpleDateFormat("yyyyMMddHHmmss", Locale.KOREAN);
+//	private final SimpleDateFormat DATETIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.KOREAN);
 
 //	private static final String CLIENT = "crm_1";
 
@@ -92,6 +93,7 @@ public class EonMessageService {
 		for (Map.Entry<String, Object> entry : variant.entrySet()) {
 			String strKey = entry.getKey();
 			String strValue = Utilities.nullCheck(entry.getValue());
+			System.out.println("strKey > " + strKey + " : strValue > " + strValue);
 			ret = ret.replace("#{" + strKey + "}", strValue + "");
 		}
 		ret = ret.replace("#{}", "");
@@ -139,8 +141,10 @@ public class EonMessageService {
 			cal.add(Calendar.DATE, 1);
 		}
 		String dateString = Utilities.getDateString(cal.getTime());
-		Date dt = DATETIME_FORMAT_ORG.parse(dateString + time + "00");
-		return DATETIME_FORMAT.format(dt);
+		SimpleDateFormat sfo = new SimpleDateFormat("yyyyMMddHHmmss", Locale.KOREAN);
+		Date dt = sfo.parse(dateString + time + "00");
+		SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.KOREAN);
+		return sf.format(dt);
 	}
 
 	public int sendMessage(MsgIfVo message) throws Exception {
@@ -160,11 +164,13 @@ public class EonMessageService {
 		return ret;
 	}
 
-	public void sendAsyncPointMessage(String itgCustNo, int pt, String codeCd, String storNo,boolean reserve) throws Exception {
-		asyncService.sendPointMessage(itgCustNo, pt, codeCd, storNo,reserve);
+	public void sendAsyncPointMessage(String itgCustNo, int pt, String codeCd, String storNo, boolean reserve)
+			throws Exception {
+		asyncService.sendPointMessage(itgCustNo, pt, codeCd, storNo, reserve);
 	}
 
-	public int sendPointMessage(String itgCustNo, int pt, String codeCd, String storNo,boolean reserve) throws Exception {
+	public int sendPointMessage(String itgCustNo, int pt, String codeCd, String storNo, boolean reserve)
+			throws Exception {
 
 		if (pt == 0)
 			return 0;
@@ -174,9 +180,9 @@ public class EonMessageService {
 		if (code == null || !"Y".equals(code.getUseYn())) {
 			return 0;
 		}
-		if(reserve && Utilities.isEmpty(code.getTalkSendTime()))
+		if (reserve && Utilities.isEmpty(code.getTalkSendTime()))
 			code.setRfrn2ComnCd("1000");
-			
+
 		param.setString("itgCustNo", itgCustNo);
 		CrmCustVo cust = custDao.selectMphone(param);
 		if (cust == null)
@@ -219,23 +225,22 @@ public class EonMessageService {
 		message.setCampaignId(null);
 		return sendMessage(message);
 	}
-	
 
-	
 	// 구매추천 추가
-	public int sendPointRcmdrMessage(String itgCustNo, int pt, String codeCd, String storNo,boolean reserve, String rcmdrCustNm) throws Exception {
+	public int sendPointRcmdrMessage(String itgCustNo, int pt, String codeCd, String storNo, boolean reserve,
+			String rcmdrCustNm) throws Exception {
 
 		if (pt == 0)
 			return 0;
 		EzMap param = new EzMap();
-		param.setString("codeCd", codeCd);		
+		param.setString("codeCd", codeCd);
 		MsgCodeVo code = msgIfDao.selectCode(param);
 		if (code == null || !"Y".equals(code.getUseYn())) {
 			return 0;
 		}
-		if(reserve && Utilities.isEmpty(code.getTalkSendTime()))
+		if (reserve && Utilities.isEmpty(code.getTalkSendTime()))
 			code.setRfrn2ComnCd("1000");
-			
+
 		param.setString("itgCustNo", itgCustNo);
 		CrmCustVo cust = custDao.selectMphone(param);
 		if (cust == null)
@@ -245,21 +250,18 @@ public class EonMessageService {
 		int point = Math.abs(pt);
 		info.setOccurPointScore(point);
 		Map<String, Object> msgMap = Utilities.beanToMap(info);
-		
+
 		String strOPoint = Utilities.getNumberString(info.getOccurPointScore());
-		
+
 		// cust
 		msgMap.put("추천인", cust.getCustNm());
 		msgMap.put("피추천인", rcmdrCustNm);
-		msgMap.put("보상포인트", strOPoint );
-
+		msgMap.put("보상포인트", strOPoint);
 
 		MsgIfVo message = getMessage(code, itgCustNo, cust.getMphonNo(), msgMap);
 		message.setCampaignId(null);
 		return sendMessage(message);
 	}
-	
-	
 
 	public void sendAsyncAgreeMessage(String itgCustNo, String codeCd) throws Exception {
 		asyncService.sendAgreeMessage(itgCustNo, codeCd);
@@ -269,7 +271,7 @@ public class EonMessageService {
 		EzMap param = new EzMap();
 		param.setString("codeCd", codeCd);
 		MsgCodeVo code = msgIfDao.selectCode(param);
-		if (code == null|| !"Y".equals(code.getUseYn())) {
+		if (code == null || !"Y".equals(code.getUseYn())) {
 			return 0;
 		}
 
@@ -297,7 +299,6 @@ public class EonMessageService {
 		return sendMessage(message);
 	}
 
-	
 	public int sendCustStatusMessage(String itgCustNo, String codeCd) throws Exception {
 		EzMap param = new EzMap();
 		param.setString("codeCd", codeCd);
@@ -308,7 +309,7 @@ public class EonMessageService {
 
 		param.setString("itgCustNo", itgCustNo);
 		CrmCustVo cust = custDao.selectMphone(param);
-		if (cust == null|| !"Y".equals(code.getUseYn()))
+		if (cust == null || !"Y".equals(code.getUseYn()))
 			return 0;
 
 		Map<String, Object> msgMap = Utilities.beanToMap(cust);
@@ -317,7 +318,7 @@ public class EonMessageService {
 		msgMap.put("회원명", cust.getCustNm());
 		msgMap.put("고객명", cust.getCustNm());
 		msgMap.put("회원명", cust.getCustNm());
-		
+
 		msgMap.put("핸드폰번호", Utilities.getPhoneNumberFormat(cust.getMphonNo()));
 		msgMap.put("휴면처리일자", procDt);
 		msgMap.put("탈퇴처리일자", procDt);
@@ -334,6 +335,8 @@ public class EonMessageService {
 	public MsgIfVo getMessage(MsgCodeVo code, String itgCustNo, String mphoneNo, Map<String, Object> msgMap)
 			throws Exception {
 		String msg = getTalkTemplateText(code.getTalkTemplate(), msgMap);
+		System.out.println("code.getTalkTemplate() > " + code.getTalkTemplate());
+		System.out.println("msg > " + msg);
 		String subject = getTalkTemplateText(code.getSubject(), msgMap);
 		MsgIfVo message = new MsgIfVo();
 		String timTalk = null;
@@ -362,6 +365,159 @@ public class EonMessageService {
 		message.setKkoBtnInfo(code.getBtnTemplate());
 		message.setKkoBtnType("2");
 		return message;
+	}
+
+	/*
+	 * 고객 카드번호 알림톡 발송 서비스
+	 */
+	public int sendCustBarcodeMessage(Map<String, Object> params) throws Exception {
+
+		EzMap param = new EzMap();
+		param.setString("codeCd", params.get("codeCd"));
+		MsgCodeVo code = msgIfDao.selectCode(param);
+		if (code == null) {
+			return 0;
+		}
+
+		param.setString("itgCustNo", params.get("itgCustNo"));
+		CrmCustVo cust = custDao.selectMphone(param);
+		if (cust == null || !"Y".equals(code.getUseYn()))
+			return 0;
+
+		Map<String, Object> msgMap = Utilities.beanToMap(cust);
+//		String procDt = Utilities.getDateString("-");
+		msgMap.put("고객명", params.get("custNm"));
+		// 전국 세라젬 웰카폐 안내
+		msgMap.put("url1", "https://www.ceragem.co.kr/wellcafe/experience.asp");
+		// 웹라이프 멤버십 가인 안내 URL
+		msgMap.put("url2", "https://mem.ceragem.com/register_step1");
+		msgMap.put("cno", params.get("cardNo").toString());
+
+		MsgIfVo message = getMessage(code, params.get("itgCustNo").toString(), params.get("mphonNo").toString(),
+				msgMap);
+//		MsgIfVo message = getMessage(code, params.get("itgCustNo").toString(), "01025694652", msgMap);
+		message.setCampaignId(null);
+
+		String buttonInfo = "{\"button\":[{\"ordering\":\"1\",\"name\":\"체험용 바코드\",\"type\":\"WL\",\"url_pc\":\"https://event.ceragem.com/qrcode/barcode?cno="
+				+ params.get("cardNo").toString() + "\""
+				+ ",\"url_mobile\":\"https://event.ceragem.com/qrcode/barcode?cno=" + params.get("cardNo").toString()
+				+ "\"}]}";
+
+		message.setKkoBtnInfo(buttonInfo);
+		SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.KOREAN);
+		String kTime = sf.format(new Date());
+		message.setKReservetime(kTime); // 실시간 전송시 아래 파라미터 빈값으로 전달 해야함.
+		String smsMessage = message.getMsg() + "\n\n" + "※ 간편체험용 바코드\n"
+				+ "https://event.ceragem.com/qrcode/barcode?cno=" + params.get("cardNo").toString();
+		message.setMsg(smsMessage);
+
+		return sendMessage(message);
+
+	}
+
+	/*
+	 * 고객인증 발송 메소드
+	 */
+	public int sendAuthMessage(Map<String, Object> params) throws Exception {
+		EzMap param = new EzMap();
+		param.setString("codeCd", params.get("codeCd"));
+		MsgCodeVo code = msgIfDao.selectCode(param);
+		if (code == null) {
+			return 0;
+		}
+
+//		Map<String, Object> msgMap = Utilities.beanToMap(cust);
+		Map<String, Object> msgMap = new HashMap<>();
+		msgMap.put("인증번호", params.get("smskey"));
+
+		MsgIfVo message = getMessage(code, params.get("mphonNo").toString(), msgMap);
+//		MsgIfVo message = getMessage(code, "01025694652", msgMap);
+		message.setCampaignId(null);
+		return sendMessage(message);
+	}
+
+	/*
+	 * 통합고객번호 세팅 필요 없는 알림톡 발송시
+	 */
+	public MsgIfVo getMessage(MsgCodeVo code, String mphoneNo, Map<String, Object> msgMap) throws Exception {
+		String msg = getTalkTemplateText(code.getTalkTemplate(), msgMap);
+		String subject = getTalkTemplateText(code.getSubject(), msgMap);
+		MsgIfVo message = new MsgIfVo();
+//		String timTalk = getTimeString(code.getTalkSendTime());
+		String codeCd = code.getComnCd();
+		// DATETIME_FORMAT.format(dt)
+		message.setSenderKey(code.getSendProfileKey());
+		message.setSendresult("K");
+		message.setDestel(mphoneNo);
+		message.setClient("CRM");
+		message.setDummy9(codeCd);
+		message.setCampaignId(Utilities.getDateTimeString() + Utilities.getUniqNumberID(6));
+		message.setMemberSeq("1");
+		message.setSubject(subject);
+		message.setKTitle(subject);
+		message.setMsg(msg);
+		message.setEtc3(eonUser);
+		message.setTemplateCode(code.getTalkTemplateId());
+		message.setKMsg(msg);
+//		message.setKReservetime(timTalk);
+		// message.setKReservetime(""); // 실시간 발송시는 이 파라미터값을 빈값으로 보내라고 함.
+		SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.KOREAN);
+		String kTime = sf.format(new Date());
+		message.setKReservetime(kTime); // 실시간 전송시 아래 파라미터 빈값으로 전달 해야함.
+		message.setKErrIssend("Y");
+		message.setMsgType("AT");
+		message.setSendType("2");
+		message.setKkoBtnInfo(code.getBtnTemplate());
+		message.setKkoBtnType("2");
+		return message;
+	}
+
+	/*
+	 * 20230905 현업 추가 요청사항건 반영분 고객 카드번호 알림톡 발송 서비스
+	 */
+	public int sendCustBarcodeMessage2(Map<String, Object> params) throws Exception {
+
+		EzMap param = new EzMap();
+		param.setString("codeCd", params.get("codeCd"));
+		MsgCodeVo code = msgIfDao.selectCode(param);
+		if (code == null) {
+			return 0;
+		}
+
+		param.setString("itgCustNo", params.get("itgCustNo"));
+		CrmCustVo cust = custDao.selectMphone(param);
+		if (cust == null || !"Y".equals(code.getUseYn()))
+			return 0;
+
+		Map<String, Object> msgMap = Utilities.beanToMap(cust);
+//		String procDt = Utilities.getDateString("-");
+		msgMap.put("고객명", params.get("custNm"));
+		// 전국 세라젬 웰카폐 안내
+		msgMap.put("url1", "https://www.ceragem.co.kr/wellcafe/experience.asp");
+		// 웹라이프 멤버십 가인 안내 URL
+		msgMap.put("url2", "https://mem.ceragem.com/register_step1");
+		msgMap.put("cno", params.get("cardNo").toString());
+
+		MsgIfVo message = getMessage(code, params.get("itgCustNo").toString(), params.get("mphonNo").toString(),
+				msgMap);
+//		MsgIfVo message = getMessage(code, params.get("itgCustNo").toString(), "01025694652", msgMap);
+		message.setCampaignId(null);
+
+		String buttonInfo = "{\"button\":[{\"ordering\":\"1\",\"name\":\"체험 체크인 바코드\",\"type\":\"WL\",\"url_pc\":\"https://event.ceragem.com/qrcode/revision/barcode?cno="
+				+ params.get("cardNo").toString() + "\""
+				+ ",\"url_mobile\":\"https://event.ceragem.com/qrcode/revision/barcode?cno="
+				+ params.get("cardNo").toString() + "\"}]}";
+
+		message.setKkoBtnInfo(buttonInfo);
+		SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.KOREAN);
+		String kTime = sf.format(new Date());
+		message.setKReservetime(kTime); // 실시간 전송시 아래 파라미터 빈값으로 전달 해야함.
+		String smsMessage = message.getMsg() + "\n\n" + "※ 체험 체크인 바코드\n"
+				+ "https://event.ceragem.com/qrcode/revision/barcode?cno=" + params.get("cardNo").toString();
+		message.setMsg(smsMessage);
+
+		return sendMessage(message);
+
 	}
 
 }

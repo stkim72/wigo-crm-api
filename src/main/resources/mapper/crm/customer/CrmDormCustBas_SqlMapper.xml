@@ -754,7 +754,7 @@
                     , PUSH_RCV_AGREE_YN                       =         NVL(#{pushRcvAgreeYn},'N')
                     , PUSH_RCV_AGREE_DT                       =         TO_DATE(#{pushRcvAgreeDt},'YYYYMMDDHH24MISS')
                     , PUSH_RCV_AGREE_CHL_CD                   =         #{pushRcvAgreeChlCd}
-                    , CI_CERTF_YN                             =         NVL(#{ciCertfYn},'N')
+                    , CI_CERTF_YN                             =         #{ciCertfYn}
                     , CI                                      =         #{ci}
                     , DI_CERTF_YN                             =         NVL(#{diCertfYn},'N')
                     , DI                                      =         #{di}

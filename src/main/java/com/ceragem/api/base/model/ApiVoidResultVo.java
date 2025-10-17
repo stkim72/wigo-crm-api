@@ -24,7 +24,7 @@ public class ApiVoidResultVo {
 	@Schema(description = "시스템코드", required = true, example = "001", accessMode = AccessMode.READ_ONLY)
 	private String systemCd = EzJwtService.getSystemCd();
 
-	@Schema(description = "호출일시", required = true, example = "2022-01-01T15:10:10Z", accessMode = AccessMode.READ_ONLY)
+	@Schema(description = "호출일시(표준시간)", required = true, example = "2022-01-01T15:10:10Z", accessMode = AccessMode.READ_ONLY)
 	private String timestamp = Utilities.getTimeStamp();
 
 	public ApiVoidResultVo() {

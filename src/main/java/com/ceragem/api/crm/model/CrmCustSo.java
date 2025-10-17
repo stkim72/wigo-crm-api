@@ -639,7 +639,7 @@ public class CrmCustSo extends CrmSnstvInfoInqrySo {
 
 	@Parameter(description = "종료멤버십승급점수", example = "", hidden = false, required = false)
 	private Integer toMshipAdvncmtScore;
-	
+
 	@Parameter(description = "시작매출합계", example = "", hidden = false, required = false)
 	private Long fromSaleAggrAmt;
 
@@ -672,7 +672,10 @@ public class CrmCustSo extends CrmSnstvInfoInqrySo {
 	@Parameter(description = "체험여부", hidden = false)
 	@YnValue
 	private String exprnYn;
-	
+
+	@Parameter(description = "계약번호(CSS)")
+	private String cntrNo;
+
 	/**
 	 * 전화번호
 	 */

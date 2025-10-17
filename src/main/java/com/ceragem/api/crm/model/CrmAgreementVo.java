@@ -13,12 +13,12 @@ import lombok.Setter;
 
 /**
  * 
- * @ClassName	CrmAgreementVo
- * @author		김성태
- * @date		2022. 6. 13.
- * @Version		1.0
- * @description	
- * @Company		Copyright ⓒ wigo.ai. All Right Reserved
+ * @ClassName CrmAgreementVo
+ * @author 김성태
+ * @date 2022. 6. 13.
+ * @Version 1.0
+ * @description
+ * @Company Copyright ⓒ wigo.ai. All Right Reserved
  */
 @Getter
 @Setter
@@ -96,14 +96,20 @@ public class CrmAgreementVo extends ApiBaseVo {
 	@MaxByte(max = 1)
 	private String pushRcvAgreeYn;
 
-	/**
-	 * PUSH수신동의여부
-	 */
+	@Schema(description = "PUSH Token 정보", example = "", hidden = false, required = false, nullable = true, maxLength = 1)
+	@MaxByte(max = 1000)
+	private String appPushTokn;
+
+	@Schema(description = "앱OS정보 [안드로이드:1, iOs:2, Web: 3]", example = "1", hidden = false, required = false, nullable = true, maxLength = 3)
+	@CodeValue(codeId = "MB220", codes = { "1", "2", "3" }, message = "[안드로이드:1, iOs:2, Web: 3] 등록된 코드가 아닙니다.")
+	@MaxByte(max = 3)
+	private String appPushOsCd;
+
 	@Schema(description = "민감정보 동의여부 [Y/N]", example = "N", hidden = false, required = false, nullable = true, maxLength = 1)
 	@YnValue
 	@MaxByte(max = 1)
 	private String infoAgreeYn;
-	
+
 	/**
 	 * 등록채널코드 공통코드 : S000 [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS]
 	 */
@@ -112,5 +118,12 @@ public class CrmAgreementVo extends ApiBaseVo {
 			"POS" }, message = "[CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS] 등록된 코드가 아닙니다. ")
 	@MaxByte(max = 3)
 	private String regChlCd;
+
+
+	@Schema(description = "체험 정보 동의 여부[Y/N]", example = "N", hidden = false, required = false, nullable = true, maxLength = 1)
+	@YnValue
+	@MaxByte(max = 1)
+	private String exprnInfoAgreeYn;
+
 
 }

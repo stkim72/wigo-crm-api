@@ -43,7 +43,7 @@ SELECT T.*
 				, #{qustnDiv}
 				, #{custNm}
 				, #{submitDt}
-				, #{mobilNo}
+				, DAMO.ENCRYPT_VAR_B64('AES_256',#{mobilNo},'')
 				, #{prodNm}
 				, #{submitCntn}
 				, #{procTy}

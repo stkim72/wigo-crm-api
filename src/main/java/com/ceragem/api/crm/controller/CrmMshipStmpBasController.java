@@ -174,8 +174,8 @@ public class CrmMshipStmpBasController extends BaseRestController {
 	public ResponseEntity<ApiResultVo<List<CrmMshipStmpIssueVo>>> eventCrmMshipStmpBas(
 			@Parameter(description = "CRM멤버십스탬프적립 객체") @RequestBody @Valid CrmMshipStmpEventVo vo) throws Exception {
 		List<CrmMshipStmpIssueVo> list = service.eventStmp(vo);
-		if (Utilities.isEmpty(list))
-			throw new EzApiException(Constants._API_CODE_NO_DATA, Constants._API_CODE_NO_DATA_MSG);
+//		if (Utilities.isEmpty(list))
+//			throw new EzApiException(Constants._API_CODE_NO_DATA, Constants._API_CODE_NO_DATA_MSG);
 		return successResponse(list);
 	}
 
@@ -193,7 +193,7 @@ public class CrmMshipStmpBasController extends BaseRestController {
 	public ResponseEntity<ApiResultVo<List<CrmMshipStmpIssueVo>>> accumlCrmMshipStmpBas(
 			@Parameter(description = "CRM멤버십스탬프적립 객체") @RequestBody @Valid CrmMshipStmpAccumVo vo) throws Exception {
 
-		List<CrmMshipStmpIssueVo> list = service.accumlStmp(vo);
+		List<CrmMshipStmpIssueVo> list = service.saveAccumlStmp(vo);
 		if (Utilities.isEmpty(list))
 			throw new EzApiException(Constants._API_CODE_NO_DATA, Constants._API_CODE_NO_DATA_MSG);
 		return successResponse(list);
@@ -211,7 +211,7 @@ public class CrmMshipStmpBasController extends BaseRestController {
 	 */
 	@PostMapping("cancel")
 	@Operation(summary = "CRM멤버십스탬프 취소", description = "CRM멤버십스탬프 취소")
-	public ResponseEntity<ApiResultVo<CrmMshipStmpIssueVo>> cancelCrmMshipStmpBas(
+	public ResponseEntity<ApiResultVo<List<CrmMshipStmpIssueVo>>> cancelCrmMshipStmpBas(
 			@Parameter(description = "CRM멤버십스탬프적립 객체") @RequestBody @Valid CrmMshipStmpCancelVo cVo) throws Exception {
 
 		CrmMshipStmpAccumVo vo = new CrmMshipStmpAccumVo();
@@ -223,9 +223,9 @@ public class CrmMshipStmpBasController extends BaseRestController {
 		vo.setMshipTypeCd(cVo.getMshipTypeCd());
 		vo.setCprtCmpNo(cVo.getCprtCmpNo());
 		vo.setMshpGradeCd(cVo.getMshpGradeCd());
-		service.cancelStmp(vo);
+		List<CrmMshipStmpIssueVo> result = service.cancelStmp(vo);
 
-		return successResponse(null);
+		return successResponse(result);
 	}
 
 	/**

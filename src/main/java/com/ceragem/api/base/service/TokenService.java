@@ -7,7 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.ceragem.api.base.constant.Constants;
+import com.ceragem.api.base.model.ApiExecHstVo;
 import com.ceragem.api.base.model.TokenVo;
+import com.ceragem.api.base.util.Utilities;
 import com.ceragem.api.crm.model.CrmCommonCodeVo;
 import com.ceragem.api.crm.service.CrmComnCdBasService;
 import com.ceragem.crm.common.jwt.JwtUtility;
@@ -40,7 +42,13 @@ public class TokenService {
 			String jwtToken = JwtUtility.createToken("SYSTEM", channelCode);
 			TokenVo token = new TokenVo();
 			token.setToken(jwtToken);
+			ApiExecHstVo apiInfo = (ApiExecHstVo) Utilities.getRequest().getAttribute(Constants._API_INFO_KEY);
+			if (apiInfo != null) {
+				apiInfo.setRegrId(channelCode);
+				apiInfo.setAmdrId(channelCode);
+				apiInfo.setRegChlCd(channelCode);
 
+			}
 			return token;
 		} else {
 			throw new EzApiException();

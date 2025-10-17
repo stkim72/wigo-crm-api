@@ -174,8 +174,13 @@ public class CrmMshipCoupnBasSo extends ApiPagination {
 	/**
 	 * 쿠폰기본명
 	 */
-	@Parameter(description = "쿠폰기본명", example = "", hidden = true, required = false)
+	@Parameter(description = "쿠폰마스터명", example = "", hidden = true, required = false)
 	private String coupnBasNm;
+	/**
+	 * 쿠폰기본명
+	 */
+	@Parameter(description = "쿠폰마스터명 Like 검색", example = "", hidden = false, required = false)
+	private String coupnBasNmLike;
 	/**
 	 * 쿠폰기본내용
 	 */
@@ -191,10 +196,11 @@ public class CrmMshipCoupnBasSo extends ApiPagination {
 	 */
 	@Parameter(description = "정산금액", example = "", hidden = true, required = false)
 	private String admtAmt;
-	@Parameter(description = "쿠폰유형 EV100  [010 : 웰카페 체험추천, 020 : 홈체험 추천, 030 : 멤버십 가입 추천, 040 : 웰카페 체험, 050 : 홈체험, 060 : 멤버십회원 가입, 902 : 구매추천, 901 : 구매, 070 : 마케팅정보 수신동의, 080 : 앱 다운로드, 090 : 추가 정보 입력, 100 : 생일, 110 : 휴면방지, 120 : 휴면해제, 130 : 출석체크, 140 : 텍스트 후기 작성, 150 : 이미지 후기 작성, 160 : 동영상 후기 작성, 170 : 세라체크, 180 : 서베이, 190 : IoT]", example = "010", hidden = true, required = true)
-	@CodeValue(codeId = "EV100", codes = { "010", "020", "030", "040", "050", "060", "902", "901", "070", "080", "090",
-			"100", "110", "120", "130", "140", "150", "160", "170", "180",
-			"190" }, message = "[010 : 웰카페 체험추천, 020 : 홈체험 추천, 030 : 멤버십 가입 추천, 040 : 웰카페 체험, 050 : 홈체험, 060 : 멤버십회원 가입, 902 : 구매추천, 901 : 구매, 070 : 마케팅정보 수신동의, 080 : 앱 다운로드, 090 : 추가 정보 입력, 100 : 생일, 110 : 휴면방지, 120 : 휴면해제, 130 : 출석체크, 140 : 텍스트 후기 작성, 150 : 이미지 후기 작성, 160 : 동영상 후기 작성, 170 : 세라체크, 180 : 서베이, 190 : IoT] 등록된 코드가 아닙니다. ")
+
+	@Parameter(description = "쿠폰유형 MB080  [001 :	음료 쿠폰,002 :	체험 쿠폰,012 :	앰버서더,017 :	상품 쿠폰,003 :	회원가입,004 :	마케팅정보수신동의,005 :	홈쇼핑 채널 쿠폰,006 :	쿠폰재발행,007 :	생일,008 :	슬기로운마스터,009 :	휴면해제,010 :	출석체크,011 :	후기작성,015 :	세라체크,014 :	서베이,016 :	IoT,013 :	서비스 쿠폰,018 :	임직원 쿠폰,019 :	HC전용 쿠폰,020 :	장바구니 쿠폰, 021 : 직영몰 상품 쿠폰 , 022 : TM상담쿠폰]", example = "001", hidden = false, required = false)
+	@CodeValue(codeId = "MB080", codes = { "001", "002", "012", "017", "003", "004", "005", "006", "007", "008", "009",
+			"010", "011", "015", "014", "016", "013", "018", "019", "020", "021",
+			"022" }, message = "[001 :	음료 쿠폰,002 :	체험 쿠폰,012 :	앰버서더,017 :	상품 쿠폰,003 :	회원가입,004 :	마케팅정보수신동의,005 :	홈쇼핑 채널 쿠폰,006 :	쿠폰재발행,007 :	생일,008 :	슬기로운마스터,009 :	휴면해제,010 :	출석체크,011 :	후기작성,015 :	세라체크,014 :	서베이,016 :	IoT,013 :	서비스 쿠폰,018 :	임직원 쿠폰,019 :	HC전용 쿠폰,020 :	장바구니 쿠폰 , 021 : 직영몰 상품 쿠폰 , 022 : TM상담쿠폰 ] 등록된 코드가 아닙니다. ")
 	@MaxByte(max = 3)
 
 	private String coupnTypeCd;
@@ -270,10 +276,10 @@ public class CrmMshipCoupnBasSo extends ApiPagination {
 	/**
 	 * 등록채널코드 공통코드 : S000 [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS]
 	 */
-	@Parameter(description = "등록채널코드  [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS]", example = "", hidden = true, required = false)
-	@CodeValue(codeId = "S000", codes = { "CRM", "CTC", "AS", "SAP",
-			"POS" }, message = "[CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS] 등록된 코드가 아닙니다. ")
-	private String regChlCd;
+//	@Parameter(description = "등록채널코드  [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS]", example = "", hidden = true, required = false)
+//	@CodeValue(codeId = "S000", codes = { "CRM", "CTC", "AS", "SAP",
+//			"POS" }, message = "[CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS] 등록된 코드가 아닙니다. ")
+//	private String regChlCd;
 	/**
 	 * 멤버십코드
 	 */
@@ -284,4 +290,17 @@ public class CrmMshipCoupnBasSo extends ApiPagination {
 	 */
 	@Parameter(description = "제휴사코드번호", example = "", hidden = true, required = false)
 	private String cprtCmpNo;
+	/**
+	 * 사용가능여부
+	 */
+	@Parameter(description = "사용가능여부[Y : 사용가능, N : 사용불가 유효기간 지남]", example = "", hidden = false, required = false)
+	@YnValue
+	private String availableYn;
+	/**
+	 * 등록채널코드 공통코드 : CH100 [COM : MAL , POS : POS]
+	 */
+	@Parameter(description = "등록채널코드  [MEM : 멤버십 , COM : 직영몰 , POS : POS]", example = "", hidden = false, required = false)
+	@CodeValue(codeId = "CH100", codes = { "MEM", "COM",
+			"POS" }, message = "[MEM : MEM , COM : 직영몰 , POS : POS] 등록된 코드가 아닙니다. ")
+	private String regChlCd;
 }

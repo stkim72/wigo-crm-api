@@ -1,11 +1,12 @@
 package com.ceragem.api.crm.validate;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
-import com.ceragem.api.base.constant.Constants;
 import com.ceragem.api.base.util.Utilities;
 
 public class DatetimeValidator implements ConstraintValidator<DatetimeValue, CharSequence> {
@@ -18,8 +19,9 @@ public class DatetimeValidator implements ConstraintValidator<DatetimeValue, Cha
 		try {
 			if (value.length() != 14)
 				return false;
-			Date dt = Constants._DATETIME_FORMAT.parse(value.toString());
-			String str = Constants._DATETIME_FORMAT.format(dt);
+			SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmss", Locale.KOREAN);
+			Date dt = df.parse(value.toString());
+			String str = df.format(dt);
 			return str.equals(value.toString());
 		} catch (Exception e) {
 			return false;

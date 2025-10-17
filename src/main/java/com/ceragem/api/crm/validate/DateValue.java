@@ -9,13 +9,15 @@ import java.lang.annotation.Target;
 import javax.validation.Constraint;
 import javax.validation.Payload;
 
-@Target({ ElementType.METHOD, ElementType.FIELD })
+@Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Constraint(validatedBy = DateValidator.class)
 public @interface DateValue {
 
 	String message() default "[유효한 날짜(YYYYMMDD)가 아닙니다.]";
-    Class<?>[] groups() default {};
-    Class<? extends Payload>[] payload() default {};
+
+	Class<?>[] groups() default {};
+
+	Class<? extends Payload>[] payload() default {};
 }

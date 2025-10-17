@@ -1,0 +1,1043 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ceragem.api.crm.dao.CrmCoupnPblsHstDao">
+    <sql id="sqlPkConditions">
+    		<choose>
+    			<when test="coupnPblsBasNo != null and coupnPblsBasNo !=''">
+    			WHERE COUPN_PBLS_BAS_NO=       #{coupnPblsBasNo}
+    			</when>
+    			<otherwise>
+    			WHERE COUPN_PBLS_HST_SEQ=       #{coupnPblsHstSeq}
+    			</otherwise>
+    		</choose>
+                
+    </sql>
+    <sql id="sqlCols">
+                      COUPN_PBLS_HST_SEQ                    /*쿠폰발행이력일련번호        */
+                    , COUPN_PBLS_BAS_NO                    /*쿠폰발행기본번호        */
+                    , STOR_NO                    /*매장번호        */
+                    , CAMP_NO                    /*캠페인번호        */
+                    , PROM_NO                    /*프로모션번호        */
+                    , COUPN_BOOK_HST_SEQ                    /*쿠폰북이력일련번호        */
+                    , ITG_CUST_NO                    /*통합고객번호        */
+                    , MSHIP_COUPN_BAS_NO                    /*멤버십쿠폰기본번호        */
+                    , COUPN_KND_CD                    /*쿠폰종류코드        */
+                    , COUPN_TGT_CD                    /*쿠폰대상코드        */
+                    , COUPN_APPLY_DIV_CD1                    /*쿠폰적용구분코드1        */
+                    , COUPN_APPLY_DIV_CD2                    /*쿠폰적용구분코드2        */
+                    , FROM_PBLS_STD_DAY                    /*FROM발행기준일        */
+                    , TO_PBLS_STD_DAY                    /*TO발행기준일        */
+                    , USE_STD_DAY_COND_CD                    /*사용기준일조건코드        */
+                    , FROM_USE_STD_DAY                    /*FROM사용기준일        */
+                    , TO_USE_STD_DAY                    /*TO사용기준일        */
+                    , GIFT_POSS_YN                    /*선물가능여부        */
+                    , COUPN_ISSUE_METH_CD                    /*쿠폰발급방법코드        */
+                    , ISSUE_RSTRTN_CNT                    /*발급제한수        */
+                    , MAX_ISSUE_CNT                    /*최대발급수        */
+                    , MAX_USE_CNT                    /*최대사용수        */
+                    , APPLY_AMT                    /*적용금액        */
+                    , APPLY_RATE                    /*적용율        */
+                    , MIN_BUY_AMT                    /*최소구매금액        */
+                    , MAX_DC_AMT                    /*최대할인금액        */
+                    , APPLY_CNT                    /*적용수        */
+                    , PRSNTTN_GODS_CD                    /*증정제품코드        */
+                    , USE_DOW                    /*사용요일        */
+                    , FROM_USE_HOUR                    /*FROM사용시간        */
+                    , TO_USE_HOUR                    /*TO사용시간        */
+                    , USE_CHL_CD                    /*사용채널코드        */
+                    , DUP_USE_YN                    /*중복사용여부        */
+                    , CHIT_NO                    /*전표번호        */
+                    , USE_DT                    /*사용일시        */
+                    , USE_DIV_CD                    /*사용구분코드        */
+                    , USE_YN                    /*사용여부        */
+                    , COUPN_BAS_NM                    /*쿠폰기본명        */
+                    , COUPN_BAS_CTNTS                    /*쿠폰기본내용        */
+                    , ADMT_METH_CD                    /*정산방법코드        */
+                    , ADMT_AMT                    /*정산금액        */
+                    , COUPN_TYPE_CD                    /*쿠폰유형        */
+                    , COUPN_USE_POSS_DAY                    /*쿠폰사용가능일        */
+                    , COUPN_USE_POSS_YN                    /*쿠폰사용가능여부        */
+                    , COUPN_USE_POSS_DAY_CNT                    /*쿠폰사용가능일수        */
+                    , COUPN_CLASS_CD                    /*쿠폰분류코드        */                   
+                    , DOW_1_USE_YN                    /*요일1사용여부        */
+                    , DOW_2_USE_YN                    /*요일2사용여부        */
+                    , DOW_3_USE_YN                    /*요일3사용여부        */
+                    , DOW_4_USE_YN                    /*요일4사용여부        */
+                    , DOW_5_USE_YN                    /*요일5사용여부        */
+                    , DOW_6_USE_YN                    /*요일6사용여부        */
+                    , DOW_7_USE_YN                    /*요일7사용여부        */
+                    , MSHP_GRADE_CD                    /*회원등급코드        */
+                    , AMDR_ID                    /*수정자ID        */
+                    , AMD_DT                    /*수정일시        */
+                    , REGR_ID                    /*등록자ID        */
+                    , REG_DT                    /*등록일시        */
+                    , REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS]*/
+                    , USE_STOR_NO					/*사용매장*/
+                    , TRNS							/*양도자*/
+                    , PBLS_DIV_CD
+                    , RCMDR_CUST_NO
+    </sql>
+    <sql id="sqlSelectCols">
+                      A.COUPN_PBLS_HST_SEQ                    /*쿠폰발행이력일련번호        */
+                    , A.COUPN_PBLS_BAS_NO                    /*쿠폰발행기본번호        */
+                    , A.STOR_NO                    /*매장번호        */
+                    , A.CAMP_NO                    /*캠페인번호        */
+                    , A.PROM_NO                    /*프로모션번호        */
+                    , A.COUPN_BOOK_HST_SEQ                    /*쿠폰북이력일련번호        */
+                    , A.ITG_CUST_NO                    /*통합고객번호        */
+                    , A.MSHIP_COUPN_BAS_NO                    /*멤버십쿠폰기본번호        */
+                    , B.COUPN_KND_CD                    /*쿠폰종류코드        */
+                    , A.COUPN_TGT_CD                    /*쿠폰대상코드        */
+                    , A.COUPN_APPLY_DIV_CD1                    /*쿠폰적용구분코드1        */
+                    , A.COUPN_APPLY_DIV_CD2                    /*쿠폰적용구분코드2        */
+                    , B.FROM_PBLS_STD_DAY                    /*FROM발행기준일        */
+                    , B.TO_PBLS_STD_DAY                    /*TO발행기준일        */
+                    , B.USE_STD_DAY_COND_CD                    /*사용기준일조건코드        */
+                    , B.FROM_USE_STD_DAY                    /*FROM사용기준일        */
+                    , B.TO_USE_STD_DAY                    /*TO사용기준일        */
+                    , A.GIFT_POSS_YN                    /*선물가능여부        */
+                    , A.COUPN_ISSUE_METH_CD                    /*쿠폰발급방법코드        */
+                    , A.ISSUE_RSTRTN_CNT                    /*발급제한수        */
+                    , A.MAX_ISSUE_CNT                    /*최대발급수        */
+                    , B.MAX_USE_CNT                    /*최대사용수        */
+                    , B.APPLY_AMT                    /*적용금액        */
+                    , B.APPLY_RATE                    /*적용율        */
+                    , B.APPLY_POINT                    /*포인트        */
+                    , B.MIN_BUY_AMT                    /*최소구매금액        */
+                    , A.MAX_DC_AMT                    /*최대할인금액        */
+                    , A.APPLY_CNT                    /*적용수        */
+                    , A.PRSNTTN_GODS_CD                    /*증정제품코드        */
+                    , A.USE_DOW                    /*사용요일        */
+                    , B.FROM_USE_HOUR                    /*FROM사용시간        */
+                    , B.TO_USE_HOUR                    /*TO사용시간        */
+                    , A.USE_CHL_CD                    /*사용채널코드        */
+                    , A.DUP_USE_YN                    /*중복사용여부        */
+                    , A.CHIT_NO                    /*전표번호        */
+                    , A.USE_DT                    /*사용일시        */
+                    , B.USE_DIV_CD                    /*사용구분코드        */
+                    , A.USE_YN                    /*사용여부        */
+                    , B.COUPN_BAS_NM                    /*쿠폰기본명        */
+                    , B.COUPN_BAS_CTNTS                    /*쿠폰기본내용        */
+                    , B.ADMT_METH_CD                    /*정산방법코드        */
+                    , A.ADMT_AMT                    /*정산금액        */
+                    , B.COUPN_TYPE_CD                    /*쿠폰유형        */
+                    , B.COUPN_USE_POSS_DAY                    /*쿠폰사용가능일        */
+                    , B.COUPN_USE_POSS_YN                    /*쿠폰사용가능여부        */
+                    , B.COUPN_USE_POSS_DAY_CNT                    /*쿠폰사용가능일수        */
+                    , B.COUPN_CLASS_CD                    /*쿠폰분류코드        */
+                    
+                    , B.DOW_1_USE_YN                    /*요일1사용여부        */
+                    , B.DOW_2_USE_YN                    /*요일2사용여부        */
+                    , B.DOW_3_USE_YN                    /*요일3사용여부        */
+                    , B.DOW_4_USE_YN                    /*요일4사용여부        */
+                    , B.DOW_5_USE_YN                    /*요일5사용여부        */
+                    , B.DOW_6_USE_YN                    /*요일6사용여부        */
+                    , B.DOW_7_USE_YN                    /*요일7사용여부        */
+                    , A.MSHP_GRADE_CD                    /*회원등급코드        */
+                    , A.TRNS							/*양도자*/
+                    , A.AMDR_ID                    /*수정자ID        */
+                    , TO_CHAR(A.AMD_DT,'YYYYMMDDHH24MISS')    AMD_DT                    /*수정일시        */
+                    , A.REGR_ID                    /*등록자ID        */
+                    , TO_CHAR(A.REG_DT,'YYYYMMDDHH24MISS')    REG_DT                    /*등록일시        */
+                    , A.REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS]*/
+                    , PBLS_DIV_CD
+                    , A.SGNT_YN							/*무기명 여부*/
+                    , (SELECT STOR_NM FROM CRM_STOR_BAS WHERE STOR_NO = A.STOR_NO AND ROWNUM = 1)  STOR_NO_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'MB130' AND COMN_CD = B.COUPN_KND_CD AND  COMN_CD_LVL_NO = 2) COUPN_KND_CD_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'MB100' AND COMN_CD = A.COUPN_TGT_CD AND  COMN_CD_LVL_NO = 2) COUPN_TGT_CD_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'MB175' AND COMN_CD = A.COUPN_APPLY_DIV_CD1 AND  COMN_CD_LVL_NO = 2) COUPN_APPLY_DIV_CD1_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'MB175' AND COMN_CD = A.COUPN_APPLY_DIV_CD2 AND  COMN_CD_LVL_NO = 2) COUPN_APPLY_DIV_CD2_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'MB110' AND COMN_CD = A.COUPN_ISSUE_METH_CD AND  COMN_CD_LVL_NO = 2) COUPN_ISSUE_METH_CD_NM
+                    , (SELECT GODS_NM FROM CRM_GODS_BAS WHERE GODS_NO = A.PRSNTTN_GODS_CD ) PRSNTTN_GODS_CD_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'S000' AND COMN_CD = A.USE_CHL_CD AND  COMN_CD_LVL_NO = 2) USE_CHL_CD_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = '' AND COMN_CD = A.ADMT_METH_CD AND COMN_CD_LVL_NO = 2) ADMT_METH_CD_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'MB080' AND COMN_CD = A.COUPN_TYPE_CD AND  COMN_CD_LVL_NO = 2) COUPN_TYPE_CD_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'MB120' AND COMN_CD = A.COUPN_CLASS_CD AND  COMN_CD_LVL_NO = 2) COUPN_CLASS_CD_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'S000' AND COMN_CD = A.REG_CHL_CD AND  COMN_CD_LVL_NO = 2) REG_CHL_CD_NM
+                    , (SELECT COMN_CD_NM FROM CRM_COMN_CD_BAS WHERE TOP_COMN_CD = 'MB120' AND COMN_CD = A.USE_DIV_CD AND  COMN_CD_LVL_NO = 2) USE_DIV_CD_NM
+    </sql>
+    <sql id="sqlConditions">
+    <where>
+        <if test="coupnPblsHstSeq != null and coupnPblsHstSeq != ''">
+                  AND A.COUPN_PBLS_HST_SEQ=       #{coupnPblsHstSeq}
+        </if>
+        <if test="coupnPblsBasNo != null and coupnPblsBasNo != ''">
+                  AND A.COUPN_PBLS_BAS_NO=       #{coupnPblsBasNo}
+        </if>
+        <if test="storNo != null and storNo != ''">
+                  AND A.STOR_NO         =       #{storNo}
+        </if>
+        <if test="campNo != null and campNo != ''">
+                  AND A.CAMP_NO         =       #{campNo}
+        </if>
+        <if test="promNo != null and promNo != ''">
+                  AND A.PROM_NO         =       #{promNo}
+        </if>
+        <if test="coupnBookHstSeq != null and coupnBookHstSeq != ''">
+                  AND A.COUPN_BOOK_HST_SEQ=       #{coupnBookHstSeq}
+        </if>
+        <if test="itgCustNo != null and itgCustNo != ''">
+                  AND A.ITG_CUST_NO     =       #{itgCustNo}
+        </if>
+        <if test="mshipCoupnBasNo != null and mshipCoupnBasNo != ''">
+                  AND A.MSHIP_COUPN_BAS_NO=       #{mshipCoupnBasNo}
+        </if>
+        <if test="coupnKndCd != null and coupnKndCd != ''">
+            <choose>
+                <when test="coupnKndCd instanceof String">
+                    AND A.COUPN_KND_CD    =       #{coupnKndCd}
+                </when>
+                <otherwise>
+                    AND A.COUPN_KND_CD    IN
+                    <foreach item="item" index="index" collection="coupnKndCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="coupnTgtCd != null and coupnTgtCd != ''">
+            <choose>
+                <when test="coupnTgtCd instanceof String">
+                    AND A.COUPN_TGT_CD    =       #{coupnTgtCd}
+                </when>
+                <otherwise>
+                    AND A.COUPN_TGT_CD    IN
+                    <foreach item="item" index="index" collection="coupnTgtCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="coupnApplyDivCd1 != null and coupnApplyDivCd1 != ''">
+                  AND A.COUPN_APPLY_DIV_CD1=       #{coupnApplyDivCd1}
+        </if>
+        <if test="coupnApplyDivCd2 != null and coupnApplyDivCd2 != ''">
+                  AND A.COUPN_APPLY_DIV_CD2=       #{coupnApplyDivCd2}
+        </if>
+        <if test="fromPblsStdDay != null and fromPblsStdDay != ''">
+                  AND A.FROM_PBLS_STD_DAY=       #{fromPblsStdDay}
+        </if>
+        <if test="toPblsStdDay != null and toPblsStdDay != ''">
+                  AND A.TO_PBLS_STD_DAY =       #{toPblsStdDay}
+        </if>
+        <if test="useStdDayCondCd != null and useStdDayCondCd != ''">
+            <choose>
+                <when test="useStdDayCondCd instanceof String">
+                    AND A.USE_STD_DAY_COND_CD=       #{useStdDayCondCd}
+                </when>
+                <otherwise>
+                    AND A.USE_STD_DAY_COND_CDIN
+                    <foreach item="item" index="index" collection="useStdDayCondCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="fromUseStdDay != null and fromUseStdDay != ''">
+                  AND A.FROM_USE_STD_DAY=       #{fromUseStdDay}
+        </if>
+        <if test="toUseStdDay != null and toUseStdDay != ''">
+                  AND A.TO_USE_STD_DAY  =       #{toUseStdDay}
+        </if>
+        <if test="giftPossYn != null and giftPossYn != ''">
+                  AND A.GIFT_POSS_YN    =       #{giftPossYn}
+        </if>
+        <if test="coupnIssueMethCd != null and coupnIssueMethCd != ''">
+            <choose>
+                <when test="coupnIssueMethCd instanceof String">
+                    AND A.COUPN_ISSUE_METH_CD=       #{coupnIssueMethCd}
+                </when>
+                <otherwise>
+                    AND A.COUPN_ISSUE_METH_CDIN
+                    <foreach item="item" index="index" collection="coupnIssueMethCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="issueRstrtnCnt != null and issueRstrtnCnt != ''">
+                  AND A.ISSUE_RSTRTN_CNT=       #{issueRstrtnCnt}
+        </if>
+        <if test="maxIssueCnt != null and maxIssueCnt != ''">
+                  AND A.MAX_ISSUE_CNT   =       #{maxIssueCnt}
+        </if>
+        <if test="maxUseCnt != null and maxUseCnt != ''">
+                  AND A.MAX_USE_CNT     =       #{maxUseCnt}
+        </if>
+        <if test="applyAmt != null and applyAmt != ''">
+                  AND A.APPLY_AMT       =       #{applyAmt}
+        </if>
+        <if test="applyRate != null and applyRate != ''">
+                  AND A.APPLY_RATE      =       #{applyRate}
+        </if>
+        <if test="minBuyAmt != null and minBuyAmt != ''">
+                  AND A.MIN_BUY_AMT     =       #{minBuyAmt}
+        </if>
+        <if test="maxDcAmt != null and maxDcAmt != ''">
+                  AND A.MAX_DC_AMT      =       #{maxDcAmt}
+        </if>
+        <if test="applyCnt != null and applyCnt != ''">
+                  AND A.APPLY_CNT       =       #{applyCnt}
+        </if>
+        <if test="prsnttnGodsCd != null and prsnttnGodsCd != ''">
+            <choose>
+                <when test="prsnttnGodsCd instanceof String">
+                    AND A.PRSNTTN_GODS_CD =       #{prsnttnGodsCd}
+                </when>
+                <otherwise>
+                    AND A.PRSNTTN_GODS_CD IN
+                    <foreach item="item" index="index" collection="prsnttnGodsCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="useDow != null and useDow != ''">
+                  AND A.USE_DOW         =       #{useDow}
+        </if>
+        <if test="fromUseHour != null and fromUseHour != ''">
+                  AND A.FROM_USE_HOUR   =       #{fromUseHour}
+        </if>
+        <if test="toUseHour != null and toUseHour != ''">
+                  AND A.TO_USE_HOUR     =       #{toUseHour}
+        </if>
+        <if test="useHour != null and useHour != ''">
+                  AND A.FROM_USE_HOUR <![CDATA[<=]]> #{useHour} AND A.TO_USE_HOUR <![CDATA[>=]]> #{useHour}
+        </if>
+        <if test="useChlCd != null and useChlCd != ''">
+            <choose>
+                <when test="useChlCd instanceof String">
+                    AND A.USE_CHL_CD      =       #{useChlCd}
+                </when>
+                <otherwise>
+                    AND A.USE_CHL_CD      IN
+                    <foreach item="item" index="index" collection="useChlCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="dupUseYn != null and dupUseYn != ''">
+                  AND A.DUP_USE_YN      =       #{dupUseYn}
+        </if>
+        <if test="chitNo != null and chitNo != ''">
+                  AND A.CHIT_NO         =       #{chitNo}
+        </if>
+        <if test="useDt != null and useDt != ''">
+                  AND A.USE_DT          =       #{useDt}
+        </if>
+        <if test="useDivCd != null and useDivCd != ''">
+            <choose>
+                <when test="useDivCd instanceof String">
+                    AND A.USE_DIV_CD      =       #{useDivCd}
+                </when>
+                <otherwise>
+                    AND A.USE_DIV_CD      IN
+                    <foreach item="item" index="index" collection="useDivCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        
+        <if test="coupnBasNm != null and coupnBasNm != ''">
+                  AND A.COUPN_BAS_NM    =       #{coupnBasNm}
+        </if>
+        <if test="coupnBasCtnts != null and coupnBasCtnts != ''">
+                  AND A.COUPN_BAS_CTNTS =       #{coupnBasCtnts}
+        </if>
+        <if test="admtMethCd != null and admtMethCd != ''">
+            <choose>
+                <when test="admtMethCd instanceof String">
+                    AND A.ADMT_METH_CD    =       #{admtMethCd}
+                </when>
+                <otherwise>
+                    AND A.ADMT_METH_CD    IN
+                    <foreach item="item" index="index" collection="admtMethCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="admtAmt != null and admtAmt != ''">
+                  AND A.ADMT_AMT        =       #{admtAmt}
+        </if>
+        <if test="coupnTypeCd != null and coupnTypeCd != ''">
+            <choose>
+                <when test="coupnTypeCd instanceof String">
+                    AND A.COUPN_TYPE_CD   =       #{coupnTypeCd}
+                </when>
+                <otherwise>
+                    AND A.COUPN_TYPE_CD   IN
+                    <foreach item="item" index="index" collection="coupnTypeCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="coupnUsePossDay != null and coupnUsePossDay != ''">
+                  AND A.COUPN_USE_POSS_DAY=       #{coupnUsePossDay}
+        </if>
+        <if test="coupnUsePossYn != null and coupnUsePossYn != ''">
+                  AND A.COUPN_USE_POSS_YN=       #{coupnUsePossYn}
+        </if>
+        <if test="coupnUsePossDayCnt != null and coupnUsePossDayCnt != ''">
+                  AND A.COUPN_USE_POSS_DAY_CNT=       #{coupnUsePossDayCnt}
+        </if>
+        <if test="coupnClassCd != null and coupnClassCd != ''">
+            <choose>
+                <when test="coupnClassCd instanceof String">
+                    AND A.COUPN_CLASS_CD  =       #{coupnClassCd}
+                </when>
+                <otherwise>
+                    AND A.COUPN_CLASS_CD  IN
+                    <foreach item="item" index="index" collection="coupnClassCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+       
+        <if test="dow1UseYn != null and dow1UseYn != ''">
+                  AND A.DOW_1_USE_YN    =       #{dow1UseYn}
+        </if>
+        <if test="dow2UseYn != null and dow2UseYn != ''">
+                  AND A.DOW_2_USE_YN    =       #{dow2UseYn}
+        </if>
+        <if test="dow3UseYn != null and dow3UseYn != ''">
+                  AND A.DOW_3_USE_YN    =       #{dow3UseYn}
+        </if>
+        <if test="dow4UseYn != null and dow4UseYn != ''">
+                  AND A.DOW_4_USE_YN    =       #{dow4UseYn}
+        </if>
+        <if test="dow5UseYn != null and dow5UseYn != ''">
+                  AND A.DOW_5_USE_YN    =       #{dow5UseYn}
+        </if>
+        <if test="dow6UseYn != null and dow6UseYn != ''">
+                  AND A.DOW_6_USE_YN    =       #{dow6UseYn}
+        </if>
+        <if test="dow7UseYn != null and dow7UseYn != ''">
+                  AND A.DOW_7_USE_YN    =       #{dow7UseYn}
+        </if>
+        <if test="mshpGradeCd != null and mshpGradeCd != ''">
+            <choose>
+                <when test="mshpGradeCd instanceof String">
+                    AND A.MSHP_GRADE_CD   =       #{mshpGradeCd}
+                </when>
+                <otherwise>
+                    AND A.MSHP_GRADE_CD   IN
+                    <foreach item="item" index="index" collection="mshpGradeCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="regChlCd != null and regChlCd != ''">
+            <choose>
+                <when test="regChlCd instanceof String">
+                    AND A.REG_CHL_CD      =       #{regChlCd}
+                </when>
+                <otherwise>
+                    AND A.REG_CHL_CD      IN
+                    <foreach item="item" index="index" collection="regChlCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="availableYn != null and availableYn != ''">
+              <choose>
+                <when test="'Y'.toString().equals(availableYn)">
+                    AND A.USE_YN = 'N'
+                    <!-- AND ((TRUNC(SYSDATE - A.REG_DT) <![CDATA[<=]]> NVL(B.COUPN_USE_POSS_DAY,0)) OR (TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD') <![CDATA[>=]]> SYSDATE)) -->
+                    <!-- AND (
+                    	(TRUNC(SYSDATE - A.REG_DT) <![CDATA[<=]]> NVL(B.COUPN_USE_POSS_DAY,0)) 
+                    	OR (TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') <![CDATA[>]]> TO_CHAR(SYSDATE,'YYYY-MM-DD')) 
+                    	OR ((TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD')) AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[<]]> TO_CHAR(B.TO_USE_HOUR)))
+                    	) -->
+                    AND (TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') <![CDATA[>=]]> TO_CHAR(SYSDATE,'YYYY-MM-DD') 
+	                        OR (B.USE_STD_DAY_COND_CD = 'Y' AND TO_CHAR(TO_DATE (A.REG_DT + NVL(B.COUPN_USE_POSS_DAY,0)),'YYYY-MM-DD') <![CDATA[>=]]> TO_CHAR(SYSDATE,'YYYY-MM-DD'))
+	                        OR (TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD') AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[<=]]> TO_CHAR(B.TO_USE_HOUR)) )
+	                        OR (B.USE_STD_DAY_COND_CD = 'Y' AND TO_CHAR(TO_DATE (A.REG_DT + NVL(B.COUPN_USE_POSS_DAY,0)),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD') AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[<=]]> TO_CHAR(B.TO_USE_HOUR)) )
+                        )
+                </when>
+                <otherwise>
+                    <!-- AND ((TRUNC(SYSDATE - A.REG_DT) <![CDATA[>]]> NVL(B.COUPN_USE_POSS_DAY,0)) OR (TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD') <![CDATA[<]]> SYSDATE) OR A.USE_YN = 'Y') -->
+                    <!-- AND (
+                    	(TRUNC(SYSDATE - A.REG_DT) <![CDATA[>]]> NVL(B.COUPN_USE_POSS_DAY,0)) 
+                    	OR (TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') <![CDATA[<]]> TO_CHAR(SYSDATE,'YYYY-MM-DD')) 
+                    	OR ((TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD')) AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[>]]> TO_CHAR(B.TO_USE_HOUR))) 
+                    	OR A.USE_YN = 'Y'
+                    	) -->
+                   	AND (TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') <![CDATA[<]]> TO_CHAR(SYSDATE,'YYYY-MM-DD') 
+	                        OR (B.USE_STD_DAY_COND_CD = 'Y' AND TO_CHAR(TO_DATE (A.REG_DT + NVL(B.COUPN_USE_POSS_DAY,0)),'YYYY-MM-DD') <![CDATA[<]]> TO_CHAR(SYSDATE,'YYYY-MM-DD'))
+	                        OR (TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD') AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[>]]> TO_CHAR(B.TO_USE_HOUR)) )
+	                        OR (B.USE_STD_DAY_COND_CD = 'Y' AND TO_CHAR(TO_DATE (A.REG_DT + NVL(B.COUPN_USE_POSS_DAY,0)),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD') AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[>]]> TO_CHAR(B.TO_USE_HOUR)) )
+	                        OR (A.USE_YN = 'Y')
+                        )
+                </otherwise>
+              </choose>
+        </if>
+        
+        <if test="expiredYn != null and expiredYn != ''">
+                  <choose>
+                    <when test="'Y'.toString().equals(expiredYn)">
+                    	<!-- AND A.USE_YN = 'N' -->
+                        <!-- AND ((TRUNC(SYSDATE - A.REG_DT) <![CDATA[<=]]> NVL(B.COUPN_USE_POSS_DAY,0)) OR (TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD') <![CDATA[>=]]> SYSDATE) ) -->
+                        <!-- AND (
+                        	(TRUNC(SYSDATE - A.REG_DT) <![CDATA[<=]]> NVL(B.COUPN_USE_POSS_DAY,0)) 
+                        	OR (TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') <![CDATA[>=]]> TO_CHAR(SYSDATE,'YYYY-MM-DD')) 
+                        	) -->
+                        AND (TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') <![CDATA[>=]]> TO_CHAR(SYSDATE,'YYYY-MM-DD') 
+	                        OR (B.USE_STD_DAY_COND_CD = 'Y' AND TO_CHAR(TO_DATE (A.REG_DT + NVL(B.COUPN_USE_POSS_DAY,0)),'YYYY-MM-DD') <![CDATA[>=]]> TO_CHAR(SYSDATE,'YYYY-MM-DD'))
+	                        OR (TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD') AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[<=]]> TO_CHAR(B.TO_USE_HOUR)) )
+	                        OR (B.USE_STD_DAY_COND_CD = 'Y' AND TO_CHAR(TO_DATE (A.REG_DT + NVL(B.COUPN_USE_POSS_DAY,0)),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD') AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[<=]]> TO_CHAR(B.TO_USE_HOUR)) )
+                        )
+                    </when>
+                    <otherwise>
+                        <!-- AND ((TRUNC(SYSDATE - A.REG_DT) <![CDATA[>=]]> B.COUPN_USE_POSS_DAY) OR (TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD') <![CDATA[<=]]> SYSDATE)) -->
+                       <!--  AND ((TRUNC(SYSDATE - A.REG_DT) <![CDATA[<]]> NVL(B.COUPN_USE_POSS_DAY,0)) OR (TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD') <![CDATA[>]]> SYSDATE)) -->
+                        <!-- AND (
+                        	(TRUNC(SYSDATE - A.REG_DT) <![CDATA[<]]> NVL(B.COUPN_USE_POSS_DAY,0)) 
+                        	OR (TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') <![CDATA[>]]> TO_CHAR(SYSDATE,'YYYY-MM-DD'))
+                        	) -->
+                        AND (TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') <![CDATA[<]]> TO_CHAR(SYSDATE,'YYYY-MM-DD') 
+	                        OR (B.USE_STD_DAY_COND_CD = 'Y' AND TO_CHAR(TO_DATE (A.REG_DT + NVL(B.COUPN_USE_POSS_DAY,0)),'YYYY-MM-DD') <![CDATA[<]]> TO_CHAR(SYSDATE,'YYYY-MM-DD'))
+	                        OR (TO_CHAR(TO_DATE(B.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD') AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[>]]> TO_CHAR(B.TO_USE_HOUR)) )
+	                        OR (B.USE_STD_DAY_COND_CD = 'Y' AND TO_CHAR(TO_DATE (A.REG_DT + NVL(B.COUPN_USE_POSS_DAY,0)),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD') AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[>]]> TO_CHAR(B.TO_USE_HOUR)) )
+                        )
+                    </otherwise>
+                  </choose>
+        </if>
+        <if test="useYn != null and useYn != ''">
+              <choose>
+                    <when test="'Y'.toString().equals(useYn)">
+                        AND A.USE_DT IS NOT NULL 
+                    </when>
+                    <otherwise>
+                        AND A.USE_DT IS NULL 
+                    </otherwise>
+                  </choose>     
+        </if>
+        	<choose>
+        		<when test="coupnBookHstSeq !=null and coupnBookHstSeq !=''">
+              	AND COUPN_BOOK_HST_SEQ = #{coupnBookHstSeq}	
+        		</when>
+        		<when test="bookYn != null and bookYn != ''">
+                	<choose>
+        				<when test="'Y'.toString().equals(bookYn)">
+        		AND A.COUPN_BOOK_HST_SEQ IS NOT NULL 
+        				</when>
+        				<otherwise>
+        		AND A.COUPN_BOOK_HST_SEQ IS  NULL
+        				</otherwise>
+        			</choose>
+        		</when>
+        		<otherwise>
+<!--         		AND A.COUPN_BOOK_HST_SEQ IS  NULL -->
+        		</otherwise>
+        	</choose>
+            </where>
+    </sql>
+    <select id="selectListCount" resultType="int">
+                SELECT /* com.ceragem.api.crm.dao.CrmCoupnPblsHstDao.selectListCount */ COUNT(1)
+                 FROM CRM_COUPN_PBLS_HST A JOIN CRM_MSHIP_COUPN_BAS B
+                    ON A.MSHIP_COUPN_BAS_NO = B.MSHIP_COUPN_BAS_NO
+                    AND B.COUPN_TYPE_CD != '013'
+        <include refid="sqlConditions"/>
+    </select>
+    <select id="selectList" resultType="com.ceragem.api.crm.model.CrmCouponVo">
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingHeader"/>
+               SELECT /* com.ceragem.api.crm.dao.CrmCoupnPblsHstDao.selectList */ 
+               	<include refid="sqlSelectCols"/>
+               	<!-- , (SELECT LISTAGG(MSHIP_PROM_BAS_NO, ',') AS MSHIP_PROM_BAS_NO FROM  CRM_MSHIP_PROM_BAS WHERE PRV_COUPN_BAS_NO = A.MSHIP_COUPN_BAS_NO) AS MSHIP_PROM_BAS_NOS -->
+                <!-- , (SELECT LISTAGG(CAMP_BAS_NO, ',') AS CAMP_BAS_NO FROM CRM_CAMP_BAS WHERE APPLY_COUPN_BAS_NO = A.MSHIP_COUPN_BAS_NO ) AS CAMP_BAS_NOS -->
+                 FROM CRM_COUPN_PBLS_HST A JOIN CRM_MSHIP_COUPN_BAS B
+                    ON A.MSHIP_COUPN_BAS_NO = B.MSHIP_COUPN_BAS_NO
+                    AND B.COUPN_TYPE_CD != '013'
+        <include refid="sqlConditions"/>
+               ORDER BY A.REG_DT DESC
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingFooter"/>
+    </select>
+    <select id="select" resultType="com.ceragem.api.crm.model.CrmCouponVo">
+               SELECT /* com.ceragem.api.crm.dao.CrmCoupnPblsHstDao.select */ <include refid="sqlSelectCols"/>
+               		, NVL(#{storNo},NULL) AS USE_STOR_NO
+                 FROM CRM_COUPN_PBLS_HST A JOIN CRM_MSHIP_COUPN_BAS B
+                    ON A.MSHIP_COUPN_BAS_NO = B.MSHIP_COUPN_BAS_NO
+                <if test="useChlCd != null and useChlCd != ''">
+                    JOIN CRM_MSHIP_APPLY_CHL_REL C ON B.MSHIP_COUPN_BAS_NO =  C.MSHIP_COUPN_BAS_NO 
+                    AND C.APPLY_CHL_CD = #{useChlCd}
+                </if>
+                    AND B.COUPN_TYPE_CD != '013'
+                    <!-- AND B.USE_YN = 'Y' -->
+        <include refid="sqlPkConditions"/>
+    </select>
+    <insert id="insert">
+    	<selectKey order="BEFORE" keyProperty="coupnPblsHstSeq,coupnPblsBasNo" resultType="EzMap">
+    		SELECT FN_CRM_AUTO_SEQ('CPN') AS  COUPN_PBLS_HST_SEQ
+<!--     		     , NVL(#{coupnPblsBasNo}, FN_LUHN_COUPN(NVL(#{couponGradeCd},'05'))) AS COUPN_PBLS_BAS_NO -->
+			     , FN_LUHN_COUPN(NVL(#{couponGradeCd},'05')) AS COUPN_PBLS_BAS_NO
+    		  FROM DUAL
+    	</selectKey>
+                INSERT /* com.ceragem.api.crm.dao.CrmCoupnPblsHstDao.insert */ INTO CRM_COUPN_PBLS_HST (
+        <include refid="sqlCols"/>
+                 ) VALUES (
+                       #{coupnPblsHstSeq}
+                     , #{coupnPblsBasNo}
+                     , NVL(#{storNo}, '141359')
+                     , #{campNo}
+                     , #{promNo}
+                     , #{coupnBookHstSeq}
+                     , #{itgCustNo}
+                     , #{mshipCoupnBasNo}
+                     , #{coupnKndCd}
+                     , #{coupnTgtCd}
+                     , #{coupnApplyDivCd1}
+                     , #{coupnApplyDivCd2}
+                     , #{fromPblsStdDay}
+                     , #{toPblsStdDay}
+                     , #{useStdDayCondCd}
+                     , #{fromUseStdDay}
+                     , #{toUseStdDay}
+                     , NVL(#{giftPossYn},'N')
+                     , #{coupnIssueMethCd}
+                     , #{issueRstrtnCnt}
+                     , #{maxIssueCnt}
+                     , #{maxUseCnt}
+                     , #{applyAmt}
+                     , #{applyRate}
+                     , #{minBuyAmt}
+                     , #{maxDcAmt}
+                     , #{applyCnt}
+                     , #{prsnttnGodsCd}
+                     , #{useDow}
+                     , #{fromUseHour}
+                     , #{toUseHour}
+                     , #{useChlCd}
+                     , NVL(#{dupUseYn},'N')
+                     , #{chitNo}
+                     , #{useDt}
+                     , #{useDivCd}
+                     , NVL(#{useYn},'N')
+                     , #{coupnBasNm}
+                     , #{coupnBasCtnts}
+                     , #{admtMethCd}
+                     , #{admtAmt}
+                     , #{coupnTypeCd}
+                     , #{coupnUsePossDay}
+                     , NVL(#{coupnUsePossYn},'N')
+                     , #{coupnUsePossDayCnt}
+                     , #{coupnClassCd}
+                     , NVL(#{dow1UseYn},'N')
+                     , NVL(#{dow2UseYn},'N')
+                     , NVL(#{dow3UseYn},'N')
+                     , NVL(#{dow4UseYn},'N')
+                     , NVL(#{dow5UseYn},'N')
+                     , NVL(#{dow6UseYn},'N')
+                     , NVL(#{dow7UseYn},'N')
+                     , #{mshpGradeCd}
+                     , #{amdrId}
+                     , SYSDATE
+                     , #{regrId}
+                     , SYSDATE
+                     , NVL(#{regChlCd},#{regrId})
+                     , NULL
+                     , NULL
+                     , #{pblsDivCd}
+                     , #{rcmdrCustNo2}
+                 )
+    </insert>
+    <update id="update">
+               UPDATE /* com.ceragem.api.crm.dao.CrmCoupnPblsHstDao.update */ CRM_COUPN_PBLS_HST
+                  SET COUPN_PBLS_BAS_NO                       =         #{coupnPblsBasNo}
+                    , STOR_NO                                 =         #{storNo}
+                    , CAMP_NO                                 =         #{campNo}
+                    , PROM_NO                                 =         #{promNo}
+                    , COUPN_BOOK_HST_SEQ                      =         #{coupnBookHstSeq}
+                    , ITG_CUST_NO                             =         #{itgCustNo}
+                    , MSHIP_COUPN_BAS_NO                      =         #{mshipCoupnBasNo}
+                    , COUPN_KND_CD                            =         #{coupnKndCd}
+                    , COUPN_TGT_CD                            =         #{coupnTgtCd}
+                    , COUPN_APPLY_DIV_CD1                     =         #{coupnApplyDivCd1}
+                    , COUPN_APPLY_DIV_CD2                     =         #{coupnApplyDivCd2}
+                    , FROM_PBLS_STD_DAY                       =         #{fromPblsStdDay}
+                    , TO_PBLS_STD_DAY                         =         #{toPblsStdDay}
+                    , USE_STD_DAY_COND_CD                     =         #{useStdDayCondCd}
+                    , FROM_USE_STD_DAY                        =         #{fromUseStdDay}
+                    , TO_USE_STD_DAY                          =         #{toUseStdDay}
+                    , GIFT_POSS_YN                            =         NVL(#{giftPossYn},'N')
+                    , COUPN_ISSUE_METH_CD                     =         #{coupnIssueMethCd}
+                    , ISSUE_RSTRTN_CNT                        =         #{issueRstrtnCnt}
+                    , MAX_ISSUE_CNT                           =         #{maxIssueCnt}
+                    , MAX_USE_CNT                             =         #{maxUseCnt}
+                    , APPLY_AMT                               =         #{applyAmt}
+                    , APPLY_RATE                              =         #{applyRate}
+                    , MIN_BUY_AMT                             =         #{minBuyAmt}
+                    , MAX_DC_AMT                              =         #{maxDcAmt}
+                    , APPLY_CNT                               =         #{applyCnt}
+                    , PRSNTTN_GODS_CD                         =         #{prsnttnGodsCd}
+                    , USE_DOW                                 =         #{useDow}
+                    , FROM_USE_HOUR                           =         #{fromUseHour}
+                    , TO_USE_HOUR                             =         #{toUseHour}
+                    , USE_CHL_CD                              =         #{useChlCd}
+                    , DUP_USE_YN                              =         NVL(#{dupUseYn},'N')
+                    , CHIT_NO                                 =         #{chitNo}
+                    , USE_DT                                  =         #{useDt}
+                    , USE_DIV_CD                              =         #{useDivCd}
+                    , USE_YN                                  =         NVL(#{useYn},'N')
+                    , COUPN_BAS_NM                            =         #{coupnBasNm}
+                    , COUPN_BAS_CTNTS                         =         #{coupnBasCtnts}
+                    , ADMT_METH_CD                            =         #{admtMethCd}
+                    , ADMT_AMT                                =         #{admtAmt}
+                    , COUPN_TYPE_CD                           =         #{coupnTypeCd}
+                    , COUPN_USE_POSS_DAY                      =         #{coupnUsePossDay}
+                    , COUPN_USE_POSS_YN                       =         NVL(#{coupnUsePossYn},'N')
+                    , COUPN_USE_POSS_DAY_CNT                  =         #{coupnUsePossDayCnt}
+                    , COUPN_CLASS_CD                          =         #{coupnClassCd}
+                   
+                    , DOW_1_USE_YN                            =         NVL(#{dow1UseYn},'N')
+                    , DOW_2_USE_YN                            =         NVL(#{dow2UseYn},'N')
+                    , DOW_3_USE_YN                            =         NVL(#{dow3UseYn},'N')
+                    , DOW_4_USE_YN                            =         NVL(#{dow4UseYn},'N')
+                    , DOW_5_USE_YN                            =         NVL(#{dow5UseYn},'N')
+                    , DOW_6_USE_YN                            =         NVL(#{dow6UseYn},'N')
+                    , DOW_7_USE_YN                            =         NVL(#{dow7UseYn},'N')
+                    , MSHP_GRADE_CD                           =         #{mshpGradeCd}
+                    , AMDR_ID                                 =         #{amdrId}
+                    , AMD_DT                                  =         SYSDATE
+                    , REG_CHL_CD                              =         #{regChlCd}
+        <include refid="sqlPkConditions"/>
+    </update>
+    
+    <update id="updateApprove">
+               UPDATE CRM_COUPN_PBLS_HST /* com.ceragem.api.crm.dao.CrmCoupnPblsHstDao.updateApprove */ 
+                  SET USE_DT                                  =         TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+                    , USE_YN                                  =         'Y'
+                    <!-- , STOR_NO                                 =         NVL(#{storNo},STOR_NO) -->
+                    , USE_STOR_NO                             =         NVL(#{useStorNo},NULL)
+                    , AMDR_ID                                 =         #{amdrId}
+                    , AMD_DT                                  =         SYSDATE
+					, CHIT_NO                                 =         NVL(#{chitNo},CHIT_NO)
+					, BUY_GODS_CD                             =         NVL(#{buyGodsCd},BUY_GODS_CD)
+					, ORDR_AMT                                =         NVL(#{ordrAmt},ORDR_AMT)
+					, PAY_AMT                                 =         NVL(#{payAmt},PAY_AMT)
+					, SALE_AMT                                =         NVL(#{saleAmt},SALE_AMT)
+					, PROM_NO                                 =         NVL(#{promNo},PROM_NO)
+					, CAMP_NO                                 =         NVL(#{campNo},CAMP_NO)
+					<if test="sgntYn != null and sgntYn != '' and 'Y'.toString().equals(sgntYn)">
+					, ITG_CUST_NO							  = 		NVL(#{itgCustNo},NULL)
+					</if>
+					<!-- , ITG_CUST_NO							  = 		NVL(#{itgCustNo},NULL)
+					CASE  
+						WHEN STOR_NO IS NOT NULL THEN NVL(#{itgCustNo},NULL)
+						WHEN STOR_NO IS NULL THEN ITG_CUST_NO
+					END -->
+        <include refid="sqlPkConditions"/>
+    </update>
+    <update id="updateCancel">
+               UPDATE CRM_COUPN_PBLS_HST /* com.ceragem.api.crm.dao.CrmCoupnPblsHstDao.updateCancel */ 
+                  SET USE_DT                                  =         NULL
+                    , USE_YN                                  =         'N'
+                    , USE_STOR_NO                             =         NULL
+                    , AMDR_ID                                 =         #{amdrId}
+                    , AMD_DT                                  =         SYSDATE
+                    , CHIT_NO                                 =         NULL
+					, BUY_GODS_CD                             =         NULL
+					, ORDR_AMT                                =         NULL
+					, PAY_AMT                                 =         NULL
+					, SALE_AMT                                =         NULL
+					, PROM_NO                                 =         NULL
+					, CAMP_NO                                 =         NULL
+					<if test="sgntYn != null and sgntYn != '' and 'Y'.toString().equals(sgntYn)">
+					, ITG_CUST_NO							  = 		NULL
+					</if>
+					<!-- , ITG_CUST_NO							  = 		
+					CASE  
+						WHEN STOR_NO IS NOT NULL THEN NULL
+						WHEN STOR_NO IS NULL THEN ITG_CUST_NO
+					END -->
+        <include refid="sqlPkConditions"/>
+    </update>
+    
+    <delete id="delete">
+               DELETE /* com.ceragem.api.crm.dao.CrmCoupnPblsHstDao.delete */
+                 FROM CRM_COUPN_PBLS_HST
+        <include refid="sqlPkConditions"/>
+    </delete>
+    
+    <delete id="deleteBook">
+               DELETE /* com.ceragem.api.crm.dao.CrmCoupnPblsHstDao.deleteBook */  
+                 FROM CRM_COUPN_PBLS_HST
+        		WHERE COUPN_BOOK_HST_SEQ = #{coupnBookHstSeq}
+    </delete>
+    
+    <!-- 스탬프 임시 발급 공통 발급은 추후 -->
+    <insert id="insertIssueTem">
+    	INSERT ALL /* crmMshipCoupnBas.insertIssueTem */ INTO  CRM_COUPN_PBLS_HST ( 
+						  COUPN_PBLS_HST_SEQ
+						, COUPN_PBLS_BAS_NO
+						, ITG_CUST_NO
+						, MSHIP_COUPN_BAS_NO
+						, COUPN_KND_CD
+						, COUPN_TGT_CD
+						, COUPN_APPLY_DIV_CD1
+						, COUPN_APPLY_DIV_CD2
+						, FROM_PBLS_STD_DAY
+						, TO_PBLS_STD_DAY
+						, USE_STD_DAY_COND_CD
+						, FROM_USE_STD_DAY
+						, TO_USE_STD_DAY
+						, GIFT_POSS_YN
+						, COUPN_ISSUE_METH_CD
+						, ISSUE_RSTRTN_CNT
+						, MAX_ISSUE_CNT
+						, MAX_USE_CNT
+						, APPLY_AMT
+						, APPLY_RATE
+						, MIN_BUY_AMT
+						, MAX_DC_AMT
+						, APPLY_CNT
+						, PRSNTTN_GODS_CD
+						, USE_DOW
+						, FROM_USE_HOUR
+						, TO_USE_HOUR
+						, USE_CHL_CD
+						, DUP_USE_YN
+						, USE_DIV_CD
+						, USE_YN
+						, COUPN_BAS_NM
+						, COUPN_BAS_CTNTS
+						, ADMT_METH_CD
+						, ADMT_AMT
+						, COUPN_TYPE_CD
+						, COUPN_USE_POSS_DAY
+						, COUPN_USE_POSS_YN
+						, COUPN_USE_POSS_DAY_CNT
+						, COUPN_CLASS_CD
+						, DOW_1_USE_YN
+						, DOW_2_USE_YN
+						, DOW_3_USE_YN
+						, DOW_4_USE_YN
+						, DOW_5_USE_YN
+						, DOW_6_USE_YN
+						, DOW_7_USE_YN
+						, MSHP_GRADE_CD
+						, AMDR_ID
+						, AMD_DT
+						, REGR_ID
+						, REG_DT
+						, REG_CHL_CD 
+						, STOR_NO)
+           
+        SELECT  /* crmMshipCoupnBas.insertIssueTem */  
+        	FN_CRM_AUTO_SEQ('CPN')
+        	, FN_LUHN_COUPN( DECODE(MSHIP_GRADE_CD, '001', '01', '002', '51', '003', '05', NULL, '05') ) COUPN_PBLS_BAS_NO
+        	, #{itgCustNo}
+        	, MSHIP_COUPN_BAS_NO
+        	, COUPN_KND_CD
+        	, COUPN_TGT_CD
+        	, COUPN_APPLY_DIV_CD1
+        	,  COUPN_APPLY_DIV_CD2
+        	, FROM_PBLS_STD_DAY
+        	, TO_PBLS_STD_DAY
+        	, USE_STD_DAY_COND_CD
+        	, FROM_USE_STD_DAY
+        	, TO_USE_STD_DAY
+        	, GIFT_POSS_YN
+        	, COUPN_ISSUE_METH_CD
+        	, ISSUE_RSTRTN_CNT
+        	,  MAX_ISSUE_CNT
+        	, MAX_USE_CNT
+        	, APPLY_AMT
+        	, APPLY_RATE
+        	, MIN_BUY_AMT
+        	, MAX_DC_AMT
+        	, APPLY_CNT
+        	, PRSNTTN_GODS_CD
+        	, USE_DOW
+        	, FROM_USE_HOUR
+        	, TO_USE_HOUR
+        	, USE_CHL_CD
+        	, DUP_USE_YN
+        	,  '002'
+        	, 'N' AS USE_YN
+        	, COUPN_BAS_NM
+        	, COUPN_BAS_CTNTS
+        	, ADMT_METH_CD
+        	, ADMT_AMT
+        	, COUPN_TYPE_CD
+        	, COUPN_USE_POSS_DAY
+        	, COUPN_USE_POSS_YN
+        	, COUPN_USE_POSS_DAY_CNT
+        	,  COUPN_CLASS_CD
+        	,  DOW_1_USE_YN
+        	, DOW_2_USE_YN
+        	, DOW_3_USE_YN
+        	, DOW_4_USE_YN
+        	, DOW_5_USE_YN
+        	, DOW_6_USE_YN
+        	, DOW_7_USE_YN
+        	,  MSHP_GRADE_CD
+        	, AMDR_ID
+        	, AMD_DT
+        	, #{regrId}
+        	, SYSDATE
+        	, REG_CHL_CD 
+        	, '141359'
+		  FROM CRM_MSHIP_COUPN_BAS  WHERE MSHIP_COUPN_BAS_NO = #{mshipCoupnBasNo}   
+    </insert>
+    
+    <select id="getMaxCoupnHstSeq" resultType="com.ceragem.api.crm.model.CrmCouponVo">
+    	SELECT /*crmMshipCoupnBas.getMaxCoupnHstSeq*/ B.* FROM (
+		    SELECT  MAX(COUPN_PBLS_HST_SEQ) AS COUPN_PBLS_HST_SEQ FROM CRM_COUPN_PBLS_HST 
+		        WHERE MSHIP_COUPN_BAS_NO = #{mshipCoupnBasNo} AND ITG_CUST_NO = #{itgCustNo} 
+		) A JOIN CRM_COUPN_PBLS_HST B ON A.COUPN_PBLS_HST_SEQ = B.COUPN_PBLS_HST_SEQ 
+    </select>
+    
+    <select id="getMaxIssuDay" resultType="int">
+    	SELECT  COUNT(1) AS CNT FROM CRM_COUPN_PBLS_HST WHERE MSHIP_COUPN_BAS_NO = #{mshipCoupnBasNo}
+		    AND USE_YN = 'Y'
+		    AND USE_DT IS NOT NULL 
+		    AND TO_CHAR(TO_DATE(USE_DT,'YYYYMMDDHH24MISS'), 'YYYYMMDD') = TO_CHAR(SYSDATE,'YYYYMMDD')
+    </select>
+    
+    <select id="getGodsList" resultType="com.ceragem.api.crm.model.CrmGodsBasVo">
+    	SELECT GOD.GODS_NO 
+		    	, GOD.GODS_NM 
+		    	, GOD.GODS_CLASS_CD
+              FROM CRM_GODS_BAS GOD  
+                 , CRM_MSHIP_APPLY_GODS_REL REL 
+             WHERE GOD.GODS_NO = REL.GODS_NO 
+               AND REL.MSHIP_COUPN_BAS_NO = #{mshipCoupnBasNo}
+    </select>
+    
+    <select id="getChlList" resultType="com.ceragem.api.crm.model.CrmChlBasVo">
+    	SELECT BAS.COMN_CD AS CHL_CD 
+    			, BAS.COMN_CD_NM AS CHL_NM
+                 FROM CRM_COMN_CD_BAS BAS , CRM_MSHIP_APPLY_CHL_REL REL
+                WHERE  BAS.COMN_CD = REL.APPLY_CHL_CD
+                    AND REL.MSHIP_COUPN_BAS_NO = #{mshipCoupnBasNo}
+                    AND BAS.TOP_COMN_CD       =       'ST040'
+                    AND BAS.COMN_CD_LVL_NO    =       2
+                    AND BAS.PRNTS_COMN_CD     =       'ST040'
+    </select>
+    
+    <select id="getCouponMasterList" resultType="com.ceragem.api.crm.model.CrmCouponVo">
+    	<include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingHeader"/>
+    	SELECT B.* ,A.COUPN_PBLS_BAS_NO,A.USE_YN AS ISSUE_USE_YN,A.USE_DT AS ISSUE_USE_DT, A.ITG_CUST_NO FROM CRM_COUPN_PBLS_HST A JOIN CRM_MSHIP_COUPN_BAS B
+           ON A.MSHIP_COUPN_BAS_NO = B.MSHIP_COUPN_BAS_NO
+           	AND A.ITG_CUST_NO = #{itgCustNo}
+        <if test="mshipCoupnBasNo != null and mshipCoupnBasNo != ''">
+           	AND B.MSHIP_COUPN_BAS_NO = #{mshipCoupnBasNo}
+        </if>
+        <if test="coupnPblsBasNo != null and coupnPblsBasNo != ''">
+           	AND A.COUPN_PBLS_BAS_NO = #{coupnPblsBasNo}
+        </if>
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingFooter"/>
+    </select>
+    
+    <update id="updateGiftCoupn">
+    	UPDATE CRM_COUPN_PBLS_HST /* com.ceragem.api.crm.dao.updateGiftCoupn */
+    		SET TRNS = #{trns}
+    			, ITG_CUST_NO = #{itgCustNo}
+    			, AMD_DT = SYSDATE
+    		WHERE COUPN_PBLS_BAS_NO = #{coupnPblsBasNo}
+    </update>
+    
+    <select id="selectJoinStore" resultType="com.ceragem.api.crm.model.CrmCouponVo">
+    	SELECT /* com.ceragem.api.crm.dao.CrmCoupnPblsHstDao.selectJoinStore */ 
+    		<include refid="sqlSelectCols"/>
+        	, NVL(#{storNo},NULL) AS USE_STOR_NO
+        	, CASE
+                 WHEN (SELECT COUNT(1) FROM CRM_MSHIP_APPLY_STOR_REL WHERE MSHIP_COUPN_BAS_NO = A.MSHIP_COUPN_BAS_NO) = 0 THEN 'A' 					/*등록매장 없음*/
+                 ELSE (SELECT COUNT(1) FROM CRM_MSHIP_APPLY_STOR_REL WHERE MSHIP_COUPN_BAS_NO = A.MSHIP_COUPN_BAS_NO AND STOR_NO = #{storNo})||'' 	/*등록매장 있음*/
+             END AS CHK_STOR
+          FROM CRM_COUPN_PBLS_HST A JOIN CRM_MSHIP_COUPN_BAS B
+             ON A.MSHIP_COUPN_BAS_NO = B.MSHIP_COUPN_BAS_NO
+          <if test="useChlCd != null and useChlCd != ''">
+             JOIN CRM_MSHIP_APPLY_CHL_REL C ON B.MSHIP_COUPN_BAS_NO =  C.MSHIP_COUPN_BAS_NO 
+              AND C.APPLY_CHL_CD = #{useChlCd}
+          </if>
+          <if test="mshipCoupnBasNo != null and mshipCoupnBasNo != ''">
+             JOIN CRM_MSHIP_APPLY_STOR_REL D ON D.MSHIP_COUPN_BAS_NO = B.MSHIP_COUPN_BAS_NO 
+              AND D.STOR_NO = #{storNo}
+          </if>
+             AND B.COUPN_TYPE_CD != '013'
+        <include refid="sqlPkConditions"/>
+    </select>
+    
+    <select id="getDayCoupnCnt" resultType="int">
+    	SELECT COUNT(*) AS CNT FROM CRM_COUPN_PBLS_HST WHERE MSHIP_COUPN_BAS_NO = #{mshipCoupnBasNo}    
+    		AND TO_CHAR(REG_DT,'YYYYMMDD') = TO_CHAR(SYSDATE,'YYYYMMDD')
+    </select> 
+    
+    <select id="selectMaster" resultType="com.ceragem.api.crm.model.CrmCouponVo">
+    	SELECT /* com.ceragem.api.crm.dao.CrmCoupnPblsHstDao.selectMaster */
+    		MSHIP_COUPN_BAS_NO
+			, COUPN_KND_CD
+			, COUPN_TGT_CD
+			, COUPN_APPLY_DIV_CD1
+			, COUPN_APPLY_DIV_CD2
+			, FROM_PBLS_STD_DAY
+			, TO_PBLS_STD_DAY
+			, USE_STD_DAY_COND_CD
+			, FROM_USE_STD_DAY
+			, TO_USE_STD_DAY
+			, GIFT_POSS_YN
+			, COUPN_ISSUE_METH_CD
+			, ISSUE_RSTRTN_CNT
+			, MAX_ISSUE_CNT
+			, MAX_USE_CNT
+			, APPLY_AMT
+			, APPLY_RATE
+			, MIN_BUY_AMT
+			, MAX_DC_AMT
+			, APPLY_CNT
+			, PRSNTTN_GODS_CD
+			, USE_DOW
+			, FROM_USE_HOUR
+			, TO_USE_HOUR
+			, USE_CHL_CD
+			, DUP_USE_YN
+			, USE_DIV_CD
+			, USE_YN
+			, COUPN_BAS_NM
+			, COUPN_BAS_CTNTS
+			, ADMT_METH_CD
+			, ADMT_AMT
+			, COUPN_TYPE_CD
+			, COUPN_USE_POSS_DAY
+			, COUPN_USE_POSS_YN
+			, COUPN_USE_POSS_DAY_CNT
+			, COUPN_CLASS_CD
+			, DOW_1_USE_YN
+			, DOW_2_USE_YN
+			, DOW_3_USE_YN
+			, DOW_4_USE_YN
+			, DOW_5_USE_YN
+			, DOW_6_USE_YN
+			, DOW_7_USE_YN
+			, MSHP_GRADE_CD
+			, REG_CHL_CD
+			, MSHIP_GRADE_CD
+			, CPRT_CMP_NO
+			, APPLY_MSHP_GRADE_CTNTS
+			, MSHIP_TYPE_CDS
+    	FROM CRM_MSHIP_COUPN_BAS
+    		WHERE MSHIP_COUPN_BAS_NO = #{mshipCoupnBasNo}
+    			AND USE_YN = 'Y'
+    </select>
+    
+    <select id="selectStorCnt" resultType="EzMap">
+    	SELECT /* com.ceragem.api.crm.dao.CrmCoupnPblsHstDao.selectStorCnt */ 
+    		D.MSHIP_COUPN_BAS_NO 
+    		, COUNT(1) AS STOR_CNT
+          FROM CRM_COUPN_PBLS_HST A JOIN CRM_MSHIP_COUPN_BAS B
+             ON A.MSHIP_COUPN_BAS_NO = B.MSHIP_COUPN_BAS_NO
+          	JOIN CRM_MSHIP_APPLY_STOR_REL D ON D.MSHIP_COUPN_BAS_NO = B.MSHIP_COUPN_BAS_NO
+             AND B.COUPN_TYPE_CD != '013'
+        <include refid="sqlPkConditions"/>
+        	GROUP BY D.MSHIP_COUPN_BAS_NO
+    </select>
+    
+</mapper>

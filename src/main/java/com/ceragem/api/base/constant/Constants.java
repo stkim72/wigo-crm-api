@@ -1,9 +1,5 @@
 package com.ceragem.api.base.constant;
 
-import java.text.SimpleDateFormat;
-import java.util.Locale;
-import java.util.TimeZone;
-
 /**
  * 
  * <pre>
@@ -43,6 +39,9 @@ public class Constants {
 	public final static String _API_CODE_NO_SEARCH_PARAM = "IAR0209"; /* 검색조건이 설정되지 않았습니다. */
 	public final static String _API_CODE_NO_SEARCH_PARAM_MSG = "검색조건이 설정되지 않았습니다."; /* 검색조건이 설정되지 않았습니다. */
 
+	public final static String _API_CODE_TIMEOUT = "IAR0210"; /* 검색조건이 설정되지 않았습니다. */
+	public final static String _API_CODE_TIMEOUT_MSG = "실행시간 초과(Transaction timeout)."; /* 실행시간이 정해진 시간을 초과하여 종료합니다. */
+
 	public final static String _API_CODE_INVALID_PARAM = "IAR0300"; /* 요청파라미터가 올바르지 않습니다. [파라미터] */
 	public final static String _API_CODE_INVALID_PARAM_MSG = "요청파라미터가 올바르지 않습니다."; /* 요청파라미터가 올바르지 않습니다. [파라미터] */
 	public final static String _API_CODE_DUPLICATED_PARAM = "IAR0301"; /* 요청파라미터가 올바르지 않습니다. [파라미터] */
@@ -63,7 +62,10 @@ public class Constants {
 	public final static String _API_CODE_NO_DORMANT = "IAR0305";
 	public final static String _API_CODE_NO_DORMANT_MSG = "휴면회원 정보는 수정 할 수 없습니다.";
 
-	public final static String _API_CODE_NO_DATA = "IAR0400"; /* 조회된 데이터가 없습니다. */
+	public final static String _API_CODE_DEPRECATED = "IAR0306";
+	public final static String _API_CODE_DEPRECATED_MSG = "더 이상 제공되지 않는 기능입니다..";
+
+	public final static String _API_CODE_NO_DATA = "IAR0400";// _API_CODE_OK; /* 조회된 데이터가 없습니다. */
 	public final static String _API_CODE_NO_DATA_MSG = "조회된 데이터가 없습니다."; /* 조회된 데이터가 없습니다. */
 
 	public final static String _API_CODE_NO_RIGHT = "IAR0800"; /* 요청한 정보를 조회할 권한이 없습니다. */
@@ -78,10 +80,12 @@ public class Constants {
 	public final static String _API_CODE_NO_USETYPE = "IAR0513";
 	public final static String _API_CODE_NO_USETYPE_MSG = "일반회원은 구매 정책이 없습니다.";
 
-	public final static SimpleDateFormat _TIMESTAMP_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'",
-			Locale.KOREAN);
-	public final static SimpleDateFormat _DATETIME_FORMAT = new SimpleDateFormat("yyyyMMddHHmmss", Locale.KOREAN);
-	public final static SimpleDateFormat _DATE_FORMAT = new SimpleDateFormat("yyyyMMdd", Locale.KOREAN);
+//	public final static SimpleDateFormat _TIMESTAMP_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'",
+//			Locale.KOREAN);
+//	public final static SimpleDateFormat _TIMESTAMP_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'+09:00'",
+//			Locale.KOREAN);
+//	public final static SimpleDateFormat _DATETIME_FORMAT = new SimpleDateFormat("yyyyMMddHHmmss", Locale.KOREAN);
+//	public final static SimpleDateFormat _DATE_FORMAT = new SimpleDateFormat("yyyyMMdd", Locale.KOREAN);
 
 	public final static String _DB_ENCODING = "UTF-8";
 
@@ -149,20 +153,52 @@ public class Constants {
 	public static final String _CUST_EVENT_MEMBERSHIP = "006";
 	public static final String _CUST_EVENT_MODIFY_PWD = "002";
 	public static final String _CUST_EVENT_MODIFY_IDPWD = "002";
-	
+
 	public final static String _API_COUPN_OVER_DAY_DATA = "IAR0600"; /* 조회된 데이터가 없습니다. */
 	public final static String _API_COUPN_OVER_DAY_DATA_MSG = "발행기간이 초과 되었습니다."; /* 조회된 데이터가 없습니다. */
-	
-	public final static String _API_COUPN_OVER_ISSUE_DATA = "IAR0604"; 
-	public final static String _API_COUPN_OVER_ISSUE_DATA_MSG = "일최대 발급 매수 초과 했습니다."; 
-	
-	public final static String _API_COUPN_GRADE_DATA = "IAR0605"; 
-	public final static String _API_COUPN_GRADE_DATA_MSG = "발행권한이 제한 되었습니다."; 
-	
-	public final static String _API_COUPN_CMPNO_DATA = "IAR0606"; 
-	public final static String _API_COUPN_CMPNO_DATA_MSG = "제휴사 번호가 불일치 합니다."; 
-	
-	static {
-		_TIMESTAMP_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
-	}
+
+	public final static String _API_COUPN_OVER_ISSUE_DATA = "IAR0604";
+	public final static String _API_COUPN_OVER_ISSUE_DATA_MSG = "일최대 발급 매수 초과 했습니다.";
+
+	public final static String _API_COUPN_GRADE_DATA = "IAR0605";
+	public final static String _API_COUPN_GRADE_DATA_MSG = "발행권한이 제한 되었습니다.";
+
+	public final static String _API_COUPN_CMPNO_DATA = "IAR0606";
+	public final static String _API_COUPN_CMPNO_DATA_MSG = "제휴사 번호가 불일치 합니다.";
+
+	public final static String _API_PUB_NO_DATA = "PUB001";
+	public final static String _API_PUB_NO_DATA_MSG = "일치하는 공유사업자가 없습니다.";
+
+	public final static String _API_PUB_NO_CUST_DATA = "PUB002";
+	public final static String _API_PUB_NO_CUST_DATA_MSG = "조회할 고객의 정보를 1개 이상 입력해 주세요.";
+
+	public final static String _API_PUB_NO_CUST_INSERT = "PUB003";
+	public final static String _API_PUB_NO_CUST_INSERT_MSG = "공유사업자 고객 등록에 실패하였습니다.";
+
+	public final static String _API_PUB_NO_CUST_EXIST = "PUB004";
+	public final static String _API_PUB_NO_CUST_EXIST_MSG = "이미 공유사업자에 속한 고객입니다.";
+
+	public final static String _API_PUB_NO_WELL_EXIST = "PUB005";
+	public final static String _API_PUB_NO_WELL_EXIST_MSG = "웰라운지 코드를 기입해주세요.(공통코드 : WLNG)";
+
+	public final static String _API_PUB_BIZNO_EXIST = "PUB008";
+	public final static String _API_PUB_BIZNO_EXIST_MSG = "이미 존재하는 공유 사업자번호입니다.";
+
+	public final static String _API_PUB_ID_EXIST = "PUB006";
+	public final static String _API_PUB_ID_EXIST_MSG = "이미 존재하는 공유사업자 아이디입니다.";
+
+	public final static String _API_PUB_MPHON_EXIST = "PUB007";
+	public final static String _API_PUB_MPHON_EXIST_MSG = "이미 존재하는 휴대폰 번호입니다.";
+
+	public final static String _API_POS_CHK_DAY_BEFORE = "POS001";
+	public final static String _API_POS_CHK_DAY_BEFORE_MSG = "현재일자 또는 현재일자 이후의 날짜를 입력해 주세요.";
+
+	public final static String _FILE_WHITE_LIST = "S180";
+
+	public final static String _COM_SALE_ORG_CD = "137402";
+
+//	static {
+////		_TIMESTAMP_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
+//		_TIMESTAMP_FORMAT.setTimeZone(TimeZone.getTimeZone("Asia/Seoul"));
+//	}
 }

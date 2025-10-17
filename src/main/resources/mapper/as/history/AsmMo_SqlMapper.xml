@@ -48,7 +48,8 @@
 						, AS_SUBMIT_NO
 					FROM AS_SUBMIT_BAS
 					WHERE USE_YN = 'Y'
-						AND  REPLACE (MPHON_NO , ''), '-', '')  = REPLACE(#{sendTelNo}, '-' /* 고객전화번호 */
+						AND  REPLACE (DAMO.DECRYPT_VAR_B64('AES_256',MPHON_NO , ''), '-', '')  = REPLACE(#{sendTelNo}, '-', '') /* 고객전화번호 */
+						<!-- /*+AND  DAMO.ENCRYPT_VAR_B64('AES_256',MPHON_NO,'') = DAMO.ENCRYPT_VAR_B64('AES_256',#{sendTelNo},'')*/	 -->
 						AND (AS_STATUS_CD IS NULL OR AS_STATUS_CD = '30')
 						ORDER BY AS_SUBMIT_NO DESC
 				) A

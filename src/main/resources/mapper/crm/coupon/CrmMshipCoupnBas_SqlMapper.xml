@@ -287,6 +287,9 @@
         <if test="coupnBasNm != null and coupnBasNm != ''">
                   AND A.COUPN_BAS_NM    =       #{coupnBasNm}
         </if>
+        <if test="coupnBasNmLike != null and coupnBasNmLike != ''">
+                  AND A.COUPN_BAS_NM    LIKE    '%' ||  #{coupnBasNmLike} || '%'
+        </if>
         <if test="coupnBasCtnts != null and coupnBasCtnts != ''">
                   AND A.COUPN_BAS_CTNTS =       #{coupnBasCtnts}
         </if>
@@ -405,7 +408,27 @@
         <if test="cprtCmpNo != null and cprtCmpNo != ''">
                   AND A.CPRT_CMP_NO     =       #{cprtCmpNo}
         </if>
-        AND A.COUPN_TYPE_CD != '013'
+        <if test="availableYn != null and availableYn != ''">
+              <choose>
+                <when test="'Y'.toString().equals(availableYn)">
+                    AND A.USE_YN = 'Y'
+                    AND (TO_CHAR(TO_DATE(A.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') <![CDATA[>]]> TO_CHAR(SYSDATE,'YYYY-MM-DD')
+	                        OR (A.USE_STD_DAY_COND_CD = 'Y' AND TO_CHAR(TO_DATE(A.TO_PBLS_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') <![CDATA[>]]>  TO_CHAR(SYSDATE,'YYYY-MM-DD'))
+	                        OR (TO_CHAR(TO_DATE(A.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD') AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[>]]> TO_CHAR(A.TO_USE_HOUR)) )
+	                        OR (A.USE_STD_DAY_COND_CD = 'Y' AND TO_CHAR(TO_DATE(A.TO_PBLS_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD') AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[>]]> TO_CHAR(A.TO_USE_HOUR)) )
+                        )
+                </when>
+                <otherwise>
+                   	AND (TO_CHAR(TO_DATE(A.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') <![CDATA[<]]> TO_CHAR(SYSDATE,'YYYY-MM-DD') 
+	                        OR (A.USE_STD_DAY_COND_CD = 'Y' AND TO_CHAR(TO_DATE(A.TO_PBLS_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') <![CDATA[<]]>  TO_CHAR(SYSDATE,'YYYY-MM-DD'))
+	                        OR (TO_CHAR(TO_DATE(A.TO_USE_STD_DAY,'YYYY-MM-DD'),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD') AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[<]]> TO_CHAR(A.TO_USE_HOUR)) )
+	                        OR (A.USE_STD_DAY_COND_CD = 'Y' AND TO_CHAR(TO_DATE (NVL(A.COUPN_USE_POSS_DAY,0)),'YYYY-MM-DD') = TO_CHAR(SYSDATE,'YYYY-MM-DD') AND (TO_CHAR(SYSDATE, 'HH24MI') <![CDATA[<]]> TO_CHAR(A.TO_USE_HOUR)) )
+	                        OR (A.USE_YN = 'N')
+                        )
+                </otherwise>
+              </choose>
+        </if>
+<!--         AND A.COUPN_TYPE_CD != '013' -->
     </where>
     </sql>
     
@@ -419,14 +442,15 @@
                SELECT /* com.ceragem.api.crm.dao.CrmMshipCoupnBasDao.selectList */ <include refid="sqlSelectCols"/>
                  FROM CRM_MSHIP_COUPN_BAS A
         <include refid="sqlConditions"/>
-               ORDER BY REG_DT DESC
+               ORDER BY COUPN_BAS_NM
+                   , REG_DT DESC
         <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingFooter"/>
     </select>
     <select id="select" resultType="com.ceragem.api.crm.model.CrmMshipCoupnBasVo">
                SELECT /* com.ceragem.api.crm.dao.CrmMshipCoupnBasDao.select */ <include refid="sqlSelectCols"/>
                  FROM CRM_MSHIP_COUPN_BAS A
         <include refid="sqlPkConditions"/>
-        		AND A.COUPN_TYPE_CD != '013'
+<!--         		AND A.COUPN_TYPE_CD != '013' -->
     </select>
     
     
@@ -434,7 +458,7 @@
     
   			SELECT /* com.ceragem.api.crm.dao.CrmMshipCoupnBasDao.selectCoupnInfo */
                 A.MSHIP_GRADE_CD,
-			  	#{mshipGradeCd}  MSHP_GRADE_CD,			  	
+			  	A.MSHP_GRADE_CD,			  	
 			  	B.COUPN_EVENT_BAS_NO ,
 				B.EVENT_COMN_CD ,
 				B.COUPN_TYPE_CD ,
@@ -468,7 +492,14 @@
 			LEFT JOIN CRM_MSHIP_APPLY_COUPN_EVENT_REL B ON A.MSHIP_PLCY_BAS_NO = B.MSHIP_PLCY_BAS_NO
 			LEFT JOIN CRM_MSHIP_COUPN_BAS C ON B.MSHIP_COUPN_BAS_NO = C.MSHIP_COUPN_BAS_NO
 			WHERE B.EVENT_COMN_CD = #{coupnTypeCd}
-				AND ( A.MSHP_GRADE_CD = #{orgMshipGradeCd}  )
+            <choose>
+                <when test="orgMshipPlcyBasNo != null and orgMshipPlcyBasNo !=''">
+                AND A.MSHIP_PLCY_BAS_NO = #{orgMshipPlcyBasNo}
+                </when>
+                <otherwise>
+                AND A.MSHP_GRADE_CD = #{orgMshipGradeCd}
+                </otherwise>
+            </choose>
 				AND ( A.APPLY_STD_STA_YMD  <![CDATA[<=]]>  TO_CHAR(SYSDATE, 'YYYYMMDD')  AND  A.APPLY_STD_END_YMD <![CDATA[>=]]>   TO_CHAR(SYSDATE, 'YYYYMMDD') )
 				AND ( C.FROM_PBLS_STD_DAY  <![CDATA[<=]]>  TO_CHAR(SYSDATE, 'YYYYMMDD')  AND  C.TO_PBLS_STD_DAY <![CDATA[>=]]>   TO_CHAR(SYSDATE, 'YYYYMMDD') )
 		
@@ -608,5 +639,72 @@
                   ) A 
               WHERE RNUM = 1     
                 
+    </select>
+    
+    <select id="getGodsList" resultType="com.ceragem.api.crm.model.CrmGodsBasVo">
+    	SELECT GOD.GODS_NO 
+		    	, GOD.GODS_NM 
+		    	, GOD.GODS_CLASS_CD
+              FROM CRM_GODS_BAS GOD  
+                 , CRM_MSHIP_APPLY_GODS_REL REL 
+             WHERE GOD.GODS_NO = REL.GODS_NO 
+               AND REL.MSHIP_COUPN_BAS_NO = #{mshipCoupnBasNo}
+    </select>
+    
+    <select id="getChlList" resultType="com.ceragem.api.crm.model.CrmChlBasVo">
+    	SELECT BAS.COMN_CD AS CHL_CD 
+    			, BAS.COMN_CD_NM AS CHL_NM
+                 FROM CRM_COMN_CD_BAS BAS , CRM_MSHIP_APPLY_CHL_REL REL
+                WHERE  BAS.COMN_CD = REL.APPLY_CHL_CD
+                    AND REL.MSHIP_COUPN_BAS_NO = #{mshipCoupnBasNo}
+                    AND BAS.TOP_COMN_CD       =       'ST040'
+                    AND BAS.COMN_CD_LVL_NO    =       2
+                    AND BAS.PRNTS_COMN_CD     =       'ST040'
+    </select>
+    
+    <select id="getStorList" resultType="com.ceragem.api.crm.model.CrmStorBasVo">
+    	SELECT STR.STOR_NO
+		    , STR.STOR_NM
+		    FROM CRM_STOR_BAS STR
+		    ,CRM_MSHIP_APPLY_STOR_REL REL
+		    WHERE STR.STOR_NO = REL.STOR_NO
+		        AND STR.STATUS_CD = 'Y'
+		        AND REL.MSHIP_COUPN_BAS_NO = #{mshipCoupnBasNo}
+    </select>
+    
+    <select id="selectEventCoupon" resultType="EzMap">
+            SELECT A.COMN_CD
+                 , A.COMN_CD_NM
+                 , A.RFRN_1_COMN_CD EVENT_CD
+                 , A.RFRN_2_COMN_CD COUPN_BAS_NO
+                 , A.RFRN_3_COMN_CD TOTAL_MAX_CNT
+                 , A.RFRN_4_COMN_CD CUST_MAX_CNT
+                 , A.RFRN_5_COMN_CD EVENT_DAILY_CNT
+                 , A.RFRN_6_COMN_CD EVENT_ISSUE_CNT
+                 , A.RFRN_7_COMN_CD EVENT_START_YMD
+                 , A.RFRN_8_COMN_CD EVENT_END_YMD
+                 , 'EV300_' || A.COMN_CD PROM_NO
+                 , NVL(LEAST(NVL(A.RFRN_3_COMN_CD,1000000) - NVL(B.TOTAL_ISSUE_CNT,0),NVL(A.RFRN_4_COMN_CD,1000000) - NVL(B.CUST_ISSUE_CNT,0), NVL(A.RFRN_5_COMN_CD,1000000) - NVL(B.DAILY_ISSUE_CNT,0) ,NVL(A.RFRN_6_COMN_CD,1)),0) ISSUE_CNT
+                 , NVL(CUST_ISSUE_CNT,0) CUST_ISSUE_CNT
+                 , #{itgCustNo} ITG_CUST_NO
+                 , C.MSHIP_COUPN_BAS_NO
+              FROM CRM_COMN_CD_BAS A
+             LEFT JOIN ( SELECT COUNT(1) TOTAL_ISSUE_CNT
+                              , COUNT(DECODE(ITG_CUST_NO , #{itgCustNo}, 1,NULL)) CUST_ISSUE_CNT
+                              , COUNT(CASE WHEN REG_DT BETWEEN TRUNC(SYSDATE) AND TRUNC(SYSDATE)+1 AND  ITG_CUST_NO = #{itgCustNo} THEN 1 ELSE NULL END ) DAILY_ISSUE_CNT
+                              , MSHIP_COUPN_BAS_NO
+                            /*, PROM_NO */
+                           FROM CRM_COUPN_PBLS_HST
+                        /*WHERE PROM_NO IS NOT NULL*/
+                          GROUP BY MSHIP_COUPN_BAS_NO
+                            /*  , PROM_NO */ ) B ON A.RFRN_2_COMN_CD = B.MSHIP_COUPN_BAS_NO /* AND B.PROM_NO = 'EV300_' || A.COMN_CD */
+             INNER JOIN CRM_MSHIP_COUPN_BAS C ON A.RFRN_2_COMN_CD = C.MSHIP_COUPN_BAS_NO AND C.USE_YN = 'Y' AND NVL(TO_USE_STD_DAY,'20991231') >= TO_CHAR(SYSDATE,'YYYYMMDD')  AND TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN C.FROM_PBLS_STD_DAY AND C.TO_PBLS_STD_DAY
+             INNER JOIN CRM_CUST_BAS D ON D.ITG_CUST_NO = #{itgCustNo} AND D.CUST_STATUS_CD = '001' AND D.MSHIP_SBSC_YN = 'Y'                           
+             WHERE A.TOP_COMN_CD = 'EV300'
+               AND A.COMN_CD_LVL_NO = 2
+               AND A.USE_YN = 'Y'
+               AND A.RFRN_1_COMN_CD = #{eventCd}
+               AND TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN NVL(RFRN_7_COMN_CD,'20000101') AND NVL(RFRN_8_COMN_CD,'20991231')
+               AND NVL(LEAST(NVL(A.RFRN_3_COMN_CD,1000000) - NVL(B.TOTAL_ISSUE_CNT,0),NVL(A.RFRN_4_COMN_CD,1000000) - NVL(B.CUST_ISSUE_CNT,0), NVL(A.RFRN_5_COMN_CD,1000000) - NVL(B.DAILY_ISSUE_CNT,0) ,NVL(A.RFRN_6_COMN_CD,1)),0) > 0
     </select>
 </mapper>

@@ -28,13 +28,13 @@ SELECT T.*
              	AND to_char(A.REG_DTTM,'yyyymmdd')<![CDATA[ < ]]>#{endDt}
              </if>
              <if test="custTelNo != null and custTelNo != ''">
-             	AND A.CUST_TEL_NO = #{custTelNo}
+             	AND A.CUST_TEL_NO = DAMO.ENCRYPT_VAR_B64('AES_256',#{custTelNo},'')
              </if>
 		</when>
 		<otherwise>
              AND to_char(A.REG_DTTM,'yyyymmdd')<![CDATA[ >]]> #{startDt}
              AND to_char(A.REG_DTTM,'yyyymmdd')<![CDATA[ < ]]>#{endDt}
-             AND A.CUST_TEL_NO = #{custTelNo}
+             AND A.CUST_TEL_NO = DAMO.ENCRYPT_VAR_B64('AES_256',#{custTelNo},'')
              
 		</otherwise>			
 	</choose>	  
@@ -63,7 +63,7 @@ SELECT T.*
 			     , B.PRODUCT_CD 						/*제품코드*/
 			     , A.AS_RECP_NO							/*as접수번호*/
 			     , A.CUST_NM							/*고객명*/			     
-			     , CUST_TEL_NO AS CUST_TEL_NO  /*인입접수번호*/
+			     , DAMO.DECRYPT_VAR_B64('AES_256',CUST_TEL_NO,'') AS CUST_TEL_NO  /*인입접수번호*/
 			     , B.CNSL_TYP_CD						/*상담유형*/
 			     , B.CNSL_TYP_CD_2						/*상담유형2*/
 			     , B.CNSL_TYP_CD_3						/*상담유형3*/
@@ -105,7 +105,7 @@ SELECT T.*
 		     , B.PRODUCT_CD 						/*제품코드*/
 		     , A.AS_RECP_NO							/*as접수번호*/
 		     , A.CUST_NM							/*고객명*/
-		     , A.CUST_TEL_NO AS CUST_TEL_NO  /*인입접수번호*/
+		     , DAMO.DECRYPT_VAR_B64('AES_256',A.CUST_TEL_NO,'') AS CUST_TEL_NO  /*인입접수번호*/
 		     , B.CNSL_TYP_CD						/*상담유형*/
 		     , B.CNSL_TYP_CD_2						/*상담유형2*/
 		     , B.CNSL_TYP_CD_3						/*상담유형3*/

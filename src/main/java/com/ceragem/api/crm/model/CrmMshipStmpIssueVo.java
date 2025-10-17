@@ -20,19 +20,19 @@ public class CrmMshipStmpIssueVo {
 	/**
 	 * 스탬프 마스터 코드
 	 */
-	@Schema(description = "스탬프 마스터 명", example = "", hidden = false, required = false, nullable = true, maxLength = 30)
+	@Schema(description = "스탬프 명", example = "", hidden = false, required = false, nullable = true, maxLength = 30)
 	@MaxByte(max = 30)
 	private String stmpBasNm;
 	/**
 	 * FROM사용기준일
 	 */
-	@Schema(description = "FROM사용기준일", example = "", hidden = false, required = false, nullable = true, maxLength = 8)
+	@Schema(description = "유효기간시작일", example = "", hidden = false, required = false, nullable = true, maxLength = 8)
 	@MaxByte(max = 8)
 	private String fromUseStdDay;
 	/**
 	 * TO사용기준일
 	 */
-	@Schema(description = "TO사용기준일", example = "", hidden = false, required = false, nullable = true, maxLength = 8)
+	@Schema(description = "유효기간만료일", example = "", hidden = false, required = false, nullable = true, maxLength = 8)
 	@MaxByte(max = 8)
 	private String toUseStdDay;
 	/**
@@ -43,12 +43,12 @@ public class CrmMshipStmpIssueVo {
 	/**
 	 * 스탬프판수
 	 */
-	@Schema(description = "스탬프판수 0 무제한", example = "", hidden = false, required = false, nullable = true)
+	@Schema(description = "Max 스탬프판수 0 무제한", example = "", hidden = false, required = false, nullable = true)
 	private Integer stmpBoardCnt;
 	/**
 	 * 완료판수
 	 */
-	@Schema(description = "완료판수", example = "", hidden = false, required = false, nullable = true)
+	@Schema(description = "지급된 혜택수", example = "", hidden = false, required = false, nullable = true)
 	private Integer accumCnt;
 	/**
 	 * 스탬프 적립수

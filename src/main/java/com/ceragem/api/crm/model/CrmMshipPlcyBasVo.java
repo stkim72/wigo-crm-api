@@ -179,7 +179,7 @@ public class CrmMshipPlcyBasVo extends ApiBaseVo {
 	private String pblsDivCd; // 이벤트 구분코드
 
 	private int todayPblsPnt; // 오늘 적립된 포인트 금액
-	
+
 	/**
 	 * 통합고객번호
 	 */
@@ -187,7 +187,8 @@ public class CrmMshipPlcyBasVo extends ApiBaseVo {
 
 	private String orgMshipPlcyBasNo;
 
-
 	private String rcmdrCustNo2;
-	
+
+	private String useGradeYn;
+
 }

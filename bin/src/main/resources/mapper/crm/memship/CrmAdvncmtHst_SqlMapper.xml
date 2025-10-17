@@ -1,0 +1,480 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ceragem.api.crm.dao.CrmAdvncmtHstDao">
+
+
+
+    <sql id="sqlPkConditions">
+       WHERE 1=1
+     	<if test="advncmtHstSeq != null and advncmtHstSeq != ''">
+                  AND A.ADVNCMT_HST_SEQ =       #{advncmtHstSeq}
+        </if>
+        
+        <if test="chitNo != null and chitNo != ''">
+                  AND A.CHIT_NO =       #{chitNo}
+        </if>
+        
+    </sql>
+    
+    
+    
+    <sql id="sqlCols">
+                      ADVNCMT_HST_SEQ                    /*승급이력일련번호        */
+                    , ITG_CUST_NO                    /*통합고객번호        */
+                    , MSHIP_GRADE_CD                    /*멤버십등급코드        */
+                    , STOR_NO                    /*매장번호        */
+                    , CHIT_NO                    /*전표번호        */
+                    , BUY_GODS_NO                    /*구매제품번호        */
+                    , ORDR_AMT                    /*주문금액        */
+                    , APPLY_AMT                    /*적용금액        */
+                    , PAY_AMT                    /*결제금액        */
+                    , PBLS_DIV_CD                    /*발행구분코드        */
+                    , OCCUR_ADVNCMT_SCORE                    /*발생승급점수        */
+                    , REMAIN_ADVNCMT_SCORE                    /*잔여포인트점수        */
+                    , VALID_PERD_STA_YMD                    /*유효기간시작년월일        */
+                    , VALID_PERD_END_YMD                    /*유효기간종료년월일        */
+                    , PBLS_DT                    /*발행일시        */
+                    , EXTNC_DT                    /*소멸일시        */
+                    , TXN                    /*내역        */
+                    , PBLS_CHL_CD                    /*발행채널코드        */
+                    , CARD_PBLS_HST_SEQ                    /*카드발행이력일련번호        */
+                    , USE_TYPE_CD                    /*사용유형코드        */
+                    , DEAL_NO                    /*거래번호        */
+                    , PROM_NO                    /*프로모션번호        */
+                    , CAMP_NO                    /*캠페인번호        */
+                    , COUPN_NO                    /*쿠폰번호        */
+                    , USE_DT                    /*사용일시        */
+                    , AMDR_ID                    /*수정자ID        */
+                    , AMD_DT                    /*수정일시        */
+                    , REGR_ID                    /*등록자ID        */
+                    , REG_DT                    /*등록일시        */
+                    , REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS]*/
+                    , ACCUM_YN                    /*적립여부        */
+                    , RCMDR_CUST_NO
+                    , ORG_CHIT_NO
+    </sql>
+    <sql id="sqlSelectCols">
+                      A.ADVNCMT_HST_SEQ                    /*승급이력일련번호        */
+                    , A.ITG_CUST_NO                    /*통합고객번호        */
+                    , A.MSHIP_GRADE_CD                    /*멤버십등급코드        */
+                    , A.STOR_NO                    /*매장번호        */
+                    , A.CHIT_NO                    /*전표번호        */
+                    , A.BUY_GODS_NO                    /*구매제품번호        */
+                    , A.ORDR_AMT                    /*주문금액        */
+                    , A.APPLY_AMT                    /*적용금액        */
+                    , A.PAY_AMT                    /*결제금액        */
+                    , A.PBLS_DIV_CD                    /*발행구분코드        */
+                    , A.OCCUR_ADVNCMT_SCORE                    /*발생승급점수        */
+                    , A.REMAIN_ADVNCMT_SCORE                    /*잔여포인트점수        */
+                    , A.VALID_PERD_STA_YMD                    /*유효기간시작년월일        */
+                    , A.VALID_PERD_END_YMD                    /*유효기간종료년월일        */
+                    , TO_CHAR(A.PBLS_DT,'YYYYMMDDHH24MISS')    PBLS_DT                    /*발행일시        */
+                    , TO_CHAR(A.EXTNC_DT,'YYYYMMDDHH24MISS')    EXTNC_DT                    /*소멸일시        */
+                    , A.TXN                    /*내역        */
+                    , A.PBLS_CHL_CD                    /*발행채널코드        */
+                    , A.CARD_PBLS_HST_SEQ                    /*카드발행이력일련번호        */
+                    , A.USE_TYPE_CD                    /*사용유형코드        */
+                    , A.DEAL_NO                    /*거래번호        */
+                    , A.PROM_NO                    /*프로모션번호        */
+                    , A.CAMP_NO                    /*캠페인번호        */
+                    , A.COUPN_NO                    /*쿠폰번호        */
+                    , TO_CHAR(A.USE_DT,'YYYYMMDDHH24MISS')    USE_DT                    /*사용일시        */
+                    , A.AMDR_ID                    /*수정자ID        */
+                    , TO_CHAR(A.AMD_DT,'YYYYMMDDHH24MISS')    AMD_DT                    /*수정일시        */
+                    , A.REGR_ID                    /*등록자ID        */
+                    , TO_CHAR(A.REG_DT,'YYYYMMDDHH24MISS')    REG_DT                    /*등록일시        */
+                    , A.REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS]*/
+                    , A.ACCUM_YN                    /*적립여부        */
+                    , A.ORG_CHIT_NO
+    </sql>
+    <sql id="sqlConditions">
+    <where>
+        <if test="advncmtHstSeq != null and advncmtHstSeq != ''">
+                  AND A.ADVNCMT_HST_SEQ =       #{advncmtHstSeq}
+        </if>
+        <if test="itgCustNo != null and itgCustNo != ''">
+                  AND A.ITG_CUST_NO     =       #{itgCustNo}
+        </if>
+        <if test="mshipGradeCd != null and mshipGradeCd != ''">
+            <choose>
+                <when test="mshipGradeCd instanceof String">
+                    AND A.MSHIP_GRADE_CD  =       #{mshipGradeCd}
+                </when>
+                <otherwise>
+                    AND A.MSHIP_GRADE_CD  IN
+                    <foreach item="item" index="index" collection="mshipGradeCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="storNo != null and storNo != ''">
+                  AND A.STOR_NO         =       #{storNo}
+        </if>
+        <if test="chitNo != null and chitNo != ''">
+                  AND A.CHIT_NO         =       #{chitNo}
+        </if>
+        <if test="buyGodsNo != null and buyGodsNo != ''">
+                  AND A.BUY_GODS_NO     =       #{buyGodsNo}
+        </if>
+        <if test="ordrAmt != null and ordrAmt != ''">
+                  AND A.ORDR_AMT        =       #{ordrAmt}
+        </if>
+        <if test="applyAmt != null and applyAmt != ''">
+                  AND A.APPLY_AMT       =       #{applyAmt}
+        </if>
+        <if test="payAmt != null and payAmt != ''">
+                  AND A.PAY_AMT         =       #{payAmt}
+        </if>
+        <if test="pblsDivCd != null and pblsDivCd != ''">
+            <choose>
+                <when test="pblsDivCd instanceof String">
+                    AND A.PBLS_DIV_CD     =       #{pblsDivCd}
+                </when>
+                <otherwise>
+                    AND A.PBLS_DIV_CD     IN
+                    <foreach item="item" index="index" collection="pblsDivCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="occurAdvncmtScore != null and occurAdvncmtScore != ''">
+                  AND A.OCCUR_ADVNCMT_SCORE=       #{occurAdvncmtScore}
+        </if>
+        <if test="remainAdvncmtScore != null and remainAdvncmtScore != ''">
+                  AND A.REMAIN_ADVNCMT_SCORE=       #{remainAdvncmtScore}
+        </if>
+        <if test="validPerdStaYmd != null and validPerdStaYmd != ''">
+                  AND A.VALID_PERD_STA_YMD=       #{validPerdStaYmd}
+        </if>
+        <if test="validPerdEndYmd != null and validPerdEndYmd != ''">
+                  AND A.VALID_PERD_END_YMD=       #{validPerdEndYmd}
+        </if>
+        <if test="pblsDt != null and pblsDt != ''">
+                  AND A.PBLS_DT         =       TO_DATE(#{pblsDt},'YYYYMMDDHH24MISS')
+        </if>
+        <if test="extncDt != null and extncDt != ''">
+                  AND A.EXTNC_DT        =       TO_DATE(#{extncDt},'YYYYMMDDHH24MISS')
+        </if>
+        <if test="txn != null and txn != ''">
+                  AND A.TXN             =       #{txn}
+        </if>
+        <if test="pblsChlCd != null and pblsChlCd != ''">
+            <choose>
+                <when test="pblsChlCd instanceof String">
+                    AND A.PBLS_CHL_CD     =       #{pblsChlCd}
+                </when>
+                <otherwise>
+                    AND A.PBLS_CHL_CD     IN
+                    <foreach item="item" index="index" collection="pblsChlCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="cardPblsHstSeq != null and cardPblsHstSeq != ''">
+                  AND A.CARD_PBLS_HST_SEQ=       #{cardPblsHstSeq}
+        </if>
+        <if test="useTypeCd != null and useTypeCd != ''">
+            <choose>
+                <when test="useTypeCd instanceof String">
+                    AND A.USE_TYPE_CD     =       #{useTypeCd}
+                </when>
+                <otherwise>
+                    AND A.USE_TYPE_CD     IN
+                    <foreach item="item" index="index" collection="useTypeCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="dealNo != null and dealNo != ''">
+                  AND A.DEAL_NO         =       #{dealNo}
+        </if>
+        <if test="promNo != null and promNo != ''">
+                  AND A.PROM_NO         =       #{promNo}
+        </if>
+        <if test="campNo != null and campNo != ''">
+                  AND A.CAMP_NO         =       #{campNo}
+        </if>
+        <if test="coupnNo != null and coupnNo != ''">
+                  AND A.COUPN_NO        =       #{coupnNo}
+        </if>
+        <if test="useDt != null and useDt != ''">
+                  AND A.USE_DT          =       TO_DATE(#{useDt},'YYYYMMDDHH24MISS')
+        </if>
+        <if test="regChlCd != null and regChlCd != ''">
+            <choose>
+                <when test="regChlCd instanceof String">
+                    AND A.REG_CHL_CD      =       #{regChlCd}
+                </when>
+                <otherwise>
+                    AND A.REG_CHL_CD      IN
+                    <foreach item="item" index="index" collection="regChlCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="accumYn != null and accumYn != ''">
+                  AND A.ACCUM_YN        =       #{accumYn}
+        </if>
+        </where>
+    </sql>
+    <sql id="sqlOrderBy">
+        <choose>
+            <when test="colSortName ==null or colSortName == ''">
+                ORDER BY      REG_DT DESC
+            </when>
+            <when test="colSortName.equals('advncmtHstSeq')">
+                ORDER BY      ADVNCMT_HST_SEQ
+            </when>
+            <when test="colSortName.equals('itgCustNo')">
+                ORDER BY      ITG_CUST_NO
+            </when>
+            <when test="colSortName.equals('mshipGradeCd')">
+                ORDER BY      MSHIP_GRADE_CD
+            </when>
+            <when test="colSortName.equals('storNo')">
+                ORDER BY      STOR_NO
+            </when>
+            <when test="colSortName.equals('chitNo')">
+                ORDER BY      CHIT_NO
+            </when>
+            <when test="colSortName.equals('buyGodsNo')">
+                ORDER BY      BUY_GODS_NO
+            </when>
+            <when test="colSortName.equals('ordrAmt')">
+                ORDER BY      ORDR_AMT
+            </when>
+            <when test="colSortName.equals('applyAmt')">
+                ORDER BY      APPLY_AMT
+            </when>
+            <when test="colSortName.equals('payAmt')">
+                ORDER BY      PAY_AMT
+            </when>
+            <when test="colSortName.equals('pblsDivCd')">
+                ORDER BY      PBLS_DIV_CD
+            </when>
+            <when test="colSortName.equals('occurAdvncmtScore')">
+                ORDER BY      OCCUR_ADVNCMT_SCORE
+            </when>
+            <when test="colSortName.equals('remainAdvncmtScore')">
+                ORDER BY      REMAIN_ADVNCMT_SCORE
+            </when>
+            <when test="colSortName.equals('validPerdStaYmd')">
+                ORDER BY      VALID_PERD_STA_YMD
+            </when>
+            <when test="colSortName.equals('validPerdEndYmd')">
+                ORDER BY      VALID_PERD_END_YMD
+            </when>
+            <when test="colSortName.equals('pblsDt')">
+                ORDER BY      PBLS_DT
+            </when>
+            <when test="colSortName.equals('extncDt')">
+                ORDER BY      EXTNC_DT
+            </when>
+            <when test="colSortName.equals('txn')">
+                ORDER BY      TXN
+            </when>
+            <when test="colSortName.equals('pblsChlCd')">
+                ORDER BY      PBLS_CHL_CD
+            </when>
+            <when test="colSortName.equals('cardPblsHstSeq')">
+                ORDER BY      CARD_PBLS_HST_SEQ
+            </when>
+            <when test="colSortName.equals('useTypeCd')">
+                ORDER BY      USE_TYPE_CD
+            </when>
+            <when test="colSortName.equals('dealNo')">
+                ORDER BY      DEAL_NO
+            </when>
+            <when test="colSortName.equals('promNo')">
+                ORDER BY      PROM_NO
+            </when>
+            <when test="colSortName.equals('campNo')">
+                ORDER BY      CAMP_NO
+            </when>
+            <when test="colSortName.equals('coupnNo')">
+                ORDER BY      COUPN_NO
+            </when>
+            <when test="colSortName.equals('useDt')">
+                ORDER BY      USE_DT
+            </when>
+            <when test="colSortName.equals('amdrId')">
+                ORDER BY      AMDR_ID
+            </when>
+            <when test="colSortName.equals('amdDt')">
+                ORDER BY      AMD_DT
+            </when>
+            <when test="colSortName.equals('regrId')">
+                ORDER BY      REGR_ID
+            </when>
+            <when test="colSortName.equals('regDt')">
+                ORDER BY      REG_DT
+            </when>
+            <when test="colSortName.equals('regChlCd')">
+                ORDER BY      REG_CHL_CD
+            </when>
+            <when test="colSortName.equals('accumYn')">
+                ORDER BY      ACCUM_YN
+            </when>
+            <otherwise>
+                ORDER BY      REG_DT
+            </otherwise>
+        </choose>
+        <if test="colSortName !=null and colSortDir !='' and colSortDir !=null and colSortDir !='' and colSortDir.equals('desc')">
+            DESC
+        </if>
+    </sql>
+    <select id="selectListCount" resultType="int">
+                SELECT /* com.ceragem.api.crm.dao.CrmAdvncmtHstDao.selectListCount */ COUNT(1)
+                 FROM CRM_ADVNCMT_HST A
+        <include refid="sqlConditions"/>
+    </select>
+    <select id="selectList" resultType="com.ceragem.api.crm.model.CrmAdvncmtHstVo">
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingHeader"/>
+               SELECT /* com.ceragem.api.crm.dao.CrmAdvncmtHstDao.selectList */ <include refid="sqlSelectCols"/>
+                 FROM CRM_ADVNCMT_HST A
+        <include refid="sqlConditions"/>
+        <include refid="sqlOrderBy"/>
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingFooter"/>
+    </select>
+    
+     <select id="select" resultType="com.ceragem.api.crm.model.CrmAdvncmtHstVo">
+               SELECT /* com.ceragem.api.crm.dao.CrmAdvncmtHstDao.select */ <include refid="sqlSelectCols"/>
+                 FROM CRM_ADVNCMT_HST A
+        <include refid="sqlPkConditions"/>
+    </select>
+    
+    <select id="selectAdvnCmt" resultType="com.ceragem.api.crm.model.CrmAdvncmtHstVo">
+               SELECT /* com.ceragem.api.crm.dao.CrmAdvncmtHstDao.select */ <include refid="sqlSelectCols"/>
+               	   , (SELECT SUM(  NVL(OCCUR_ADVNCMT_SCORE,0)) FROM CRM_ADVNCMT_HST B WHERE B.ITG_CUST_NO = A.ITG_CUST_NO  AND PBLS_DIV_CD = '901' ) TOTAL_ADVNCMT  
+               	   , (SELECT DECODE(COUNT(*), 0, 'N', 'Y') FROM CRM_ADVNCMT_HST C WHERE C.ITG_CUST_NO = A.ITG_CUST_NO  AND PBLS_DIV_CD = '901' AND C.ORG_CHIT_NO = A.CHIT_NO    ) CANCEL_YN  
+                 FROM CRM_ADVNCMT_HST A                 
+        <include refid="sqlPkConditions"/>
+        		 AND PBLS_DIV_CD = '901' /* 22.10.17 구매자만 취소 처리 */
+        	  
+    </select>
+    
+    
+  
+  <!--  // 승급점수 플러스 처리 아래로 변경 
+      <select id="selectAdvnCmtInfo" resultType="com.ceragem.api.crm.model.CrmAdvncmtHstVo">
+    	       SELECT /* com.ceragem.api.crm.dao.CrmPointHstDao.selectAdvnCmtInfo */  #{itgCustNo} ITG_CUST_NO
+                   , NVL(SUM(
+			                    CASE WHEN 0 >= OCCUR_ADVNCMT_SCORE THEN OCCUR_ADVNCMT_SCORE
+			                    	 WHEN EXTNC_DT IS NOT NULL THEN OCCUR_ADVNCMT_SCORE
+			                         WHEN TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN VALID_PERD_STA_YMD AND VALID_PERD_END_YMD THEN OCCUR_ADVNCMT_SCORE
+			                         WHEN VALID_PERD_STA_YMD > TO_CHAR(SYSDATE,'YYYYMMDD') THEN OCCUR_ADVNCMT_SCORE
+			                         WHEN TO_CHAR(SYSDATE,'YYYYMMDD') > VALID_PERD_END_YMD THEN 0
+			                         ELSE 0 END
+                    ),0) TOTAL_ADVNCMT
+                   
+                 FROM CRM_ADVNCMT_HST A
+        		WHERE ITG_CUST_NO = #{itgCustNo}
+    </select>
+    
+-->
+       
+         
+    <select id="selectAdvnCmtInfo" resultType="com.ceragem.api.crm.model.CrmAdvncmtHstVo">
+    	       SELECT /* com.ceragem.api.crm.dao.CrmPointHstDao.selectAdvnCmtInfo */  #{itgCustNo} ITG_CUST_NO
+                   , NVL(SUM(  NVL(OCCUR_ADVNCMT_SCORE,0)),0) TOTAL_ADVNCMT                   
+                 FROM CRM_ADVNCMT_HST A
+        		WHERE ITG_CUST_NO = #{itgCustNo}
+    </select>
+    
+
+    
+    <insert id="insert">
+    
+      DECLARE BEGIN 
+    
+    
+                INSERT /* com.ceragem.api.crm.dao.CrmAdvncmtHstDao.insert */ INTO CRM_ADVNCMT_HST (
+        <include refid="sqlCols"/>
+                 ) VALUES (
+                      NVL(#{advncmtHstSeq}, FN_CRM_AUTO_SEQ('ADH') )
+                     , #{itgCustNo}
+                     , #{mshipGradeCd}
+                     , NVL(#{storNo}, '141359' )
+                     , #{chitNo}
+                     , #{buyGodsNo}
+                     , #{ordrAmt}
+                     , #{applyAmt}
+                     , #{payAmt}
+                     , #{pblsDivCd}
+                     , #{occurAdvncmtScore}
+                     , #{remainAdvncmtScore}
+                     , #{validPerdStaYmd}
+                     , #{validPerdEndYmd}
+                     , TO_DATE(#{pblsDt},  'YYYY-MM-DD HH24:MI:SS')
+                     , TO_DATE(#{extncDt}, 'YYYY-MM-DD HH24:MI:SS')
+                    
+                     , #{txn}
+                     , NVL(#{pblsChlCd}, 'CRM' ) 
+                     , #{cardPblsHstSeq}
+                     , #{useTypeCd}
+                     , #{dealNo}
+                     , #{promNo}
+                     , #{campNo}
+                     , #{coupnNo}
+                     , NULL
+                     , #{amdrId}
+                     ,  SYSDATE
+                     , #{regrId}
+                     , SYSDATE
+                     , #{regChlCd}
+                     , NVL(#{accumYn},'N')
+                     , #{rcmdrCustNo2}
+                     , #{orgChitNo}
+                 );
+                 
+               UPDATE /* com.ceragem.crm.memship.dao.CrmAdvncmtHstDao.saveAdvncmtHst  회원 승급점수 업데이트 */  
+                 	CRM_CUST_BAS SET MSHIP_ADVNCMT_SCORE = NVL( #{remainAdvncmtScore}, 0)
+                 WHERE ITG_CUST_NO = #{itgCustNo};
+                 
+        END;
+        
+        
+    </insert>
+    <update id="update">
+               UPDATE /* com.ceragem.api.crm.dao.CrmAdvncmtHstDao.update */ CRM_ADVNCMT_HST
+                  SET ITG_CUST_NO                             =         #{itgCustNo}
+                    , MSHIP_GRADE_CD                          =         #{mshipGradeCd}
+                    , STOR_NO                                 =         #{storNo}
+                    , CHIT_NO                                 =         #{chitNo}
+                    , BUY_GODS_NO                             =         #{buyGodsNo}
+                    , ORDR_AMT                                =         #{ordrAmt}
+                    , APPLY_AMT                               =         #{applyAmt}
+                    , PAY_AMT                                 =         #{payAmt}
+                    , PBLS_DIV_CD                             =         #{pblsDivCd}
+                    , OCCUR_ADVNCMT_SCORE                     =         #{occurAdvncmtScore}
+                    , REMAIN_ADVNCMT_SCORE                    =         #{remainAdvncmtScore}
+                    , VALID_PERD_STA_YMD                      =         #{validPerdStaYmd}
+                    , VALID_PERD_END_YMD                      =         #{validPerdEndYmd}
+                    , PBLS_DT                                 =         TO_DATE(#{pblsDt},  'YYYY-MM-DD HH24:MI:SS')
+                    , EXTNC_DT                                =         TO_DATE(#{extncDt}, 'YYYY-MM-DD HH24:MI:SS')
+                    , TXN                                     =         #{txn}
+                    , PBLS_CHL_CD                             =         #{pblsChlCd}
+                    , CARD_PBLS_HST_SEQ                       =         #{cardPblsHstSeq}
+                    , USE_TYPE_CD                             =         #{useTypeCd}
+                    , DEAL_NO                                 =         #{dealNo}
+                    , PROM_NO                                 =         #{promNo}
+                    , CAMP_NO                                 =         #{campNo}
+                    , COUPN_NO                                =         #{coupnNo}
+                    , USE_DT                                  =         #{useDt}
+                    , AMDR_ID                                 =         #{amdrId}
+                    , AMD_DT                                  =         SYSDATE
+                    , REG_CHL_CD                              =         #{regChlCd}
+                    , ACCUM_YN                                =         NVL(#{accumYn},'N')
+        <include refid="sqlPkConditions"/>
+    </update>
+    <delete id="delete">
+               DELETE /* com.ceragem.api.crm.dao.CrmAdvncmtHstDao.delete */
+                 FROM CRM_ADVNCMT_HST
+        <include refid="sqlPkConditions"/>
+    </delete>
+</mapper>

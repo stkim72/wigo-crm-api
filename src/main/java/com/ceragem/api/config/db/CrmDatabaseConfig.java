@@ -1,5 +1,9 @@
 package com.ceragem.api.config.db;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import javax.sql.DataSource;
 
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -13,6 +17,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.core.io.Resource;
 
 import com.ceragem.api.config.annotation.CrmMapper;
 import com.zaxxer.hikari.HikariConfig;
@@ -33,7 +38,7 @@ import com.zaxxer.hikari.HikariDataSource;
  */
 
 @Configuration
-@MapperScan(basePackages = { "com.ceragem.api.crm",
+@MapperScan(basePackages = { "com.ceragem.api.com", "com.ceragem.api.crm",
 		"com.ceragem.api.base.dao" }, value = "CRM 패키지 경로", annotationClass = CrmMapper.class, sqlSessionFactoryRef = "crmSqlSessionFactory")
 public class CrmDatabaseConfig {
 	@Autowired
@@ -58,7 +63,7 @@ public class CrmDatabaseConfig {
 
 	@Primary
 	@Bean(name = "crmDataSource")
-	public DataSource dataSource() {
+	DataSource dataSource() {
 		if (poolSize <= 0)
 			poolSize = 100;
 		if (timeout <= 0)
@@ -78,20 +83,23 @@ public class CrmDatabaseConfig {
 	}
 
 	@Bean(name = "crmSqlSessionFactory")
-	public SqlSessionFactory sqlSessionFactory(@Qualifier("crmDataSource") DataSource dataSource) throws Exception {
+	SqlSessionFactory sqlSessionFactory(@Qualifier("crmDataSource") DataSource dataSource) throws Exception {
+
+		List<Resource> mapList = new ArrayList<>();
+		mapList.addAll(Arrays.asList(applicationContext.getResources("classpath:/mapper/crm/**/*_SqlMapper.xml")));
+		mapList.addAll(Arrays.asList(applicationContext.getResources("classpath:/mapper/com/**/*_SqlMapper.xml")));
+
 		SqlSessionFactoryBean sqlSessionFactoryBean = new SqlSessionFactoryBean();
 		sqlSessionFactoryBean.setDataSource(dataSource);
 		sqlSessionFactoryBean
 				.setConfigLocation(applicationContext.getResource("classpath:/config/mybatis/mybatis-config-base.xml"));
-		sqlSessionFactoryBean
-				.setMapperLocations(applicationContext.getResources("classpath:/mapper/crm/**/*_SqlMapper.xml"));
+		sqlSessionFactoryBean.setMapperLocations(mapList.toArray(new Resource[mapList.size()]));
 		sqlSessionFactoryBean.setTypeAliasesPackage("com.ceragem.**.model,com.ceragem.**.entity");
 		return sqlSessionFactoryBean.getObject();
 	}
 
 	@Bean(name = "crmSqlSessionTemplate")
-	public SqlSessionTemplate sqlSessionTemplate(
-			@Qualifier("crmSqlSessionFactory") SqlSessionFactory sqlSessionFactory) {
+	SqlSessionTemplate sqlSessionTemplate(@Qualifier("crmSqlSessionFactory") SqlSessionFactory sqlSessionFactory) {
 		return new SqlSessionTemplate(sqlSessionFactory);
 	}
 }

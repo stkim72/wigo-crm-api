@@ -15,13 +15,13 @@
 	</sql>
 	    
 	<sql id="sqlConditions">
-		WHERE MOBIL_NO = #{mobilNo}
+		WHERE MOBIL_NO = DAMO.ENCRYPT_VAR_B64('AES_256',#{mobilNo},'')
 	</sql>
 	<sql id="sqlCols">
 		     QUSTN_SEQ                                       		  /*문의번호*/
 	       , SUBMIT_DT                                                /*접수일자*/
 	       , CUST_NM                                                  /*고객명*/
-	       , MOBIL_NO AS MOBIL_NO  /*고객_핸드폰번호(복호화X)*/
+	       , DAMO.DECRYPT_VAR_B64('AES_256',MOBIL_NO,'') AS MOBIL_NO  /*고객_핸드폰번호(복호화X)*/
 	       , PROD_NM                                                  /*제품명*/
 	       , SUBMIT_CNTN                                              /*접수내용*/
 	       , UPD_DTTM                                                 /*상담접수완료일자*/

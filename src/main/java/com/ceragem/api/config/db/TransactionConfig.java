@@ -34,14 +34,26 @@ public class TransactionConfig {
 
 	@Primary
 	@Bean(name = "crmTransactionManager")
-	DataSourceTransactionManager crmTxManager(@Qualifier("crmDataSource") DataSource dataSource)
-			throws Exception {
+	DataSourceTransactionManager crmTxManager(@Qualifier("crmDataSource") DataSource dataSource) throws Exception {
 		DataSourceTransactionManager tx = new DataSourceTransactionManager(dataSource);
 		tx.setDefaultTimeout(60);
 		return tx;
 	}
 
-	
+	@Bean(name = "ctcTransactionManager")
+	DataSourceTransactionManager ctcTxManager(@Qualifier("ctcDataSource") DataSource dataSource) throws Exception {
+		return new DataSourceTransactionManager(dataSource);
+	}
+
+	@Bean(name = "asTransactionManager")
+	DataSourceTransactionManager asTxManager(@Qualifier("asDataSource") DataSource dataSource) throws Exception {
+		return new DataSourceTransactionManager(dataSource);
+	}
+
+	@Bean(name = "posTransactionManager")
+	DataSourceTransactionManager posTxManager(@Qualifier("posDataSource") DataSource dataSource) throws Exception {
+		return new DataSourceTransactionManager(dataSource);
+	}
 
 //	@Bean(name = "txManager")
 //	public PlatformTransactionManager chainedTransactionManager(

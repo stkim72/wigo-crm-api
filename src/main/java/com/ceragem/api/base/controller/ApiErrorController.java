@@ -19,9 +19,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.transaction.TransactionSystemException;
 import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -76,11 +78,43 @@ public class ApiErrorController implements ErrorController {
 		return ERROR_PATH;
 	}
 
+	private String getCodeErrorMsg(String topComnCd) {
+		try {
+			EzMap param = new EzMap();
+			param.setString("topComnCd", topComnCd);
+			List<CrmCommonCodeVo> list = codeService.getList(param);
+			StringBuffer bf = new StringBuffer();
+
+			for (int i = 0; i < list.size(); i++) {
+				CrmCommonCodeVo vo = list.get(i);
+				if (i > 0)
+					bf.append(" , ");
+				else {
+					bf.append("[");
+					bf.append(vo.getLargeCd());
+					bf.append(" : ");
+					bf.append(vo.getLargeNm());
+					bf.append(" ][");
+				}
+
+				bf.append(vo.getSmallCd());
+				bf.append(" : ");
+				bf.append(vo.getSmallNm());
+			}
+			bf.append("] 등록된 코드가 아닙니다.");
+			return bf.toString();
+		} catch (Exception e) {
+			Utilities.trace(e);
+			return "";
+		}
+	}
+
 	private ResponseEntity<ApiErrorResultVo> getUnknownError(HttpServletRequest request, HttpServletResponse response,
 			Throwable exception) {
 		String errorCode = Constants._API_CODE_FAIL;// (Integer)
 													// request.getAttribute("javax.servlet.error.status_code");
-		String message = "시스템 관리자 확인 필요 작업입니다. 문의 부탁 드립니다.";// (String) request.getAttribute("javax.servlet.error.message");
+		String message = "시스템 관리자 확인 필요 작업입니다. 문의 부탁 드립니다.";// (String)
+															// request.getAttribute("javax.servlet.error.message");
 //		response.setStatus(200);
 
 		if (exception != null) {
@@ -206,6 +240,13 @@ public class ApiErrorController implements ErrorController {
 
 	}
 
+	@ExceptionHandler(HttpMediaTypeNotAcceptableException.class)
+	public Object notAcceptable(HttpMediaTypeNotAcceptableException ex, HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		return getErrorResult(Constants._API_CODE_NO_REG, Constants._API_CODE_NO_REG_MSG, request, response, ex);
+
+	}
+
 	@ExceptionHandler(MalformedJwtException.class)
 	public Object malformedKey(MalformedJwtException ex, HttpServletRequest request, HttpServletResponse response)
 			throws Exception {
@@ -268,6 +309,13 @@ public class ApiErrorController implements ErrorController {
 		return getErrorResult(Constants._API_CODE_NOT_FOUND, ex.getMessage(), request, response, e);
 	}
 
+	@ExceptionHandler(TransactionSystemException.class)
+	public Object ezTimeoutException(TransactionSystemException ex, HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		EzApiException e = new EzApiException(Constants._API_CODE_TIMEOUT, Constants._API_CODE_TIMEOUT_MSG, ex);
+		return getErrorResult(Constants._API_CODE_TIMEOUT, e.getMessage(), request, response, e);
+	}
+
 	@ExceptionHandler(MissingServletRequestParameterException.class)
 	public Object missingServletRequestParameterException(MissingServletRequestParameterException ex,
 			HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -304,22 +352,38 @@ public class ApiErrorController implements ErrorController {
 		Set<ConstraintViolation<?>> cv = ex.getConstraintViolations();
 		Iterator<ConstraintViolation<?>> it = cv.iterator();
 		ConstraintViolation<?> v = null;
-		if(it.hasNext())
-		{
+		if (it.hasNext()) {
 			v = it.next();
 		}
 		StringBuffer msg = new StringBuffer();
-		
+
 		if (v != null) {
-			log.debug(v.getPropertyPath().toString());
 			String[] pt = v.getPropertyPath().toString().split("\\.");
 			String prop = pt[pt.length - 1];
-			msg.append("[");
-			msg.append(prop);
-			msg.append("-");
-			msg.append(v.getInvalidValue());
-			msg.append("]");
-			msg.append(v.getMessage());
+			String annName = null;
+			try {
+				annName = v.getConstraintDescriptor().getAnnotation().annotationType().getSimpleName();
+			} catch (Exception e) {
+			}
+
+			if ("CodeValue".equals(annName)) {
+				String cd = (String) v.getConstraintDescriptor().getAttributes().get("codeId");
+				msg.append("[");
+				msg.append(prop);
+				msg.append("-");
+				msg.append(v.getInvalidValue());
+				msg.append("]");
+				msg.append(getCodeErrorMsg(cd));
+			}
+			if (msg.length() == 0) {
+				msg.append("[");
+				msg.append(prop);
+				msg.append("-");
+				msg.append(v.getInvalidValue());
+				msg.append("]");
+				msg.append(v.getMessage());
+			}
+
 		}
 		EzApiException e = new EzApiException(Constants._API_CODE_INVALID_PARAM, msg.toString(), ex);
 		return getErrorResult(Constants._API_CODE_INVALID_PARAM, e.getMessage(), request, response, e);
@@ -341,35 +405,8 @@ public class ApiErrorController implements ErrorController {
 			if ("CodeValue".equals(cd)) {
 				Object[] arr = br.getFieldError().getArguments();
 				if (arr != null && arr.length > 1 && arr[1] != null) {
-
-					try {
-						String topComnCd = (String) arr[1].toString();
-						EzMap param = new EzMap();
-						param.setString("topComnCd", topComnCd);
-						List<CrmCommonCodeVo> list = codeService.getList(param);
-						StringBuffer bf = new StringBuffer();
-
-						for (int i = 0; i < list.size(); i++) {
-							CrmCommonCodeVo vo = list.get(i);
-							if (i > 0)
-								bf.append(" , ");
-							else {
-								bf.append("[");
-								bf.append(vo.getLargeCd());
-								bf.append(" : ");
-								bf.append(vo.getLargeNm());
-								bf.append(" ][");
-							}
-
-							bf.append(vo.getSmallCd());
-							bf.append(" : ");
-							bf.append(vo.getSmallNm());
-						}
-						bf.append("] 등록된 코드가 아닙니다.");
-						msg = bf.toString();
-					} catch (Exception e) {
-						Utilities.trace(e);
-					}
+					String topComnCd = (String) arr[1].toString();
+					msg = getCodeErrorMsg(topComnCd);
 
 				}
 

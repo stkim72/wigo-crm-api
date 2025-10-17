@@ -1,5 +1,7 @@
 package com.ceragem.api.crm.model;
 
+import com.ceragem.api.crm.validate.CodeValue;
+
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -23,7 +25,9 @@ public class CrmCouponApproSo {
 	/**
 	 * 채널코드
 	 */
-	@Parameter(description = "채널코드", example = "", hidden = false, required = false)
+	@Parameter(description = "매장채널코드 [9620 : 웰카페 , 9100 : CB5 , 9200 : 나비엘 , 9630 : 유통점 , 9651 : HC , 9650 : HP , 9640 : 온라인 , 9610 : 홈쇼핑 , 9670 : B2B , 9660 : 본사]", example = "", hidden = false, required = false)
+	@CodeValue(codeId = "ST040", codes = { "9620", "9100", "9200", "9630", "9651", "9650", "9640", "9610", "9670",
+			"9660" }, message = "[9620 : 웰카페 , 9100 : CB5 , 9200 : 나비엘 , 9630 : 유통점 , 9651 : HC , 9650 : HP , 9640 : 온라인 , 9610 : 홈쇼핑 , 9670 : B2B , 9660 : 본사] 등록된 코드가 아닙니다. ")
 	private String chlCd;
 	/**
 	 * 통합회원

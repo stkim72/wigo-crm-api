@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ceragem.api.crm.dao.CrmPointUseRelDao">
+    <sql id="sqlPkConditions">
+                WHERE OCCUR_POINT_HST_SEQ=       #{occurPointHstSeq}
+                  AND USE_POINT_HST_SEQ =       #{usePointHstSeq}
+    </sql>
+    <sql id="sqlCols">
+                      OCCUR_POINT_HST_SEQ                    /*발생포인트이력일련번호        */
+                    , USE_POINT_HST_SEQ                    /*사용포인트이력일련번호        */
+                    , USE_AMT                    /*사용금액        */
+                    , USE_POINT_SCORE                    /*사용포인트점수        */
+                    , USE_DT                    /*사용일시        */
+                    , AMDR_ID                    /*수정자ID        */
+                    , AMD_DT                    /*수정일시        */
+                    , REGR_ID                    /*등록자ID        */
+                    , REG_DT                    /*등록일시        */
+                    , REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , test : test]*/
+    </sql>
+    <sql id="sqlSelectCols">
+                      A.OCCUR_POINT_HST_SEQ                    /*발생포인트이력일련번호        */
+                    , A.USE_POINT_HST_SEQ                    /*사용포인트이력일련번호        */
+                    , A.USE_AMT                    /*사용금액        */
+                    , A.USE_POINT_SCORE                    /*사용포인트점수        */
+                    , TO_CHAR(A.USE_DT,'YYYYMMDDHH24MISS')    USE_DT                    /*사용일시        */
+                    , A.AMDR_ID                    /*수정자ID        */
+                    , TO_CHAR(A.AMD_DT,'YYYYMMDDHH24MISS')    AMD_DT                    /*수정일시        */
+                    , A.REGR_ID                    /*등록자ID        */
+                    , TO_CHAR(A.REG_DT,'YYYYMMDDHH24MISS')    REG_DT                    /*등록일시        */
+                    , A.REG_CHL_CD                    /*등록채널코드        공통코드 : S000        [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , test : test]*/
+    </sql>
+    <sql id="sqlConditions">
+    <where>
+        <if test="occurPointHstSeq != null and occurPointHstSeq != ''">
+                  AND A.OCCUR_POINT_HST_SEQ=       #{occurPointHstSeq}
+        </if>
+        <if test="usePointHstSeq != null and usePointHstSeq != ''">
+                  AND A.USE_POINT_HST_SEQ=       #{usePointHstSeq}
+        </if>
+        <if test="useAmt != null and useAmt != ''">
+                  AND A.USE_AMT         =       #{useAmt}
+        </if>
+        <if test="usePointScore != null and usePointScore != ''">
+                  AND A.USE_POINT_SCORE =       #{usePointScore}
+        </if>
+        <if test="useDt != null and useDt != ''">
+                  AND A.USE_DT          =       TO_DATE(#{useDt},'YYYYMMDDHH24MISS')
+        </if>
+        <if test="regChlCd != null and regChlCd != ''">
+            <choose>
+                <when test="regChlCd instanceof String">
+                    AND A.REG_CHL_CD      =       #{regChlCd}
+                </when>
+                <otherwise>
+                    AND A.REG_CHL_CD      IN
+                    <foreach item="item" index="index" collection="regChlCd" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="ocurPointHstList !=null and ocurPointHstList.size() > 0 ">
+              <foreach item="item" index="index" collection="ocurPointHstList" open="AND  OCCUR_POINT_HST_SEQ IN (" separator="," close=")">
+                   #{item.pointHstSeq}
+              </foreach>
+        </if>
+        </where>
+    </sql>
+    <select id="selectListCount" resultType="int">
+                SELECT /* com.ceragem.api.crm.dao.CrmPointUseRelDao.selectListCount */ COUNT(1)
+                 FROM CRM_POINT_USE_REL A
+        <include refid="sqlConditions"/>
+    </select>
+    <select id="selectList" resultType="com.ceragem.api.crm.model.CrmPointUseRelVo">
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingHeader"/>
+               SELECT /* com.ceragem.api.crm.dao.CrmPointUseRelDao.selectList */ <include refid="sqlSelectCols"/>
+                 FROM CRM_POINT_USE_REL A
+        <include refid="sqlConditions"/>
+               ORDER BY REG_DT DESC
+        <include refid="com.ceragem.api.crm.dao.CrmCommonDao.pagingFooter"/>
+    </select>
+    <select id="select" resultType="com.ceragem.api.crm.model.CrmPointUseRelVo">
+               SELECT /* com.ceragem.api.crm.dao.CrmPointUseRelDao.select */<include refid="sqlSelectCols"/>
+                 FROM CRM_POINT_USE_REL A
+        <include refid="sqlPkConditions"/>
+    </select>
+    <insert id="insert">
+    	        INSERT /* com.ceragem.api.crm.dao.CrmPointUseRelDao.insert */ INTO CRM_POINT_USE_REL (
+        <include refid="sqlCols"/>
+                 ) VALUES (
+                       #{occurPointHstSeq}
+                     , #{usePointHstSeq}
+                     , #{useAmt}
+                     , #{usePointScore}
+                     , SYSDATE
+                     , #{amdrId}
+                     , SYSDATE
+                     , #{regrId}
+                     , SYSDATE
+                     , NVL(#{regChlCd},#{regrId})
+                 )
+    </insert>
+    <update id="update">
+               UPDATE CRM_POINT_USE_REL /* com.ceragem.api.crm.dao.CrmPointUseRelDao.update */
+                  SET USE_AMT                                 =         #{useAmt}
+                    , USE_POINT_SCORE                         =         #{usePointScore}
+                    , USE_DT                                  =         TO_DATE(#{useDt},'YYYYMMDDHH24MISS')
+                    , AMDR_ID                                 =         #{amdrId}
+                    , AMD_DT                                  =         SYSDATE
+                    , REG_CHL_CD                              =         #{regChlCd}
+        <include refid="sqlPkConditions"/>
+    </update>
+    <delete id="delete">
+               DELETE /* com.ceragem.api.crm.dao.CrmPointUseRelDao.delete */ 
+                 FROM CRM_POINT_USE_REL
+        <include refid="sqlPkConditions"/>
+    </delete>
+    <delete id="deletePoint">
+               DELETE /* com.ceragem.api.crm.dao.CrmPointUseRelDao.deletePoint */ 
+                 FROM CRM_POINT_USE_REL
+        		WHERE #{pointHstSeq} IN (OCCUR_POINT_HST_SEQ, USE_POINT_HST_SEQ)
+    </delete>
+    
+</mapper>

@@ -1,5 +1,7 @@
 package com.ceragem.api.crm.model;
 
+import java.util.List;
+
 import com.ceragem.api.base.model.ApiBaseVo;
 import com.ceragem.api.crm.validate.CodeValue;
 import com.ceragem.api.crm.validate.MaxByte;
@@ -25,7 +27,7 @@ public class CrmMshipCoupnBasVo extends ApiBaseVo {
 	/**
 	 * 멤버십쿠폰기본번호
 	 */
-	@Schema(description = "멤버십쿠폰기본번호", example = "", hidden = true, required = true, nullable = false, maxLength = 30)
+	@Schema(description = "멤버십쿠폰기본번호", example = "", hidden = false, required = true, nullable = false, maxLength = 30)
 	@MaxByte(max = 30)
 	private String mshipCoupnBasNo;
 	/**
@@ -80,31 +82,31 @@ public class CrmMshipCoupnBasVo extends ApiBaseVo {
 	/**
 	 * FROM발행기준일
 	 */
-	@Schema(description = "FROM발행기준일", example = "", hidden = true, required = false, nullable = true, maxLength = 8)
+	@Schema(description = "FROM발행기준일", example = "", hidden = false, required = false, nullable = true, maxLength = 8)
 	@MaxByte(max = 8)
 	private String fromPblsStdDay;
 	/**
 	 * TO발행기준일
 	 */
-	@Schema(description = "TO발행기준일", example = "", hidden = true, required = false, nullable = true, maxLength = 8)
+	@Schema(description = "TO발행기준일", example = "", hidden = false, required = false, nullable = true, maxLength = 8)
 	@MaxByte(max = 8)
 	private String toPblsStdDay;
 	/**
 	 * 사용기준일조건코드
 	 */
-	@Schema(description = "사용기준일조건코드", example = "", hidden = true, required = false, nullable = true, maxLength = 15)
+	@Schema(description = "사용기준일조건코드", example = "", hidden = false, required = false, nullable = true, maxLength = 15)
 	@MaxByte(max = 15)
 	private String useStdDayCondCd;
 	/**
 	 * FROM사용기준일
 	 */
-	@Schema(description = "FROM사용기준일", example = "", hidden = true, required = false, nullable = true, maxLength = 8)
+	@Schema(description = "FROM사용기준일", example = "", hidden = false, required = false, nullable = true, maxLength = 8)
 	@MaxByte(max = 8)
 	private String fromUseStdDay;
 	/**
 	 * TO사용기준일
 	 */
-	@Schema(description = "TO사용기준일", example = "", hidden = true, required = false, nullable = true, maxLength = 8)
+	@Schema(description = "TO사용기준일", example = "", hidden = false, required = false, nullable = true, maxLength = 8)
 	@MaxByte(max = 8)
 	private String toUseStdDay;
 	/**
@@ -244,7 +246,7 @@ public class CrmMshipCoupnBasVo extends ApiBaseVo {
 	/**
 	 * 쿠폰기본내용
 	 */
-	@Schema(description = "쿠폰기본내용", example = "", hidden = false, required = false, nullable = true, maxLength = 200)
+	@Schema(description = "쿠폰기본내용", example = "", hidden = true, required = false, nullable = true, maxLength = 200)
 	@MaxByte(max = 200)
 	private String coupnBasCtnts;
 	/**
@@ -267,35 +269,35 @@ public class CrmMshipCoupnBasVo extends ApiBaseVo {
 	/**
 	 * 쿠폰유형
 	 */
-	@Schema(description = "쿠폰유형 EV100  [010 : 웰카페 체험추천, 020 : 홈체험 추천, 030 : 멤버십 가입 추천, 040 : 웰카페 체험, 050 : 홈체험, 060 : 멤버십회원 가입, 902 : 구매추천, 901 : 구매, 070 : 마케팅정보 수신동의, 080 : 앱 다운로드, 090 : 추가 정보 입력, 100 : 생일, 110 : 휴면방지, 120 : 휴면해제, 130 : 출석체크, 140 : 텍스트 후기 작성, 150 : 이미지 후기 작성, 160 : 동영상 후기 작성, 170 : 세라체크, 180 : 서베이, 190 : IoT]", example = "010", hidden = false, required = true, nullable = false, maxLength = 3)
-	@CodeValue(codeId = "EV100", codes = { "010", "020", "030", "040", "050", "060", "902", "901", "070", "080", "090",
-			"100", "110", "120", "130", "140", "150", "160", "170", "180",
-			"190" }, message = "[010 : 웰카페 체험추천, 020 : 홈체험 추천, 030 : 멤버십 가입 추천, 040 : 웰카페 체험, 050 : 홈체험, 060 : 멤버십회원 가입, 902 : 구매추천, 901 : 구매, 070 : 마케팅정보 수신동의, 080 : 앱 다운로드, 090 : 추가 정보 입력, 100 : 생일, 110 : 휴면방지, 120 : 휴면해제, 130 : 출석체크, 140 : 텍스트 후기 작성, 150 : 이미지 후기 작성, 160 : 동영상 후기 작성, 170 : 세라체크, 180 : 서베이, 190 : IoT] 등록된 코드가 아닙니다. ")
+	@Schema(description = "쿠폰유형 MB080  [001 :	음료 쿠폰,002 :	체험 쿠폰,012 :	앰버서더,017 :	상품 쿠폰,003 :	회원가입,004 :	마케팅정보수신동의,005 :	홈쇼핑 채널 쿠폰,006 :	쿠폰재발행,007 :	생일,008 :	슬기로운마스터,009 :	휴면해제,010 :	출석체크,011 :	후기작성,015 :	세라체크,014 :	서베이,016 :	IoT,013 :	서비스 쿠폰,018 :	임직원 쿠폰,019 :	HC전용 쿠폰,020 :	장바구니 쿠폰]", example = "010", hidden = false, required = true, nullable = false, maxLength = 3)
+	@CodeValue(codeId = "MB080", codes = { "001", "002", "012", "017", "003", "004", "005", "006", "007", "008", "009",
+			"010", "011", "015", "014", "016", "013", "018", "019",
+			"020" }, message = "[001 :	음료 쿠폰,002 :	체험 쿠폰,012 :	앰버서더,017 :	상품 쿠폰,003 :	회원가입,004 :	마케팅정보수신동의,005 :	홈쇼핑 채널 쿠폰,006 :	쿠폰재발행,007 :	생일,008 :	슬기로운마스터,009 :	휴면해제,010 :	출석체크,011 :	후기작성,015 :	세라체크,014 :	서베이,016 :	IoT,013 :	서비스 쿠폰,018 :	임직원 쿠폰,019 :	HC전용 쿠폰,020 :	장바구니 쿠폰]  등록된 코드가 아닙니다. ")
 	@MaxByte(max = 3)
 	private String coupnTypeCd;
 	/**
 	 * 쿠폰유형명
 	 */
-	@Schema(description = "쿠폰유형명", example = "", hidden = true, required = false, nullable = true)
+	@Schema(description = "쿠폰유형명", example = "", hidden = false, required = false, nullable = true)
 	private String coupnTypeCdNm;
 
 	/**
 	 * 쿠폰사용가능일
 	 */
-	@Schema(description = "쿠폰사용가능일", example = "", hidden = true, required = false, nullable = true, maxLength = 3)
+	@Schema(description = "쿠폰사용가능일", example = "", hidden = false, required = false, nullable = true, maxLength = 3)
 	@MaxByte(max = 3)
 	private String coupnUsePossDay;
 	/**
 	 * 쿠폰사용가능여부
 	 */
-	@Schema(description = "쿠폰사용가능여부 [Y/N]", example = "N", hidden = true, required = false, nullable = true, maxLength = 1)
+	@Schema(description = "쿠폰사용가능여부 [Y/N]", example = "N", hidden = false, required = false, nullable = true, maxLength = 1)
 	@YnValue
 	@MaxByte(max = 1)
 	private String coupnUsePossYn;
 	/**
 	 * 쿠폰사용가능일수
 	 */
-	@Schema(description = "쿠폰사용가능일수", example = "", hidden = true, required = false, nullable = true)
+	@Schema(description = "쿠폰사용가능일수", example = "", hidden = false, required = false, nullable = true)
 	private Integer coupnUsePossDayCnt;
 	/**
 	 * 쿠폰분류코드
@@ -308,7 +310,7 @@ public class CrmMshipCoupnBasVo extends ApiBaseVo {
 	 */
 	@Schema(description = "쿠폰분류코드명", example = "", hidden = true, required = false, nullable = true)
 	private String coupnClassCdNm;
-	
+
 	/**
 	 * 요일1사용여부
 	 */
@@ -361,7 +363,7 @@ public class CrmMshipCoupnBasVo extends ApiBaseVo {
 	/**
 	 * 회원등급코드
 	 */
-	@Schema(description = "회원등급코드", example = "", hidden = true, required = false, nullable = true, maxLength = 3)
+	@Schema(description = "회원등급코드", example = "", hidden = false, required = false, nullable = true, maxLength = 3)
 	@MaxByte(max = 3)
 	private String mshpGradeCd;
 	/**
@@ -377,23 +379,42 @@ public class CrmMshipCoupnBasVo extends ApiBaseVo {
 	 */
 	@Schema(description = "등록채널코드명", example = "", hidden = true, required = false, nullable = true)
 	private String regChlCdNm;
-	
+
 	/**
 	 * 적용등급
 	 */
 	@Schema(description = "적용등급", example = "", hidden = true, required = false, nullable = true)
 	private String applyMshpGradeCtnts;
-	
+
 	/**
 	 * 적용등급
 	 */
 	@Schema(description = "회원타입", example = "", hidden = true, required = false, nullable = true)
 	private String mshipTypeCds;
-	
+
 	/**
 	 * 적용등급
 	 */
 	@Schema(description = "제휴사", example = "", hidden = true, required = false, nullable = true)
 	private String cprtCmpNo;
 
+	/**
+	 * 상품목록
+	 */
+	@Schema(description = "상품목록", hidden = false)
+	private List<CrmGodsBasVo> godsList;
+
+	/**
+	 * 채널목록
+	 */
+	@Schema(description = "채널목록", hidden = false)
+	private List<CrmChlBasVo> chlList;
+
+	/**
+	 * 매장목록
+	 */
+	@Schema(description = "매장목록", hidden = false)
+	private List<CrmStorBasVo> storeList;
+
+	/** 카테고리 추가 */
 }

@@ -146,6 +146,16 @@ public class CrmPointHstVo extends ApiBaseVo {
 	 */
 	@Schema(description = "잔여포인트점수", example = "", hidden = false, required = false, nullable = true, accessMode = AccessMode.READ_ONLY)
 	private Integer remainPointScore;
+	/**
+	 * 실제포인트점수
+	 */
+	@Schema(description = "실제포인트점수", example = "", hidden = true, required = false, nullable = true, accessMode = AccessMode.READ_ONLY)
+	private int pointScore;
+	/**
+	 * 실제포인트점수
+	 */
+	@Schema(description = "실제만료포인트점수", example = "", hidden = true, required = false, nullable = true, accessMode = AccessMode.READ_ONLY)
+	private int expireScore;
 
 	/**
 	 * 유효기간시작년월일
@@ -161,6 +171,9 @@ public class CrmPointHstVo extends ApiBaseVo {
 	@MaxByte(max = 8)
 	@DateValue
 	private String validPerdEndYmd;
+
+	@Schema(description = "원 유효기간종료년월일", example = "", hidden = true, required = false, nullable = true, maxLength = 8)
+	private String orgValidPerdEndYmd;
 	/**
 	 * 발행일시
 	 */
@@ -199,9 +212,9 @@ public class CrmPointHstVo extends ApiBaseVo {
 	/**
 	 * 사용유형코드 공통코드 : PO010 [001 : 사용 , 002 : 적립 , 003 : 취소]
 	 */
-	@Schema(description = "사용유형코드  [001 : 사용 , 002 : 적립 , 003 : 취소]", example = "001", hidden = false, required = false, nullable = true, maxLength = 3)
+	@Schema(description = "사용유형코드  [001 : 사용 , 002 : 적립 , 003 : 취소, 004 : 소멸]", example = "001", hidden = false, required = false, nullable = true, maxLength = 3)
 	@CodeValue(codeId = "PO010", codes = { "001", "002",
-			"003" }, message = "[001 : 사용 , 002 : 적립 , 003 : 취소] 등록된 코드가 아닙니다. ")
+			"003" }, message = "[001 : 사용 , 002 : 적립 , 003 : 취소 , 004 : 소멸] 등록된 코드가 아닙니다. ")
 	@MaxByte(max = 3)
 	private String useTypeCd;
 
@@ -338,6 +351,9 @@ public class CrmPointHstVo extends ApiBaseVo {
 
 	@Schema(description = "취소전표번호", example = "", hidden = true, required = false, nullable = true)
 	private String orgChitNo;
+
+	@Schema(description = "비고", example = "", hidden = true, required = false, nullable = true)
+	private String rmark;
 	/**
 	 * 사용포인트점수
 	 */
@@ -352,6 +368,26 @@ public class CrmPointHstVo extends ApiBaseVo {
 		return occurPointScore - usePointScore;
 //		return remainPointScore;
 	}
+
+	/**
+	 * 임시유효기간 [이벤트 중 유효기간 동적처리]
+	 */
+	@Schema(description = "임시유효기간", example = "", hidden = true, required = false, nullable = true)
+	@MaxByte(max = 8)
+	@DateValue
+	private String temValidPerdYmd;
+
+	/**
+	 * 취소유효기간순번
+	 */
+	@Schema(description = "취소유효기간순번", example = "", hidden = true, required = false, nullable = true)
+	private String pointPerdHstSeq;
+
+	/**
+	 * 사용참조순번
+	 */
+	@Schema(description = "사용참조순번", example = "", hidden = true, required = false, nullable = true)
+	private String pointSeq;
 
 	@Schema(description = "카드번호", example = "", hidden = false, required = false, nullable = true)
 	public String getCardNo() {

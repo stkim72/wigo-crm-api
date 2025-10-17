@@ -1,9 +1,14 @@
 package com.ceragem.api.crm.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.ceragem.api.base.constant.Constants;
@@ -18,7 +23,10 @@ import com.ceragem.api.crm.dao.ICrmDao;
 import com.ceragem.api.crm.model.CrmAdvncmtHstVo;
 import com.ceragem.api.crm.model.CrmCustSo;
 import com.ceragem.api.crm.model.CrmCustVo;
+import com.ceragem.api.crm.model.CrmMshipApplyPointRelVo;
 import com.ceragem.api.crm.model.CrmMshipPlcyBasVo;
+import com.ceragem.api.crm.model.CrmPointExceptVo;
+import com.ceragem.api.crm.model.CrmPointExpireVo;
 import com.ceragem.api.crm.model.CrmPointHstSo;
 import com.ceragem.api.crm.model.CrmPointHstVo;
 import com.ceragem.api.crm.model.CrmPointInfoVo;
@@ -26,6 +34,7 @@ import com.ceragem.api.crm.model.CrmPointItemVo;
 import com.ceragem.api.crm.model.CrmPointUseRelVo;
 import com.ceragem.api.crm.model.CrmPointVo;
 import com.ceragem.crm.common.model.EzApiException;
+import com.ceragem.crm.common.model.EzMap;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,6 +50,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class CrmPointHstService extends AbstractCrmService {
+	private final String CODE_EXPIRE = "998";
 
 	public final static String POINT_010 = "010"; /* 웰카페 체험추천 */
 	public final static String POINT_020 = "020"; /* 홈체험 추천 */
@@ -76,6 +86,7 @@ public class CrmPointHstService extends AbstractCrmService {
 	public final static String API_CODE_EXIST_POINT = "IAR0503";
 	public final static String API_CODE_EXIST_POINT_MSG = "이미 적립/사용한 포인트 입니다.";
 	public final static String API_CODE_EXIST_CANCEL_MSG = "이미 취소한 포인트 입니다.";
+	public final static String API_CODE_DIFF_USER_MSG = "이미 다른사용자가 적립/사용한 [전표번호]포인트입니다.";
 
 	public final static String API_CODE_LACK_POINT = "IAR0504";
 	public final static String API_CODE_LACK_POINT_MSG = "보유포인트가 부족합니다.";
@@ -143,9 +154,58 @@ public class CrmPointHstService extends AbstractCrmService {
 	@Autowired
 	CrmCustService custService;
 
+	Map<String, CrmMshipApplyPointRelVo> mshipPointPlcy = null;
+
+	Map<String, CrmPointExceptVo> pointExceptMap = null;
+
 	@Override
 	public ICrmDao getDao() {
 		return dao;
+	}
+
+	@PostConstruct
+	@Scheduled(cron = "0 1 * * * *")
+	public void refreshPointExceptions() throws Exception {
+		EzMap so = new EzMap();
+		List<CrmPointExceptVo> expList = dao.selectPointExceptList(so);
+		Map<String, CrmPointExceptVo> exceptMap = new HashMap<>();
+		for (int i = 0; i < expList.size(); i++) {
+			CrmPointExceptVo vo = expList.get(i);
+			if (Utilities.isEmpty(vo.getChlCd()))
+				vo.setChlCd("");
+			StringBuffer bf = new StringBuffer();
+			bf.append(vo.getChlCd());
+			bf.append("_");
+			bf.append(vo.getMshipPlcyBasNo());
+			bf.append("_");
+			bf.append(vo.getGodsNo());
+			String key = bf.toString();
+			exceptMap.put(key, vo);
+		}
+		pointExceptMap = exceptMap;
+	}
+
+	public CrmPointExceptVo getPointProduct(String chlCd, String mshipPlcyBasNo, String godsCd) {
+		if (pointExceptMap == null)
+			return null;
+		StringBuffer bf = new StringBuffer();
+		bf.append(chlCd);
+		bf.append("_");
+		bf.append(mshipPlcyBasNo);
+		bf.append("_");
+		bf.append(godsCd);
+		String key = bf.toString();
+		CrmPointExceptVo vo = pointExceptMap.get(key);
+		if (vo != null)
+			return vo;
+		bf = new StringBuffer();
+		bf.append("_");
+		bf.append(mshipPlcyBasNo);
+		bf.append("_");
+		bf.append(godsCd);
+		key = bf.toString();
+		vo = pointExceptMap.get(key);
+		return vo;
 	}
 
 	/**
@@ -196,7 +256,7 @@ public class CrmPointHstService extends AbstractCrmService {
 	 * @description 유형에 맞츤 포인트 검색(전표)
 	 *
 	 */
-	public CrmPointHstVo getPoint(CrmPointHstSo so, String useType) throws Exception {
+	public CrmPointHstVo getPoint(CrmPointHstSo so, String useType, String itgCustNo) throws Exception {
 //		so.setUseTypeCd(useType);
 		List<CrmPointHstVo> list = getPointList(so);
 		if (Utilities.isEmpty(list))
@@ -207,7 +267,10 @@ public class CrmPointHstService extends AbstractCrmService {
 				throw new EzApiException(API_CODE_EXIST_POINT, API_CODE_EXIST_CANCEL_MSG);
 //				return null;
 			if (hst.getUseTypeCd().equals(useType))
-				return hst;
+				throw new EzApiException(API_CODE_EXIST_POINT, API_CODE_EXIST_POINT_MSG);
+			if (!hst.getItgCustNo().equals(itgCustNo))
+				throw new EzApiException(API_CODE_EXIST_POINT, API_CODE_DIFF_USER_MSG);
+
 		}
 		return null;
 	}
@@ -238,12 +301,14 @@ public class CrmPointHstService extends AbstractCrmService {
 	 *
 	 */
 	public CrmPointInfoVo saveDeposit(CrmPointHstVo vo) throws Exception {
+		// 고객번호 유무 조회
+		CrmCustVo custVo = getCustVo(vo);
 
 		CrmPointHstSo so = new CrmPointHstSo();
 		so.setChitNo(vo.getChitNo());
 		so.setPblsChlCd(vo.getPblsChlCd());
-		so.setItgCustNo(vo.getItgCustNo());
-		CrmPointHstVo point = getPoint(so, USE_TYPE_DEPOSIT);
+//		so.setItgCustNo(vo.getItgCustNo());
+		CrmPointHstVo point = getPoint(so, USE_TYPE_DEPOSIT, vo.getItgCustNo());
 		if (point != null) {
 			throw new EzApiException(API_CODE_EXIST_POINT, API_CODE_EXIST_POINT_MSG);
 		}
@@ -253,15 +318,25 @@ public class CrmPointHstService extends AbstractCrmService {
 
 		info.setTotalPoint(info.getTotalPoint() + score);
 		info.setAvailablePoint(info.getAvailablePoint() + score);
-		info.setItgCustNo(vo.getItgCustNo());
+		info.setItgCustNo(custVo.getItgCustNo());
 
 		if (Utilities.isEmpty(vo.getUseTypeCd()))
 			vo.setUseTypeCd(USE_TYPE_DEPOSIT);
 
 		vo.setRemainPointScore(info.getAvailablePoint());
-
+		/**
+		 * selectPointInfo
+		 */
+		if (Utilities.isEmpty(vo.getTemValidPerdYmd()) && Utilities.isEmpty(vo.getValidPerdEndYmd())) {
+			CrmPointHstVo val = dao.selectValidPerd(vo);
+			if (val != null) {
+				vo.setValidPerdStaYmd(val.getValidPerdStaYmd());
+				vo.setValidPerdEndYmd(val.getValidPerdEndYmd());
+			}
+		}
 		insert(vo);
 		insertDepositHst(vo);
+		checkBuyEvent(vo);
 		info = dao.selectPointInfo(vo);
 		info.setOccurPointScore(vo.getOccurPointScore());
 		updateRemainPoint(info);
@@ -282,18 +357,20 @@ public class CrmPointHstService extends AbstractCrmService {
 	 *
 	 */
 	public CrmPointInfoVo saveBuyDeposit(CrmPointHstVo vo) throws Exception {
+		// 고객번호 유무 조회
+		CrmCustVo custVo = getCustVo(vo);
 
 		CrmPointHstSo so = new CrmPointHstSo();
 		so.setChitNo(vo.getChitNo());
 		so.setPblsChlCd(vo.getPblsChlCd());
-		so.setItgCustNo(vo.getItgCustNo());
+//		so.setItgCustNo(vo.getItgCustNo());
 
 		// 추천인 지급 체크
 		if ("Y".equals(vo.getRcmdYn())) {
 			so.setItgCustNo(vo.getRcmdrCustNo());
 		}
 
-		CrmPointHstVo point = getPoint(so, USE_TYPE_DEPOSIT);
+		CrmPointHstVo point = getPoint(so, USE_TYPE_DEPOSIT, vo.getItgCustNo());
 
 		if (point != null) {
 			throw new EzApiException(API_CODE_EXIST_POINT, API_CODE_EXIST_POINT_MSG);
@@ -365,19 +442,40 @@ public class CrmPointHstService extends AbstractCrmService {
 
 		info.setTotalPoint(info.getTotalPoint() + score);
 		info.setAvailablePoint(info.getAvailablePoint() + score);
-		info.setItgCustNo(vo.getItgCustNo());
+		info.setItgCustNo(custVo.getItgCustNo());
 
 		if (Utilities.isEmpty(vo.getUseTypeCd()))
 			vo.setUseTypeCd(USE_TYPE_DEPOSIT);
 
 		vo.setRemainPointScore(info.getAvailablePoint());
-
+		if (Utilities.isEmpty(vo.getTemValidPerdYmd()) && Utilities.isEmpty(vo.getValidPerdEndYmd())) {
+			CrmPointHstVo val = dao.selectValidPerd(vo);
+			if (val != null) {
+				vo.setValidPerdStaYmd(val.getValidPerdStaYmd());
+				vo.setValidPerdEndYmd(val.getValidPerdEndYmd());
+			}
+		}
 		insert(vo);
 		insertDepositHst(vo);
+		checkBuyEvent(vo);
 		info = dao.selectPointInfo(vo);
 		info.setOccurPointScore(vo.getOccurPointScore());
 		updateRemainPoint(info);
 		return info;
+	}
+
+	public void checkBuyEvent(CrmPointHstVo vo) throws Exception {
+//		if (POINT_901.equals(vo.getPblsDivCd())) {
+//			EzMap s = new EzMap();
+//			s.setString("itgCustNo", vo.getItgCustNo());
+//			CrmCustVo custVo = custService.get(s);
+//			if (custVo != null) {
+//				custVo.setEventCd(POINT_901);
+//				custService.getEventChk(custVo);
+//			}
+//
+//		}
+
 	}
 
 	/**
@@ -500,7 +598,9 @@ public class CrmPointHstService extends AbstractCrmService {
 		vo.setItgCustNo(info.getItgCustNo());
 //		vo.setRemainPointScore(info.getTotalPoint());
 		vo.setRemainPointScore(info.getAvailablePoint());
-		return custDao.updateRemainPoint(vo);
+		int ret = custDao.updateRemainPoint(vo);
+		custDao.updatePointSeq(vo);
+		return ret;
 	}
 
 	/**
@@ -519,9 +619,9 @@ public class CrmPointHstService extends AbstractCrmService {
 		CrmPointHstSo so = new CrmPointHstSo();
 		so.setChitNo(vo.getChitNo());
 		so.setPblsChlCd(vo.getPblsChlCd());
-		so.setItgCustNo(vo.getItgCustNo());
-		CrmPointHstVo point = getPoint(so, USE_TYPE_WITHDRAWAL);
-		if (point != null && USE_TYPE_WITHDRAWAL.equals(point.getUseTypeCd())) {
+//		so.setItgCustNo(vo.getItgCustNo());
+		CrmPointHstVo point = getPoint(so, USE_TYPE_WITHDRAWAL, vo.getItgCustNo());
+		if (point != null) {
 			throw new EzApiException(API_CODE_EXIST_POINT, API_CODE_EXIST_POINT_MSG);
 		}
 
@@ -583,12 +683,19 @@ public class CrmPointHstService extends AbstractCrmService {
 			score -= av;
 			if (score >= 0) {
 				CrmPointUseRelVo rel = new CrmPointUseRelVo();
-				rel.setOccurPointHstSeq(pt.getPointHstSeq());
+				rel.setOccurPointHstSeq(pt.getPointSeq());
 				rel.setUsePointHstSeq(vo.getPointHstSeq());
 				rel.setUsePointScore(av);
 				relDao.insert(rel);
 				cnt++;
-				dao.updateExtncDt(pt);
+				if (Utilities.isEmpty(pt.getPointPerdHstSeq()))
+					dao.updateExtncDt(pt);
+				else {
+					dao.updatePerdExtncDt(pt);
+					int remains = dao.selectPerdPointRemain(pt);
+					if (remains <= 0)
+						dao.updateExtncDt(pt);
+				}
 				if (score == 0)
 					break;
 
@@ -596,14 +703,21 @@ public class CrmPointHstService extends AbstractCrmService {
 
 			} else {
 				CrmPointUseRelVo rel = new CrmPointUseRelVo();
-				rel.setOccurPointHstSeq(pt.getPointHstSeq());
+				rel.setOccurPointHstSeq(pt.getPointSeq());
 				rel.setUsePointHstSeq(vo.getPointHstSeq());
 				rel.setUsePointScore(av + score);
 				relDao.insert(rel);
 				cnt++;
 
 				if (score == 0) {
-					dao.updateExtncDt(vo);
+					if (Utilities.isEmpty(pt.getPointPerdHstSeq()))
+						dao.updateExtncDt(pt);
+					else {
+						dao.updatePerdExtncDt(pt);
+						int remains = dao.selectPerdPointRemain(pt);
+						if (remains <= 0)
+							dao.updateExtncDt(pt);
+					}
 				}
 				break;
 			}
@@ -653,10 +767,11 @@ public class CrmPointHstService extends AbstractCrmService {
 	 *
 	 */
 	public CrmPointInfoVo saveCancel(CrmPointHstVo vo) throws Exception {
-
+		boolean extendExpire = true;
 		CrmPointHstSo so = new CrmPointHstSo();
 		so.setChitNo(vo.getChitNo());
 		so.setPblsChlCd(vo.getPblsChlCd());
+		so.setItgCustNo(vo.getItgCustNo());
 		List<CrmPointHstVo> list = getPointList(so);
 		if (Utilities.isEmpty(list))
 			throw new EzApiException(API_CODE_NO_POINT, API_CODE_NO_POINT_MSG);
@@ -681,7 +796,7 @@ public class CrmPointHstService extends AbstractCrmService {
 		totalPoint *= -1;
 		CrmPointInfoVo info = dao.selectPointInfo(vo);
 
-		CrmPointHstVo point = list.get(0);
+		CrmPointHstVo point = Utilities.beanToBean(list.get(0), CrmPointHstVo.class);
 		point.setChitNo(vo.getChitNo());
 		point.setPblsChlCd(vo.getPblsChlCd());
 		point.setUseTypeCd(USE_TYPE_CANCEL);
@@ -703,7 +818,51 @@ public class CrmPointHstService extends AbstractCrmService {
 			insertUseHst(point);
 
 		} else if (totalPoint > 0) {
+
+			int offset = totalPoint;
+			for (int i = 0; i < list.size() && offset > 0; i++) {
+				CrmPointHstVo pt = list.get(i);
+				int use = pt.getOccurPointScore();
+				if (use > 0)
+					continue;
+				EzMap rso = new EzMap();
+				rso.setString("pointHstSeq", pt.getPointHstSeq());
+				rso.setString("useExtendYn", extendExpire ? "Y" : "N");
+				List<CrmPointHstVo> relList = dao.selectUseRelList(rso);
+				for (int j = 0; j < relList.size() && offset > 0; j++) {
+					CrmPointHstVo p = relList.get(j);
+					int u = p.getOccurPointScore();
+					if (offset < u) {
+						u = offset;
+					}
+					p.setPointHstSeq(point.getPointHstSeq());
+					dao.insertPerdHst(p);
+					offset -= u;
+					String pointSeq = p.getPointSeq();
+					if (Utilities.isNotEmpty(pointSeq)) {
+						String[] seqs = pointSeq.split(",");
+						for (int k = 0; k < seqs.length; k++) {
+							String seq = seqs[k];
+							if (Utilities.isEmpty(seq))
+								continue;
+							String[] s = seq.split("#");
+							EzMap hst = new EzMap();
+							hst.setString("pointPerdHstSeq", p.getPointPerdHstSeq());
+							hst.setString("occurPointHstSeq", s[0]);
+							hst.setString("usePointHstSeq", s[1]);
+							dao.insertRestoreHst(hst);
+
+						}
+					}
+				}
+				if (relList.size() > 0) {
+					dao.updatePerdDt(point);
+				}
+
+			}
 			insertDepositHst(point);
+			if (!extendExpire)
+				saveExpire(point);
 		}
 		info = dao.selectPointInfo(vo);
 		updateRemainPoint(info);
@@ -712,6 +871,63 @@ public class CrmPointHstService extends AbstractCrmService {
 		messageService.sendAsyncPointMessage(vo.getItgCustNo(), totalPoint, Constants._TALK_CODE_POINT_CANCEL,
 				vo.getStorNo(), false);
 		return info;
+	}
+
+	public void saveExpire(CrmPointHstVo point) throws Exception {
+
+		List<CrmPointHstVo> pointList = dao.selectExpireList(point);
+		if (Utilities.isEmpty(pointList))
+			return;
+		CrmPointHstVo exp = getExpirePoint(point);
+		List<CrmPointHstVo> relList = new ArrayList<CrmPointHstVo>();
+		for (int i = 0; i < pointList.size(); i++) {
+
+			final CrmPointHstVo item = pointList.get(i);
+			int expire = item.getPointScore() - item.getUsePointScore();
+			if (expire < 0)
+				expire = 0;
+			item.setExpireScore(expire);
+			int expirePoint = exp.getOccurPointScore() + (item.getExpireScore() * -1);
+			exp.setOccurPointScore(expirePoint);
+			relList.add(item);
+		}
+		CrmPointHstVo vo = dao.selectLastPoint(exp);
+		int remain = vo == null ? 0 : vo.getRemainPointScore();
+		exp.setRemainPointScore(remain + exp.getOccurPointScore());
+		dao.insert(exp);
+		for (int i = 0; i < relList.size(); i++) {
+			CrmPointHstVo relPoint = relList.get(i);
+			CrmPointUseRelVo rel = new CrmPointUseRelVo();
+			rel.setOccurPointHstSeq(relPoint.getPointSeq());
+			rel.setUsePointHstSeq(exp.getPointHstSeq());
+			rel.setUsePointScore(relPoint.getExpireScore());
+			rel.setRegChlCd("CRM");
+			rel.setRegrId("CRM");
+			rel.setAmdrId("CRM");
+			dao.insertUseRel(rel);
+			if (Utilities.isEmpty(relPoint.getPointPerdHstSeq()))
+				dao.updateExpire(relPoint);
+			else {
+				dao.updateExpirePerd(relPoint);
+				int remains = dao.selectPerdPointRemain(relPoint);
+				if (remains <= 0)
+					dao.updateExpire(relPoint);
+			}
+		}
+	}
+
+	private CrmPointHstVo getExpirePoint(CrmPointHstVo item) {
+		CrmPointHstVo exp = new CrmPointHstVo();
+		exp.setOccurPointScore(0);
+		exp.setPblsDivCd(CODE_EXPIRE);
+		exp.setPblsChlCd("CRM");
+		exp.setRegChlCd("CRM");
+		exp.setUseTypeCd("004");
+		exp.setTxn("유효기간만료");
+		exp.setItgCustNo(item.getItgCustNo());
+		exp.setMshipGradeCd(item.getMshipGradeCd());
+
+		return exp;
 	}
 
 	/**
@@ -853,10 +1069,12 @@ public class CrmPointHstService extends AbstractCrmService {
 		// 2022.10.17 추가
 		// 이미 사용한 전표 번호인지 체크한다. 에러를 발생시킴 안됨~~!!!
 		// null 일 경우 사용안 한 전표임
-		CrmPointHstVo existChitChk = dao.selectChitNoChk(vo);
+		EzMap existChitChk = dao.selectChitNoChk(vo);
 		if (existChitChk != null) {
-			log.debug("#### 이미 사용된 전표번호 입니다. ####");
-			return dao.selectPointInfo(vo);
+			throw new EzApiException(API_CODE_EXIST_POINT, API_CODE_EXIST_POINT_MSG);
+			/*
+			 * log.debug("#### 이미 사용된 전표번호 입니다. ####"); return dao.selectPointInfo(vo);
+			 */
 		}
 
 		CrmPointHstVo deposit = getBuyPoint(custVo, vo);
@@ -877,7 +1095,7 @@ public class CrmPointHstService extends AbstractCrmService {
 			deposit.setAccumYn(deposit.getAccumYn());
 			deposit.setMshipGradeCd(custVo.getMshipGradeCd());
 			deposit.setValidPerdStaYmd(null);
-			deposit.setValidPerdEndYmd(null);
+//			deposit.setValidPerdEndYmd(null);
 
 			info = saveBuyDeposit(deposit);
 			saveBuyGodsList(deposit, POINT_901);
@@ -904,7 +1122,6 @@ public class CrmPointHstService extends AbstractCrmService {
 		String orgChitNo = deposit.getChitNo();
 		CrmCustVo custVo2 = null;
 
-		
 		// 22.10.18 0원이더라도 추천이력을 찍어준다
 		if (!"".equals(deposit.getRcmdrCustNo()) && deposit.getRcmdrCustNo() != null) {
 
@@ -973,7 +1190,6 @@ public class CrmPointHstService extends AbstractCrmService {
 			advnCmtHstService.insertAdVnCmt(deposit);
 
 		}
-
 		if (info == null)
 			info = dao.selectPointInfo(vo);
 		if (info != null && deposit.getOccurPointScore() != null)
@@ -1088,7 +1304,7 @@ public class CrmPointHstService extends AbstractCrmService {
 
 			status.setAccumYn(item.getAccumYn());
 
-			calcBuyPoint(custVo, item, status, plcyInfo, plcyInfoRcmd);
+			calcBuyPoint(custVo, item, status, plcyInfo, plcyInfoRcmd, vo.getPblsChlCd());
 
 			pointItemList.add(item);
 
@@ -1170,7 +1386,7 @@ public class CrmPointHstService extends AbstractCrmService {
 	 *
 	 */
 	private void calcBuyPoint(CrmCustVo custVo, CrmPointItemVo item, CrmPointItemVo status, CrmMshipPlcyBasVo plcyInfo,
-			CrmMshipPlcyBasVo plcyInfoRcmd) throws Exception {
+			CrmMshipPlcyBasVo plcyInfoRcmd, String chlCd) throws Exception {
 		if (custVo == null)
 			return;
 		status.setOrdrAmt(status.getOrdrAmt() + item.getOrdrAmt());
@@ -1199,26 +1415,35 @@ public class CrmPointHstService extends AbstractCrmService {
 			// 구매적립포인트
 			point = 0;
 
-			if (plcyInfo.getBuyAccumPointRate() != null) {
+			if (plcyInfo.getBuyAccumPointRate() == null)
+				plcyInfo.setBuyAccumPointRate(0.0);
 
-				// 제외 상품 또는 제외 매장일 경우
-				if (plcyInfo.getMshipGodsChk() > 0 || plcyInfo.getMshipStoreChk() > 0) {
-					item.setBuyAccumPointScore(0);
+			// 제외 상품 또는 제외 매장일 경우
+			if (plcyInfo.getMshipGodsChk() > 0 || plcyInfo.getMshipStoreChk() > 0) {
+				item.setBuyAccumPointScore(0);
+			} else {
+				/* 직영몰작업 채널별 상품 적립 예외 가져오기 */
+				CrmPointExceptVo pointExt = getPointProduct(chlCd, plcyInfo.getMshipPlcyBasNo(), item.getBuyGodsNo());
+				if (pointExt != null) {
+					if ("001".equals(pointExt.getBuyAccumTypeCd())) {
+						point = (int) (amt * pointExt.getBuyAccumPointRate() / 100);
+					} else
+						point = pointExt.getBuyAccumPointScore();
 				} else {
 					point = (int) (amt * (plcyInfo.getBuyAccumPointRate() / 100));
 
-					if (point < 0)
-						point = 0;
-					item.setBuyAccumPointScore((int) point);
-
 				}
+				if (point < 0)
+					point = 0;
+				item.setBuyAccumPointScore((int) point);
 
-				status.setBuyAccumPointScore(status.getBuyAccumPointScore() + item.getBuyAccumPointScore());
-				status.setRcmdrCustNo(plcyInfo.getItgCustNo());
-				status.setMshipGradeCd(plcyInfo.getMshipGradeCd());
-				pointAllList.add(status);
-				pointItemList.add(item);
 			}
+
+			status.setBuyAccumPointScore(status.getBuyAccumPointScore() + item.getBuyAccumPointScore());
+			status.setRcmdrCustNo(plcyInfo.getItgCustNo());
+			status.setMshipGradeCd(plcyInfo.getMshipGradeCd());
+			pointAllList.add(status);
+			pointItemList.add(item);
 
 			// 구매보상승급점수
 			point = 0;
@@ -1346,6 +1571,10 @@ public class CrmPointHstService extends AbstractCrmService {
 		}
 
 		return info;
+	}
+
+	public List<CrmPointExpireVo> selectPointExpireList(EzMap so) throws Exception {
+		return dao.selectPointExpireList(so);
 	}
 
 }

@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -18,10 +19,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.ExchangeStrategies;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.util.DefaultUriBuilderFactory;
 
 import com.ceragem.api.base.constant.Constants;
 import com.ceragem.api.base.service.AbstractCrmService;
 import com.ceragem.api.base.util.Utilities;
+import com.ceragem.api.config.jwt.EzJwtService;
 import com.ceragem.api.crm.dao.CrmAcqieHstDao;
 import com.ceragem.api.crm.dao.CrmBllkCustHstDao;
 import com.ceragem.api.crm.dao.CrmCustBasDao;
@@ -29,14 +34,18 @@ import com.ceragem.api.crm.dao.CrmCustBosCntrtHstDao;
 import com.ceragem.api.crm.dao.CrmCustHshldBasDao;
 import com.ceragem.api.crm.dao.CrmCustPatronStorBasDao;
 import com.ceragem.api.crm.dao.CrmDormCustBasDao;
+import com.ceragem.api.crm.dao.CrmMshipAppToknBasDao;
 import com.ceragem.api.crm.dao.CrmMshipCoupnBasDao;
+import com.ceragem.api.crm.dao.CrmMshipLoginHstDao;
 import com.ceragem.api.crm.dao.CrmMshipPlcyBasDao;
+import com.ceragem.api.crm.dao.CrmMshipStmpBasDao;
 import com.ceragem.api.crm.dao.CrmPointHstDao;
 import com.ceragem.api.crm.dao.CrmRcmdHstDao;
 import com.ceragem.api.crm.dao.ICrmDao;
 import com.ceragem.api.crm.dao.MsgIfDao;
 import com.ceragem.api.crm.model.CrmAdvncmtHstVo;
 import com.ceragem.api.crm.model.CrmAgreementVo;
+import com.ceragem.api.crm.model.CrmAppPushTrmHstVo;
 import com.ceragem.api.crm.model.CrmBllkCustHstSo;
 import com.ceragem.api.crm.model.CrmBllkCustHstVo;
 import com.ceragem.api.crm.model.CrmCouponVo;
@@ -49,10 +58,14 @@ import com.ceragem.api.crm.model.CrmCustPatronStorBasVo;
 import com.ceragem.api.crm.model.CrmCustSo;
 import com.ceragem.api.crm.model.CrmCustVo;
 import com.ceragem.api.crm.model.CrmDormCustBasVo;
+import com.ceragem.api.crm.model.CrmMshipAppToknBasVo;
 import com.ceragem.api.crm.model.CrmMshipApplyAdvncmtRelVo;
 import com.ceragem.api.crm.model.CrmMshipApplyCoupnEventRelVo;
 import com.ceragem.api.crm.model.CrmMshipApplyPointRelVo;
+import com.ceragem.api.crm.model.CrmMshipLoginHstVo;
 import com.ceragem.api.crm.model.CrmMshipPlcyBasVo;
+import com.ceragem.api.crm.model.CrmMshipStmpEventVo;
+import com.ceragem.api.crm.model.CrmMshipStmpIssueVo;
 import com.ceragem.api.crm.model.CrmPointHstVo;
 import com.ceragem.api.crm.model.CrmPointInfoVo;
 import com.ceragem.api.crm.model.CrmRcmdHstVo;
@@ -81,8 +94,10 @@ public class CrmCustService extends AbstractCrmService {
 	private final static String API_CODE_EVENT_CODE = "IAR0501";
 	private final static String API_CODE_EVENT_CODE_MSG = "이벤트 코드가 없습니다.";
 
-	private final SimpleDateFormat DATETIME_FORMAT_ORG = new SimpleDateFormat("yyyyMMddHHmmss", Locale.KOREAN);
-	private final SimpleDateFormat DATETIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.KOREAN);
+//	private final SimpleDateFormat DATETIME_FORMAT_ORG = new SimpleDateFormat("yyyyMMddHHmmss", Locale.KOREAN);
+//	private final SimpleDateFormat DATETIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.KOREAN);
+	@Value("${spring.profiles.active}")
+	String activeProfile;
 
 	@Value("${spring.eon.sms-sender-no}")
 	String smsSenderNo;
@@ -96,7 +111,31 @@ public class CrmCustService extends AbstractCrmService {
 	@Value("${spring.eon.user}")
 	String eonUser;
 
+	@Value("${bos.use-event}")
 	boolean useEvent = false;
+
+	@Value("${crm.event.lab-url}")
+	String labEventUrl;
+
+	@Value("${crm.event.com-url}")
+	String comEventUrl;
+
+	@Value("${crm.event.chk-url}")
+	String chkEventUrl;
+
+	@Value("${crm.event.mem-url}")
+	String memEventUrl;
+
+	@Value("${mindfit.access_key}")
+	String mindfitAccessKey; // Ybrain Mindfit AccessKey
+	@Value("${mindfit.secret_key}")
+	String mindfitSecretKey; // Ybrain Mindfit SecretKey
+	@Value("${mindfit.api.base-url}")
+	String mindfitBaseUrl; // Ybrain Mindfit Api Base Url
+	@Value("${mindfit.api.path}")
+	String mindfitPath; // Ybrain Mindfit Path
+
+	boolean useDorm = false;
 
 	private final static String API_EVENT_EXIST = "NOT_EXIST";
 	private final static String API_EVENT_EXIST_MSG = "해당하는 이벤트 정책이 없습니다.";
@@ -173,8 +212,6 @@ public class CrmCustService extends AbstractCrmService {
 	@Autowired
 	CrmRcmdHstDao rcmdHstDao;
 
-
-
 	@Autowired
 	BosApiService bosApiService;
 
@@ -183,6 +220,18 @@ public class CrmCustService extends AbstractCrmService {
 
 	@Autowired
 	CrmCustBosCntrtHstDao contractDao;
+
+	@Autowired
+	CrmMshipLoginHstDao loginHstDao;
+
+	@Autowired
+	CrmMshipAppToknBasDao tokenDao;
+
+	@Autowired
+	CrmMshipStmpBasService stmpService;
+
+	@Autowired
+	CrmMshipStmpBasDao stmpDao;
 
 	@Override
 	public ICrmDao getDao() {
@@ -272,6 +321,8 @@ public class CrmCustService extends AbstractCrmService {
 		vo.setAmdrId(vo.getIndiInfoHandlPrsnNo());
 		checkDuplication(vo);
 
+		if (Utilities.isNotEmpty(vo.getCustNm()))
+			vo.setCustNm(vo.getCustNm().trim());
 		int ret = super.insert(vo);
 
 		if (ret > 0) {
@@ -293,6 +344,7 @@ public class CrmCustService extends AbstractCrmService {
 			CrmSnstvInfoInqryHstVo hst = Utilities.beanToBean(vo, CrmSnstvInfoInqryHstVo.class);
 			hst.setInqryCnt(1);
 			hst.setPfmWorkCd("005");
+			hst.setRegChlCd(EzJwtService.getSystemCd());
 			inqHstService.addLog(hst);
 
 			dao.insertCard(vo);
@@ -305,9 +357,34 @@ public class CrmCustService extends AbstractCrmService {
 		return dao.selectNamePhone(param);
 	}
 
+	public int getAge(String birthday) {
+		if (Utilities.isEmpty(birthday))
+			return 0;
+		String day = Utilities.getDateString();
+		int year = Utilities.parseInt(birthday.substring(0, 4));
+		int cYear = Utilities.parseInt(day.substring(0, 4));
+		int off = Utilities.parseInt(birthday.substring(4, 8));
+		int coff = Utilities.parseInt(day.substring(4, 8));
+		int age = cYear - year;
+		int offset = off - coff > 0 ? -1 : 0;
+		return age + offset;
+
+	}
+
 	public int insertMembership(CrmCustVo vo) throws Exception {
 		String reason = "신규멤버십";
 		int ret = 0;
+
+		if (Utilities.isEmpty(vo.getBirthday())) {
+			throw new EzApiException(Constants._API_CODE_INVALID_PARAM, "멤버십 회원은 생년월일이 필수 입니다.");
+		}
+		int age = getAge(vo.getBirthday());
+		if (age < 14) {
+			throw new EzApiException(Constants._API_CODE_INVALID_PARAM, "멤버십 회원은 만14세 이상만 가입 가능합니다.");
+		}
+
+		if (Utilities.isNotEmpty(vo.getCustNm()))
+			vo.setCustNm(vo.getCustNm().trim());
 
 		CrmCustVo dorm = dao.selectExitUser(vo);
 		if (dorm != null) {
@@ -323,6 +400,7 @@ public class CrmCustService extends AbstractCrmService {
 				vo.setItgCustNo(old.getItgCustNo());
 			}
 		}
+		vo.setAmdrId(vo.getIndiInfoHandlPrsnNo());
 		List<CrmCustInfoChngHstVo> infoList = null;
 		inqHstService.encrypt(vo);
 		checkDuplication(vo);
@@ -334,12 +412,15 @@ public class CrmCustService extends AbstractCrmService {
 
 		} else {
 			infoList = infoChangeService.getChangeInfoList(vo.getItgCustNo(), reason, vo, vo.getIndiInfoHandlPrsnNo());
+			dao.insertCard(vo);
 			ret = dao.updateMembership(vo);
 		}
 
 		if (ret > 0 && vo != null) {
 			CrmAgreementVo agreement = vo.getAgreement();
 			if (agreement != null) {
+				agreement.setAmdrId(vo.getIndiInfoHandlPrsnNo());
+				agreement.setRegrId(vo.getIndiInfoHandlPrsnNo());
 				agreement.setItgCustNo(vo.getItgCustNo());
 				agreeService.updateAgreement(agreement);
 			}
@@ -404,6 +485,18 @@ public class CrmCustService extends AbstractCrmService {
 
 		if (param instanceof CrmCustVo) {
 			vo = (CrmCustVo) param;
+
+			if ("Y".equals(vo.getMshipSbscYn())) {
+				if (Utilities.isEmpty(vo.getBirthday())) {
+					throw new EzApiException(Constants._API_CODE_INVALID_PARAM, "멤버십 회원은 생년월일이 필수 입니다.");
+				}
+				int age = getAge(vo.getBirthday());
+				if (age < 14) {
+					throw new EzApiException(Constants._API_CODE_INVALID_PARAM, "멤버십 회원은 만14세 이상만 가입 가능합니다.");
+				}
+			}
+			if (Utilities.isNotEmpty(vo.getIndiInfoAmdTxn()))
+				reason = vo.getIndiInfoAmdTxn();
 			vo.setAmdrId(vo.getIndiInfoHandlPrsnNo());
 			vo.setRegrId(vo.getIndiInfoHandlPrsnNo());
 			inqHstService.encrypt(vo);
@@ -428,6 +521,8 @@ public class CrmCustService extends AbstractCrmService {
 			CrmSnstvInfoInqryHstVo hst = Utilities.beanToBean(vo, CrmSnstvInfoInqryHstVo.class);
 			hst.setInqryCnt(1);
 			hst.setPfmWorkCd("004");
+			hst.setRegChlCd(EzJwtService.getSystemCd());
+
 			inqHstService.addLog(hst);
 		}
 		asyncService.sendCustmerApiEvent(vo.getItgCustNo(), Constants._CUST_EVENT_MODIFY, getCallChannel());
@@ -435,6 +530,8 @@ public class CrmCustService extends AbstractCrmService {
 	}
 
 	public int updateNormal(CrmCustVo param) throws Exception {
+		if (!useDorm)
+			throw new EzApiException(Constants._API_CODE_DEPRECATED, Constants._API_CODE_DEPRECATED_MSG);
 		CrmCustVo vo = dao.select(param);
 		if (vo == null) {
 			throw new EzApiException(Constants._API_CODE_INVALID_PARAM, "등록되지 않은 회원입니다.");
@@ -467,12 +564,28 @@ public class CrmCustService extends AbstractCrmService {
 		custVo.setEventCd("120");
 		custVo.setPblsChlCd(getCallChannel());
 		custVo.setRegChlCd(getCallChannel());
-		getAsyncEventChk(custVo);
+		String codeCd = param.getCodeCd();
+		if (Utilities.isEmpty(codeCd)) {
+			getAsyncEventChk(custVo);
+		}
+		CrmCustVo cust = new CrmCustVo();
+		cust.setItgCustNo(param.getItgCustNo());
+		cust.setMshipLastLoginIpAddr(param.getConnPrsnIpAddr());
+		if (Utilities.isEmpty(cust.getMshipLastLoginIpAddr()))
+			cust.setMshipLastLoginIpAddr(Utilities.getPeerIp());
+		updateLastLogin(cust);
+		/*
+		 * 
+		 * 
+		 * int ret = service.updateLastLogin(vo);
+		 */
 		asyncService.sendCustmerApiEvent(vo.getItgCustNo(), Constants._CUST_EVENT_DORM_CANCEL, getCallChannel());
 		return ret;
 	}
 
 	public int updateDormant(CrmCustVo param) throws Exception {
+		if (!useDorm)
+			throw new EzApiException(Constants._API_CODE_DEPRECATED, Constants._API_CODE_DEPRECATED_MSG);
 		CrmCustVo vo = dao.select(param);
 		if (vo == null) {
 			throw new EzApiException(Constants._API_CODE_INVALID_PARAM, "등록되지 않은 회원입니다.");
@@ -487,7 +600,11 @@ public class CrmCustService extends AbstractCrmService {
 		if (!"Y".equals(vo.getMshipSbscYn())) {
 			throw new EzApiException(Constants._API_CODE_INVALID_PARAM, "멤버십 회원이 아닙니다.");
 		}
-		asyncService.sendCustStatusMessage(vo.getItgCustNo(), "030");
+
+		String codeCd = param.getCodeCd();
+		if (Utilities.isEmpty(codeCd)) {
+			asyncService.sendCustStatusMessage(vo.getItgCustNo(), "030");
+		}
 		CrmCustInfoChngHstVo info = new CrmCustInfoChngHstVo();
 		info.setItgCustNo(vo.getItgCustNo());
 		info.setChngClusCtnts("회원상태");
@@ -495,6 +612,9 @@ public class CrmCustService extends AbstractCrmService {
 		info.setChngPreCtnts(vo.getCustStatusCdNm());
 		info.setChngWhyCtnts(getCallChannel() + " 변경");
 		infoChangeService.insert(info);
+
+		// 23.2.7 멤버십 예정 등급코드 삭제 요청
+		vo.setMshipExptGradeCd(null);
 
 		dao.insertDormant(vo);
 		vo.setCustStatusCd(Constants._USER_STATUS_DORMANT);
@@ -512,7 +632,11 @@ public class CrmCustService extends AbstractCrmService {
 		if (Constants._USER_STATUS_DELETE.equals(status)) {
 			throw new EzApiException(Constants._API_CODE_INVALID_PARAM, "이미 탈퇴 회원 상태입니다.");
 		}
-		asyncService.sendCustStatusMessage(vo.getItgCustNo(), "130");
+		String codeCd = param.getCodeCd();
+		System.out.println("check : " + codeCd);
+		if (Utilities.isEmpty(codeCd)) {
+			asyncService.sendCustStatusMessage(vo.getItgCustNo(), "130");
+		}
 		CrmCustInfoChngHstVo info = new CrmCustInfoChngHstVo();
 		info.setItgCustNo(vo.getItgCustNo());
 		info.setChngClusCtnts("회원상태");
@@ -523,7 +647,8 @@ public class CrmCustService extends AbstractCrmService {
 
 		vo.setCustStatusCd(Constants._USER_STATUS_DELETE);
 		dao.updateRepHshldDelete(vo);
-		asyncService.sendCustmerApiEvent(vo.getItgCustNo(), Constants._CUST_EVENT_WITHDRAWAL, getCallChannel());
+		if ("Y".equals(vo.getMshipSbscYn()))
+			asyncService.sendCustmerApiEvent(vo.getItgCustNo(), Constants._CUST_EVENT_WITHDRAWAL, getCallChannel());
 		// CRM_ACQIE_HST
 		return updateDelete(vo);
 
@@ -579,6 +704,10 @@ public class CrmCustService extends AbstractCrmService {
 					Constants._API_CODE_DUPLICATED_PARAM_USER_NM_PHONE_MSG);
 		// so.setMphonNo(null);
 		// so.setCustNm(null);
+		int ret1 = dormDao.selectListCount(so);
+		if (ret1 > 0)
+			throw new EzApiException(Constants._API_CODE_DUPLICATED_PARAM,
+					Constants._API_CODE_DUPLICATED_PARAM_USER_NM_PHONE_MSG);
 	}
 
 	public int updateRepCntplc(CrmCustCntplcBasVo vo) throws Exception {
@@ -631,6 +760,21 @@ public class CrmCustService extends AbstractCrmService {
 		if (Constants._USER_STATUS_DORMANT.equals(user.getCustStatusCd())) {
 			user = dormDao.select(user);
 			user.setCustStatusCd(Constants._USER_STATUS_DORMANT);
+		}
+		inqHstService.decrypt(user);
+		return user;
+	}
+
+	public CrmCustVo getLoginUserPwd(CrmCustVo vo) throws Exception {
+		CrmCustVo user = dao.selectLoginId(vo);
+		if (user == null)
+			throw new EzApiException(Constants._API_CODE_LOGIN_FAIL, Constants._API_CODE_LOGIN_FAIL_MSG);
+		if (Constants._USER_STATUS_DORMANT.equals(user.getCustStatusCd())) {
+			user = dormDao.select(user);
+			user.setCustStatusCd(Constants._USER_STATUS_DORMANT);
+		}
+		if (!Utilities.passwordMatch(vo.getMshipLoginPwd(), user.getMshipLoginPwd())) {
+			throw new EzApiException(Constants._API_CODE_LOGIN_FAIL, Constants._API_CODE_LOGIN_FAIL_MSG);
 		}
 		inqHstService.decrypt(user);
 		return user;
@@ -809,6 +953,20 @@ public class CrmCustService extends AbstractCrmService {
 		Map<String, Object> cpnInfo = null;
 		Map<String, Object> potInfo = null;
 		Map<String, Object> advnInfo = null;
+		Map<String, Object> temPotInfo = null;
+
+		CrmMshipPlcyBasVo plcyVo = new CrmMshipPlcyBasVo();
+		plcyVo.setItgCustNo(custVo.getItgCustNo()); // 통합고객번호
+		plcyVo.setPblsDivCd(custVo.getEventCd()); // 쿠폰종류코드
+		plcyVo.setStatusCd("Y"); // 사용유무
+
+		plcyVo.setOrgItgCustNo(custVo.getOrgItgCustNo());
+		plcyVo.setOrgMshipPlcyBasNo(custVo.getOrgMshipPlcyBasNo());
+		plcyVo.setRcmdrCustNo(custVo.getRcmdrCustNo());
+
+		plcyVo.setRcmdrCustNo2(custVo.getRcmdrCustNo2());
+
+		// String div = Utilities.nullCheck(custVo.getEventCd());
 
 		// 이벤트 쿠폰을 지급한다.
 		cpnInfo = chkEvtCoupon(custVo);
@@ -835,6 +993,24 @@ public class CrmCustService extends AbstractCrmService {
 				log.debug("### advnInfo = " + advnInfo.toString());
 			}
 
+			if ("060".equals(custVo.getEventCd())) {
+				// 이벤트성 포인트 지급 끝나면 삭제.
+				// 2023.02.01 ~ 2023.02.28 멤버십 회원가입 > 5000 포인트 지급 > 유효기간 3개월
+				temPotInfo = chkTemEvtPoint(custVo);
+				if (temPotInfo != null) {
+					rtnMap.putAll(temPotInfo);
+					log.debug("### temPotInfo = " + temPotInfo.toString());
+				}
+			}
+
+		}
+
+		// 체험스탬프
+		if ("040".equals(custVo.getEventCd())) {
+			CrmMshipStmpEventVo stmpVo = stmpDao.selectExpStampEvent(custVo);
+			if (stmpVo != null) {
+				List<CrmMshipStmpIssueVo> stmps = stmpService.eventStmp(stmpVo);
+			}
 		}
 
 		// 이벤트 알림톡 체크
@@ -1030,7 +1206,6 @@ public class CrmCustService extends AbstractCrmService {
 				sendMessage(message);
 
 			}
-
 		}
 
 		return rtnMap;
@@ -1146,8 +1321,9 @@ public class CrmCustService extends AbstractCrmService {
 			cal.add(Calendar.DATE, 1);
 		}
 		String dateString = Utilities.getDateString(cal.getTime());
-		Date dt = DATETIME_FORMAT_ORG.parse(dateString + time);
-		return DATETIME_FORMAT.format(dt);
+		SimpleDateFormat sf = new SimpleDateFormat("yyyyMMddHHmmss", Locale.KOREAN);
+		Date dt = sf.parse(dateString + time);
+		return sf.format(dt);
 	}
 
 	public MsgIfVo getMessage(MsgCodeVo code, String itgCustNo, String mphoneNo, Map<String, Object> msgMap)
@@ -1158,13 +1334,13 @@ public class CrmCustService extends AbstractCrmService {
 		String subject = getTalkTemplateText(code.getSubject().replace("txt_", "txt"), msgMap);
 		MsgIfVo message = new MsgIfVo();
 		String timTalk = null;
-
+		SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.KOREAN);
 		if (Utilities.isNotEmpty(code.getTalkSendTime())) {
 			// 다음날 예약시간
 			timTalk = getTimeString(code.getTalkSendTime());
 		} else {
 			// 실시간
-			timTalk = DATETIME_FORMAT.format(new Date());
+			timTalk = sf.format(new Date());
 		}
 
 		// 이벤트가 마케팅정보 수신동의, 추가정보 입력일 경우 실시간이되,
@@ -1184,7 +1360,7 @@ public class CrmCustService extends AbstractCrmService {
 			if (nowTime < 90000 || nowTime > 180000) {
 				timTalk = getTimeString(code.getTalkSendTime());
 			} else {
-				timTalk = DATETIME_FORMAT.format(new Date());
+				timTalk = sf.format(new Date());
 				message.setDummy7("MSGR_IF");
 			}
 
@@ -1277,15 +1453,46 @@ public class CrmCustService extends AbstractCrmService {
 		// 필수 파라미터 itgCustNo, COUPN_TYPE_CD = '007' AND A.MSHIP_GRADE_CD = '003' AND
 		// A.MSHP_GRADE_CD = '005'
 
+		CrmMshipPlcyBasVo plcyVo = new CrmMshipPlcyBasVo();
+		plcyVo.setItgCustNo(custVo.getItgCustNo()); // 통합고객번호
+		plcyVo.setPblsDivCd(custVo.getEventCd()); // 쿠폰종류코드
+		plcyVo.setStatusCd("Y"); // 사용유무
+
+		plcyVo.setOrgItgCustNo(custVo.getOrgItgCustNo());
+		plcyVo.setOrgMshipPlcyBasNo(custVo.getOrgMshipPlcyBasNo());
+		plcyVo.setRcmdrCustNo(custVo.getRcmdrCustNo());
+
+		plcyVo.setRcmdrCustNo2(custVo.getRcmdrCustNo2());
+
+		// String div = Utilities.nullCheck(custVo.getEventCd());
+
+		// 정책을 불러온다.
+		CrmMshipPlcyBasVo plcyInfo = plcyDao.selectPlcyInfo(plcyVo);
+		String orgMBas = null;
 		CrmCouponVo coupon = new CrmCouponVo();
 		coupon.setItgCustNo(custVo.getItgCustNo());
 		coupon.setPblsDivCd(custVo.getEventCd());
 		coupon.setRcmdrCustNo2(custVo.getRcmdrCustNo2());
 		coupon.setMshpGradeCd(custVo.getOrgMshipGradeCd());
+		orgMBas = custVo.getOrgMshipPlcyBasNo();
+		if (plcyInfo != null) {
+			custVo.setOrgMshipPlcyBasNo(plcyInfo.getMshipPlcyBasNo());
+		}
 
 		CrmMshipApplyCoupnEventRelVo coupnInfo = couponDao.selectCoupnInfo(custVo);
+		if (plcyInfo != null && coupnInfo == null && !"003".equals(custVo.getMshipTypeCd())) {
+			custVo.setOrgMshipPlcyBasNo(null);
+			coupnInfo = couponDao.selectCoupnInfo(custVo);
+		}
+
+		custVo.setOrgMshipPlcyBasNo(orgMBas);
 
 		Utilities.beanToBean(coupon, coupnInfo);
+		coupon.setRegChlCd(null);
+		coupon.setRegrId(null);
+		coupon.setRegDt(null);
+		coupon.setAmdrId(null);
+		coupon.setAmdDt(null);
 
 		String cpnErr = "SUCCESS";
 		String cpnErrMsg = "";
@@ -1321,20 +1528,23 @@ public class CrmCustService extends AbstractCrmService {
 				// throw new EzApiException(API_CODE_PAY_OVER_01, API_CODE_PAY_OVER_01_MSG);
 				// cpnErr = "TOTAL";
 				cpnErr = API_CODE_PAY_OVER_01;
-				cpnErrMsg = API_CODE_PAY_OVER_01_MSG;
+				cpnErrMsg = API_CODE_PAY_OVER_01_MSG + "TotAppntCnt[" + coupnInfo.getTotAppntCnt()
+						+ "] , AllCpnPlbsCnt[" + coupnInfo.getAllCpnPlbsCnt() + "]";
 
 				// 1개월 지급횟수 초과
 			} else if (coupnInfo.getMonthAppntCnt() <= coupnInfo.getMonthCpnPlbsCnt()) {
 				// throw new EzApiException(API_CODE_PAY_OVER_02, API_CODE_PAY_OVER_02_MSG);
 				// cpnErr = "MONTH";
 				cpnErr = API_CODE_PAY_OVER_02;
-				cpnErrMsg = API_CODE_PAY_OVER_02_MSG;
+				cpnErrMsg = API_CODE_PAY_OVER_02_MSG + "MonthAppntCnt[" + coupnInfo.getMonthAppntCnt()
+						+ "] , MonthCpnPlbsCnt[" + coupnInfo.getMonthCpnPlbsCnt() + "]";
 
 				// 1일 지급횟수 초과
 			} else if (coupnInfo.getDayAppntCnt() <= coupnInfo.getTodayCpnPlbsCnt()) {
 				// throw new EzApiException(API_CODE_PAY_OVER_03, API_CODE_PAY_OVER_03_MSG);
 				cpnErr = API_CODE_PAY_OVER_03;
-				cpnErrMsg = API_CODE_PAY_OVER_03_MSG;
+				cpnErrMsg = API_CODE_PAY_OVER_03_MSG + "DayAppntCnt[" + coupnInfo.getDayAppntCnt()
+						+ "] , TodayCpnPlbsCnt[" + coupnInfo.getTodayCpnPlbsCnt() + "]";
 			}
 
 			// 사용기한일 구하기
@@ -1434,9 +1644,22 @@ public class CrmCustService extends AbstractCrmService {
 			// 이벤트 포인트 정책을 가져온다.
 			CrmMshipApplyPointRelVo pntInfo = plcyDao.selectEventPointInfo(plcyInfo);
 
+			if ((pntInfo == null || pntInfo.getAccumPointScore() == 0) && !"003".equals(custVo.getMshipTypeCd())) {
+				plcyVo.setUseGradeYn("Y");
+				plcyInfo = plcyDao.selectPlcyInfo(plcyVo);
+				if (plcyInfo != null) {
+					plcyInfo.setPblsDivCd(plcyVo.getPblsDivCd());
+					plcyInfo.setOrgItgCustNo(plcyVo.getOrgItgCustNo());
+					plcyInfo.setOrgMshipPlcyBasNo(plcyVo.getOrgMshipPlcyBasNo());
+					plcyInfo.setRcmdrCustNo2(plcyVo.getRcmdrCustNo2());
+					plcyVo.setUseGradeYn(null);
+					pntInfo = plcyDao.selectEventPointInfo(plcyInfo);
+				}
+
+			}
 			// log.debug("pntInfo == " + pntInfo.toString());
 
-			if (pntInfo == null) {
+			if (pntInfo == null || pntInfo.getAccumPointScore() == 0) {
 				pntErr = "NULL";
 
 				result.put("pntErr", API_EVENT_EXIST);
@@ -1456,7 +1679,7 @@ public class CrmCustService extends AbstractCrmService {
 				pntInfo.setAccumPointScore(0);
 
 				// 총지급횟수 체크
-			} else if (pntInfo.getTotAppntCnt() <= pntInfo.getAllPntPlbsCnt()) {
+			} else if (pntInfo.getTotAppntCnt() > 0 && pntInfo.getTotAppntCnt() <= pntInfo.getAllPntPlbsCnt()) {
 				// pntErr = "TOTAL";
 
 				pntErr = API_CODE_PAY_OVER_01;
@@ -1464,7 +1687,7 @@ public class CrmCustService extends AbstractCrmService {
 				pntInfo.setAccumPointScore(0);
 
 				// 월지급 체크
-			} else if (pntInfo.getMonthAppntCnt() <= pntInfo.getMonthPntPlbsCnt()) {
+			} else if (pntInfo.getMonthAppntCnt() > 0 && pntInfo.getMonthAppntCnt() <= pntInfo.getMonthPntPlbsCnt()) {
 				// pntErr = "MONTH";
 
 				pntErr = API_CODE_PAY_OVER_02;
@@ -1473,7 +1696,7 @@ public class CrmCustService extends AbstractCrmService {
 				pntInfo.setAccumPointScore(0);
 
 				// 일지급 체크
-			} else if (pntInfo.getDayAppntCnt() <= pntInfo.getTodayPntPlbsCnt()) {
+			} else if (pntInfo.getDayAppntCnt() > 0 && pntInfo.getDayAppntCnt() <= pntInfo.getTodayPntPlbsCnt()) {
 				// pntErr = "TODAY";
 
 				pntErr = API_CODE_PAY_OVER_03;
@@ -1482,7 +1705,7 @@ public class CrmCustService extends AbstractCrmService {
 			}
 
 			// 포인트 1일 적립한도 체크
-			if (pntInfo.getAccumLmtPointScore() <= pntInfo.getTodayPblsPnt()) {
+			if (pntInfo.getAccumLmtPointScore() > 0 && pntInfo.getAccumLmtPointScore() <= pntInfo.getTodayPblsPnt()) {
 				// pntErr = "TODAY";
 
 				pntErr = API_CODE_PNT_OVER;
@@ -1663,6 +1886,144 @@ public class CrmCustService extends AbstractCrmService {
 		return result;
 	}
 
+	private Map<String, Object> chkTemEvtPoint(CrmCustVo custVo) throws Exception {
+
+		Map<String, Object> result = new LinkedHashMap<String, Object>();
+
+		// 멤버십 앱만 | 채널코드[MEM] and 가입ID가 존재하는 고객만
+
+		if ((!custVo.getRegChlCd().equals("MEM"))
+				|| (custVo.getRegChlCd().equals("MEM") && Utilities.isEmpty(custVo.getMshipLoginId())))
+			return result;
+
+		CrmPointHstVo crmPointHstVo = new CrmPointHstVo();
+		crmPointHstVo.setPblsDivCd(custVo.getEventCd());
+		crmPointHstVo.setItgCustNo(custVo.getItgCustNo());
+
+		crmPointHstVo.setRcmdrCustNo2(custVo.getRcmdrCustNo2());
+
+		CrmPointInfoVo info = pointHstDao.selectPointInfo(custVo);
+
+		String pntErr = "";
+		String pntErrMsg = "";
+
+		// 1. 날짜체크 2023.02.01 ~ 2023.02.28
+		// 2. 5000 포인트 지급
+		// 3. 유효기간 3개월 설정 > 공통 insert 시 nvl(이벤트날짜,기존)
+
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+//		SimpleDateFormat sdf = new SimpleDateFormat("HHmmss");
+		Date currentTime = new Date();
+
+		String today = sdf.format(currentTime);
+		String start_dt = "20230501000000"; // 20230501000000
+		String end_dt = "20230531235959"; // 20230531235959
+
+//		String start_dt = "130000";
+//		String end_dt = "155959";
+
+		Date startDt = sdf.parse(start_dt);
+		Date endDt = sdf.parse(end_dt);
+		Date toDt = sdf.parse(today);
+
+		int compare1 = toDt.compareTo(startDt);
+		int compare2 = endDt.compareTo(toDt);
+
+		int pntCode = 0;
+		int score = 0;
+
+		// ==============================================
+		// 회수제한
+		CrmMshipPlcyBasVo plcyVo = new CrmMshipPlcyBasVo();
+		plcyVo.setItgCustNo(custVo.getItgCustNo()); // 통합고객번호
+		plcyVo.setPblsDivCd(custVo.getEventCd()); // 쿠폰종류코드
+		plcyVo.setStatusCd("Y"); // 사용유무
+
+		plcyVo.setOrgItgCustNo(custVo.getOrgItgCustNo());
+		plcyVo.setOrgMshipPlcyBasNo(custVo.getOrgMshipPlcyBasNo());
+		plcyVo.setRcmdrCustNo(custVo.getRcmdrCustNo());
+
+		plcyVo.setRcmdrCustNo2(custVo.getRcmdrCustNo2());
+
+		// 정책을 불러온다.
+		CrmMshipPlcyBasVo plcyInfo = plcyDao.selectPlcyInfo(plcyVo);
+
+		// ==============================================
+		if (plcyInfo == null) {
+			pntErr = "NULL";
+
+			result.put("pntErr", API_EVENT_EXIST);
+			result.put("pntErrMsg", API_EVENT_EXIST_MSG);
+
+			return result;
+
+		} else {
+
+			result.put("pntErr", null);
+			result.put("pntCode", null);
+
+			crmPointHstVo.setOccurPointScore(0);
+			crmPointHstVo.setUseTypeCd(CrmPointHstService.USE_TYPE_DEPOSIT); // 적립코드
+			crmPointHstVo.setPblsDivCd(plcyVo.getPblsDivCd());
+
+			plcyInfo.setPblsDivCd(plcyVo.getPblsDivCd());
+			plcyInfo.setOrgItgCustNo(plcyVo.getOrgItgCustNo());
+			plcyInfo.setOrgMshipPlcyBasNo(plcyVo.getOrgMshipPlcyBasNo());
+			plcyInfo.setRcmdrCustNo2(plcyVo.getRcmdrCustNo2());
+
+			// 이벤트 포인트 정책을 가져온다.
+			// 이미 정책에서 이벤트 포인트 설정해도 한번만 지급
+			CrmMshipApplyPointRelVo pntInfo = plcyDao.selectEventPointCnt(plcyInfo);
+
+			pntErr = "SUCCESS";
+			pntErrMsg = "";
+
+			// 총 1 회
+			if (pntInfo != null && pntInfo.getAllPntPlbsCnt() >= 1) {
+				pntErr = API_CODE_PAY_OVER_03;
+				pntErrMsg = API_CODE_PAY_OVER_03_MSG;
+			}
+
+			// 이벤트 기간이내
+			if ("SUCCESS".equals(pntErr) && compare1 >= 0 && compare2 >= 0) {
+				Calendar cal = Calendar.getInstance();
+				cal.setTime(new Date());
+				DateFormat df = new SimpleDateFormat("yyyyMMdd");
+				cal.add(Calendar.MONTH, 3);
+				log.debug("after: " + df.format(cal.getTime()));
+
+				score = 5000;
+				crmPointHstVo.setOccurPointScore(score);
+				crmPointHstVo.setMshipGradeCd(custVo.getMshipGradeCd());
+				crmPointHstVo.setAccumYn("Y");
+				crmPointHstVo.setTemValidPerdYmd(df.format(cal.getTime()));
+
+				info.setOccurPointScore(score);
+				info.setTotalPoint(info.getTotalPoint() + score);
+				info.setAvailablePoint(info.getAvailablePoint() + score);
+				info.setItgCustNo(info.getItgCustNo());
+
+				crmPointHstVo.setRemainPointScore(info.getAvailablePoint());
+
+				crmPointHstVo.setMessageYn("N");
+				crmPointHstVo.setChitNo(Utilities.getAutoSeq("CHT"));
+
+				CrmPointInfoVo crmPointInfoVo = pointHstService.saveDeposit(crmPointHstVo);
+				pntCode = crmPointInfoVo.getOccurPointScore();
+				pntErr = "SUCCESS";
+			} else {
+				pntErr = "EVENTPNT";
+			}
+
+			result.put("pntErr", pntErr);
+			result.put("pntErrMsg", pntErrMsg);
+			result.put("pntCode", pntCode);
+			result.put("pntPoint", score);
+		}
+
+		return result;
+	}
+
 	public int updateLastLogin(CrmCustVo vo) throws Exception {
 		CrmCustVo member = get(vo);
 		if (member == null)
@@ -1675,7 +2036,54 @@ public class CrmCustService extends AbstractCrmService {
 			}
 
 		}
-		return dao.updateLastLogin(vo);
+		insertLoginHist(vo);
+		int ret = dao.updateLastLogin(vo);
+		try {
+			String regChlCd = Utilities.getSystemCd();
+			// 추후에 멤버십 제거
+			if ("MEM".equals(regChlCd) && Utilities.isNotEmpty(vo.getAppPushTokn())
+					&& Utilities.isNotEmpty(vo.getAppPushOsCd())) {
+				String agreeYn = vo.getPushRcvAgreeYn();
+				if (!"Y".equals(agreeYn) && !"N".equals(agreeYn)) {
+					member.setAppPushTokn(vo.getAppPushTokn());
+					member.setAppPushOsCd(vo.getAppPushOsCd());
+					member.setRegrId(regChlCd);
+					member.setAmdrId(regChlCd);
+					member.setRegChlCd(regChlCd);
+					updateAppToken(member);
+					return ret;
+				}
+
+				CrmAgreementVo agreement = new CrmAgreementVo();
+				agreement.setPushRcvAgreeYn(agreeYn);
+				agreement.setItgCustNo(vo.getItgCustNo());
+				agreement.setRegrId(regChlCd);
+				agreement.setAmdrId(regChlCd);
+				agreement.setAppPushOsCd(vo.getAppPushOsCd());
+				agreement.setAppPushTokn(vo.getAppPushTokn());
+				agreement.setRegChlCd(regChlCd);
+				agreeService.updateAgreement(agreement);
+			}
+		} catch (Exception ex) {
+			log.error(ex.getMessage(), ex);
+		}
+
+		return ret;
+	}
+
+	public int insertLoginHist(CrmCustVo vo) {
+		try {
+			CrmMshipLoginHstVo hst = new CrmMshipLoginHstVo();
+			hst.setItgCustNo(vo.getItgCustNo());
+			hst.setLoginIpAddr(vo.getMshipLastLoginIpAddr());
+			hst.setLoginDt(vo.getMshipLastLoginDt());
+			hst.setChlCd(Utilities.getSystemCd());
+			return loginHstDao.insert(hst);
+		} catch (Exception ex) {
+			log.error(ex.getMessage(), ex);
+		}
+		return 0;
+
 	}
 
 	public int updateLastVisitStore(CrmCustVo vo) throws Exception {
@@ -1871,6 +2279,7 @@ public class CrmCustService extends AbstractCrmService {
 		Map<String, Object> map = Utilities.beanToMap(param);
 		String itgCustNo = (String) map.get("itgCustNo");
 		String mphonNo = (String) map.get("mphonNo");
+		/* String cprtCmpNo = (String)map.get("cprtCmpNo"); */
 //		String custNm = (String) map.get("custNm");
 //		String empNo = (String) map.get("empNo");
 		if (Utilities.isEmpty(itgCustNo) && Utilities.isEmpty(mphonNo)) {
@@ -1893,8 +2302,118 @@ public class CrmCustService extends AbstractCrmService {
 		return ret;
 	}
 
-	public int updateAppToken(Object vo) throws Exception {
-		return dao.updateToken(vo);
+	public int updateAppToken(CrmCustVo vo) throws Exception {
+//		CrmCustVo membership = dao.selectBasic(vo);
+//		if (!"Y".equals(membership.getMshipSbscYn()))
+//			return 0;
+//		String pYn = membership.getPushRcvAgreeYn();
+//		String aYn = vo.getPushRcvAgreeYn();
+//		String pTk = membership.getAppPushTokn();
+//		String tk = vo.getAppPushTokn();
+//		
+//		
+
+		int ret = dao.updateToken(vo);
+		if (ret > 0 && Utilities.isNotEmpty(vo.getAppPushTokn())) {
+			CrmMshipAppToknBasVo s = new CrmMshipAppToknBasVo();
+			s.setAppPushTokn(vo.getAppPushTokn());
+			CrmMshipAppToknBasVo t = tokenDao.select(vo);
+			s.setAppPushOsCd(vo.getAppPushOsCd());
+			s.setItgCustNo(vo.getItgCustNo());
+			s.setAgreeYn(vo.getPushRcvAgreeYn());
+			if ("Y".equals(s.getAgreeYn()))
+				s.setAgreeDt(Utilities.getDateTimeString());
+			if ("N".equals(s.getAgreeYn()))
+				s.setRfslDt(Utilities.getDateTimeString());
+			tokenDao.updateTokenUseYn(s);
+			s.setUseYn("Y");
+			if (t == null)
+				tokenDao.insert(s);
+			else
+				tokenDao.update(s);
+
+		}
+		return ret;
+	}
+
+	public int updateAppToken(CrmMshipAppToknBasVo vo) throws Exception {
+		String chlCd = vo.getRegChlCd();
+		if (Utilities.isEmpty(chlCd))
+			chlCd = Utilities.getSystemCd();
+
+		int ret = 0;
+
+		if ("MEM".equalsIgnoreCase(chlCd)) {
+			CrmCustVo cust = new CrmCustVo();
+			cust.setItgCustNo(vo.getItgCustNo());
+			cust.setAppPushTokn(vo.getAppPushTokn());
+			cust.setAppPushOsCd(vo.getAppPushOsCd());
+			cust.setPushRcvAgreeYn(vo.getAgreeYn());
+			CrmAgreementVo agreement = new CrmAgreementVo();
+			if (Utilities.isNotEmpty(vo.getAgreeYn())) {
+				agreement.setPushRcvAgreeYn(vo.getAgreeYn());
+				agreement.setItgCustNo(vo.getItgCustNo());
+				agreement.setRegrId(vo.getRegChlCd());
+				agreement.setAmdrId(vo.getRegChlCd());
+				agreement.setAppPushOsCd(vo.getAppPushOsCd());
+				agreement.setAppPushTokn(vo.getAppPushTokn());
+				agreement.setRegChlCd(vo.getRegChlCd());
+				agreeService.updateAgreement(agreement);
+				ret = 1;
+			} else {
+				ret = dao.updateToken(cust);
+			}
+		} else {
+			CrmMshipAppToknBasVo t = tokenDao.select(vo);
+			if ("Y".equals(vo.getAgreeYn()) && Utilities.isEmpty(vo.getAgreeDt()))
+				vo.setAgreeDt(Utilities.getDateTimeString());
+			if ("N".equals(vo.getAgreeYn()) && Utilities.isEmpty(vo.getRfslDt()))
+				vo.setRfslDt(Utilities.getDateTimeString());
+			tokenDao.updateTokenUseYn(vo);
+			if (t == null) {
+//				ret = tokenDao.deleteAppId(vo);
+				ret = tokenDao.insert(vo);
+			} else
+				ret = tokenDao.update(vo);
+
+		}
+
+		return ret;
+	}
+
+	public int updateAppPushRead(EzMap so) {
+		List<EzMap> list = tokenDao.selectDispatch(so);
+		if (Utilities.isEmpty(list)) {
+			throw new EzApiException(Constants._API_CODE_NO_DATA, Constants._API_CODE_NO_DATA_MSG);
+		}
+		int cnt = 0;
+		for (int i = 0; i < list.size(); i++) {
+			EzMap vo = list.get(i);
+			if (!"001".equals(vo.getString("pushStatusCd")))
+				cnt++;
+
+		}
+		if (cnt == 0)
+			throw new EzApiException(Constants._API_CODE_NO_DATA, "이미 처리된 데이터 입니다.");
+		return tokenDao.updatePushRead(so);
+	}
+
+	public int updateAppPushReadAll(EzMap so) {
+		so.setString("chlCd", Utilities.getSystemCd());
+		return tokenDao.updatePushReadAll(so);
+	}
+
+	public CrmAppPushTrmHstVo selectPushTrm(EzMap so) {
+		return tokenDao.selectPushTrm(so);
+	}
+
+	public List<CrmAppPushTrmHstVo> selectPushTrmList(EzMap so) {
+		so.setString("chlCd", Utilities.getSystemCd());
+		return tokenDao.selectPushTrmList(so);
+	}
+
+	public int selectPushTrmListCount(EzMap so) {
+		return tokenDao.selectPushTrmListCount(so);
 	}
 
 	public String getToday() {
@@ -1948,12 +2467,67 @@ public class CrmCustService extends AbstractCrmService {
 		if (!useEvent)
 			return;
 		try {
-			if (!"BOS".equals(exceptCh))
+			if (!"BOS".equals(exceptCh) || !"CSS".equals(exceptCh) || !"CRS".equals(exceptCh))
 				bosApiService.sendCustEvent(itgCustNo);
 		} catch (Exception ex) {
 			log.debug(ex.getMessage());
 		}
-		
+//		try {
+//			String url = String.format(labEventUrl, itgCustNo, code);
+//			log.debug(url);
+//			if (!"PRC".equals(exceptCh))
+//				Utilities.wget(url, null, null, false, "POST");
+//
+//		} catch (Exception ex) {
+//			log.debug(ex.getMessage());
+//		}
+		try {
+
+			if ("prod".equals(activeProfile)) {
+				if (Constants._CUST_EVENT_MODIFY.equals(code) || Constants._CUST_EVENT_WITHDRAWAL.equals(code)) {
+
+//					try {
+//						if (!"COM".equals(exceptCh)) {
+//							String url2 = String.format(
+//									"http://kaimen.shop/ceragem/api/crm/membership_re.php?itgCustNo=%s&eventNo=%s",
+//									itgCustNo, code);
+//							String tok = "Bearer QUtpTndnS2RpRVp3SC9TQ1hGa0hCUT09";
+//							Map<String, String> header = new HashMap<String, String>();
+//							header.put("Authorization", tok);
+//							Utilities.wget(url2, null, null, false, "GET", header, 60000);
+//						}
+//					} catch (Exception e) {
+//
+//					}
+					String url = String.format(comEventUrl, itgCustNo, code);
+					if (!"COM".equals(exceptCh))
+						Utilities.wget(url, null, null, false, "GET", null, 60000);
+				}
+
+			}
+
+		} catch (Exception ex) {
+			log.debug(ex.getMessage());
+		}
+
+		try {
+			if (Constants._CUST_EVENT_MODIFY.equals(code) || Constants._CUST_EVENT_WITHDRAWAL.equals(code)) {
+				String url = String.format(chkEventUrl, itgCustNo, code);
+				if (!"CRA".equals(exceptCh))
+					Utilities.wget(url, null, null, false, "GET", null, 60000);
+			}
+		} catch (Exception ex) {
+			log.debug(ex.getMessage());
+		}
+		try {
+			if (Constants._CUST_EVENT_MODIFY.equals(code) || Constants._CUST_EVENT_WITHDRAWAL.equals(code)) {
+				String url = String.format(memEventUrl, itgCustNo, code);
+				if (!"MEM".equals(exceptCh))
+					Utilities.wget(url, null, null, false, "GET", null, 60000);
+			}
+		} catch (Exception ex) {
+			log.debug(ex.getMessage());
+		}
 	}
 
 	public String getCallChannel() {
@@ -1966,6 +2540,52 @@ public class CrmCustService extends AbstractCrmService {
 
 	public int getCustContractListCount(Object param) {
 		return contractDao.selectCustContractListCount(param);
+	}
+
+	public String getMindfitUseList(Map<String, Object> params) {
+
+		DefaultUriBuilderFactory factory = new DefaultUriBuilderFactory(mindfitBaseUrl);
+		factory.setEncodingMode(DefaultUriBuilderFactory.EncodingMode.NONE);
+
+		ExchangeStrategies exchangeStrategies = ExchangeStrategies.builder()
+				.codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(-1)) // to unlimited memory size
+				.build();
+
+		WebClient webClient = WebClient.builder().uriBuilderFactory(factory).baseUrl(mindfitBaseUrl)
+				.exchangeStrategies(exchangeStrategies).build();
+
+		// api 요청
+		String resJsonData = webClient.get()
+				.uri(uriBuilder -> uriBuilder.path(mindfitPath).queryParam("access_key", mindfitAccessKey)
+						.queryParam("secret_key", mindfitSecretKey).queryParam("from", params.get("from").toString())
+						.queryParam("to", params.get("to").toString()).build())
+				.retrieve().bodyToMono(String.class).block();
+
+		return resJsonData;
+	}
+
+	public Map<String, Object> issueEvent(Map<String, Object> param) throws Exception {
+		Map<String, Object> ret = new HashMap<>();
+		try {
+			List<CrmCouponVo> res = couponService.insertEventCoupon(param);
+
+			if (Utilities.isNotEmpty(res)) {
+				ret.put("eventCoupnErr", "OK");
+				ret.put("eventCoupnCode", null);
+				ret.put("eventCoupnMsg", "");
+				ret.put("eventCoupnList", res);
+				ret.put("eventCoupnCount", res.size());
+			} else {
+				ret.put("eventCoupnErr", "NOT_EXIST");
+				ret.put("eventCoupnCode", null);
+				ret.put("eventCoupnMsg", "진행중인 쿠폰 이벤트가 없습니다.");
+			}
+		} catch (Exception ex) {
+			ret.put("eventCoupnErr", "SYSTEM_ERR");
+			ret.put("eventCoupnCode", null);
+			ret.put("eventCoupnMsg", ex.getClass().getName());
+		}
+		return ret;
 	}
 
 }

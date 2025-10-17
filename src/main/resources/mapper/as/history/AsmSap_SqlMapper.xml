@@ -67,6 +67,7 @@
 				, DEAL_NO           /* 거래번호 */
 				, RECK_YY           /* 회계년도 */
 				, CARD_CMP_NM       /* 은행카드사명 */
+                , CMP_CD /* 회사코드 */
         ) VALUES (
                #{belnr}
              , #{paydate}
@@ -88,6 +89,7 @@
              , #{ordno}
              , #{gjahr}
              , #{cardname}
+             , #{bukrs}
         )
     </insert>
 
@@ -142,36 +144,40 @@
         )
     </insert>
 
-    <!-- (SAP수신데이터) SAP 반제처리 -->
-    <update id="updateRfndTrtTrm">
-        UPDATE AS_RMNY_BATCH_TMP	/* com.ceragem.api.as.dao.AsmSapDao.updateRfndTrtTrm */
-			SET RFND_YN = (CASE WHEN RFND_YN='R' AND #{result} = 'S' THEN 'Y' 	/* 반제요청 처리결과(성공) = 반제완료처리 */
-							    		WHEN RFND_YN='R' AND #{result} = 'E' THEN 'N' 	/* 반제요청 처리결과(실패) = 반제안됨처리 */
-							    		WHEN RFND_YN='C' AND #{result} = 'S' THEN 'N' 	/* 반제취소요청 처리결과(성공) = 반제안됨처리 */
-							    		WHEN RFND_YN='C' AND #{result} = 'E' THEN 'Y' 	/* 반제취소요청 처리결과(실패) =  반제완료처리(다시취소요청가능) */
-							    		ELSE RFND_YN
-					      		END)
-			    , CLO_YN = (CASE WHEN RFND_YN='R' AND #{result} = 'S' THEN 'Y' 		/* 반제요청 처리결과(성공) = 마감완료처리 */
-							    	   WHEN RFND_YN='R' AND #{result} = 'E' THEN 'N' 	/* 반제요청 처리결과(실패) = 마감안됨처리 */
-							    	   WHEN RFND_YN='C' AND #{result} = 'S' THEN 'N' 	/* 반제취소요청 처리결과(성공) = 마감안됨처리 */
-							    	   WHEN RFND_YN='C' AND #{result} = 'E' THEN 'Y' 		/* 반제취소요청 처리결과(실패) =  마감완료처리 */
-							    	   ELSE CLO_YN
-					      		END)
-				, AMDR_ID = 'apiadmin'	/* 수정자ID */
-        		, AMD_DT = SYSDATE		/* 수정일시 */
-		WHERE USE_YN = 'Y'
-			AND CLO_ADM_NO = #{rfndadmno}	/* 마감관리번호=반제관리번호 */
-    </update>
+<!-- (SAP수신데이터) SAP 반제처리 -->
+<update id="updateRfndTrtTrm">
+/* com.ceragem.api.as.dao.AsmSapDao.updateRfndTrtTrm */
+UPDATE  AS_RMNY_BATCH_TMP	
+   SET  RFND_YN = (CASE WHEN RFND_YN='R' AND #{result} = 'S' THEN 'Y' 	/* 반제요청 처리결과(성공) = 반제완료처리 */
+                        WHEN RFND_YN='R' AND #{result} = 'E' THEN 'N' 	/* 반제요청 처리결과(실패) = 반제안됨처리 */
+                        WHEN RFND_YN='C' AND #{result} = 'S' THEN 'N' 	/* 반제취소요청 처리결과(성공) = 반제안됨처리 */
+                        WHEN RFND_YN='C' AND #{result} = 'E' THEN 'Y' 	/* 반제취소요청 처리결과(실패) =  반제완료처리(다시취소요청가능) */
+                        ELSE RFND_YN
+			       END)
+	  , CLO_YN = (CASE WHEN RFND_YN='R' AND #{result} = 'S' THEN 'Y' 	/* 반제요청 처리결과(성공) = 마감완료처리 */
+		        	   WHEN RFND_YN='R' AND #{result} = 'E' THEN 'N' 	/* 반제요청 처리결과(실패) = 마감안됨처리 */
+		        	   WHEN RFND_YN='C' AND #{result} = 'S' THEN 'N' 	/* 반제취소요청 처리결과(성공) = 마감안됨처리 */
+		        	   WHEN RFND_YN='C' AND #{result} = 'E' THEN 'Y' 	/* 반제취소요청 처리결과(실패) =  마감완료처리 */
+		          ELSE CLO_YN
+		          END)
+	  , AMDR_ID = 'apiadmin'	/* 수정자ID */
+      , AMD_DT = SYSDATE		/* 수정일시 */
+ WHERE  USE_YN = 'Y'
+   AND  CLO_ADM_NO = #{rfndadmno}	/* 마감관리번호=반제관리번호 */
+</update>
 
-    <!-- (SAP수신데이터) AS자재수불마스터상세 - PO입고처리 -->
-    <update id="updateProdReqTrm">
-        UPDATE AS_PROD_RECP_DISBST_DTL	/* com.ceragem.api.as.dao.AsmSapDao.updateProdReqTrm */
-			SET PO_NO = #{ebeln}			/* SAP구매오더 번호 */
-			    , STWH_DT = TO_DATE(#{budat},'YYYYMMDDHH24MISS')		/* SAP구매오더의 입고일자 */
-				, AMDR_ID = 'apiadmin'	/* 수정자ID */
-        		, AMD_DT = SYSDATE		/* 수정일시 */
-		WHERE PRGRS_YN = 'Y'	/* 진행여부 */
-			AND RECP_DISBST_NO = #{intime}		/* 자재요청번호=수불번호 */
+<!-- (SAP수신데이터) AS자재수불마스터상세 - PO입고처리 -->
+<update id="updateProdReqTrm">
+/*+ com.ceragem.api.as.dao.AsmSapDao.updateProdReqTrm */
+UPDATE  AS_PROD_RECP_DISBST_DTL	
+   SET  PO_NO = #{rsnum}			/* SAP구매오더 번호 */
+   <if test="budat != null and budat != '' and budat != '00000000'">
+	  , STWH_DT = TO_DATE(#{budat},'YYYYMMDDHH24MISS')		/* SAP구매오더의 입고일자 */
+   </if>
+      , AMDR_ID = 'apiadmin'	/* 수정자ID */
+      , AMD_DT = SYSDATE		/* 수정일시 */
+ WHERE  PRGRS_YN = 'Y'	/* 진행여부 */
+   AND  RECP_DISBST_NO = #{intime}		/* 자재요청번호=수불번호 */
     </update>
 
     <!-- (SAP수신데이터) SAP 반제처리2(수납테이블) -->

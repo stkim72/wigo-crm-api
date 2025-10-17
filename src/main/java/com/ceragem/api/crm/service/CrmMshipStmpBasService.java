@@ -53,7 +53,7 @@ public class CrmMshipStmpBasService extends AbstractCrmService {
 	}
 
 	@SuppressWarnings("unchecked")
-	public List<CrmMshipStmpIssueVo> accumlStmp(@Valid CrmMshipStmpAccumVo vo) throws Exception {
+	public List<CrmMshipStmpIssueVo> saveAccumlStmp(@Valid CrmMshipStmpAccumVo vo) throws Exception {
 
 		List<CrmMshipStmpIssueVo> resultData = new ArrayList<CrmMshipStmpIssueVo>();
 
@@ -113,7 +113,7 @@ public class CrmMshipStmpBasService extends AbstractCrmService {
 			throw new EzApiException(Constants._API_GODS_NO_DATA, Constants._API_GODS_NO_DATA_MSG);
 		}
 
-		for (int i = 0; i < itemList.size(); i++) {
+		for (int i = itemList.size() - 1; i > -1; i--) {
 			if (itemList.get(i).getApplyYn().equals("Y")) {
 				itemList.remove(i);
 			}
@@ -159,7 +159,7 @@ public class CrmMshipStmpBasService extends AbstractCrmService {
 				}
 
 				long condAmt = Utilities.parseLong(stmpInfoList.get(i).get("condAmt"));
-				long payAmt = Utilities.parseLong(dataGodsList.get(j).get("payAmt")); 
+				long payAmt = Utilities.parseLong(dataGodsList.get(j).get("payAmt"));
 
 				// 주문금액이 설정 최소 금액보다 적을경우
 				if (condAmt > payAmt) {
@@ -172,12 +172,13 @@ public class CrmMshipStmpBasService extends AbstractCrmService {
 				 */
 				int applyQnty = Utilities.parseInt(dataGodsList.get(j).get("applyQnty"));
 //				long itemCnt = Long.parseLong(String.valueOf(dataGodsList.get(j).get("itemAccumCnt"))) * applyQnty;
+
 				// 적립회수 마스터에 추가함
 				int condCnt = 1;
 				if (stmpInfoList.get(i).get("condCnt") != null) {
 					condCnt = Utilities.parseInt(stmpInfoList.get(i).getInt("condCnt"));
 				}
-				
+
 				long itemCnt = Utilities.parseLong((condCnt)) * applyQnty;
 				if (itemCnt == 0) {
 					continue;
@@ -204,6 +205,16 @@ public class CrmMshipStmpBasService extends AbstractCrmService {
 						long maxCnt = Utilities.parseLong(stmpInfoList.get(i).get("stmpMaxCnt"))
 								* Utilities.parseLong(stmpInfoList.get(i).get("stmpQnty"));
 						if (totHisStmp >= maxCnt) {
+							continue;
+						}
+					}
+
+					// 일 최대 적립 제한
+					if (Utilities.isNotEmpty(stmpInfoList.get(i).get("dayRstrtnCnt"))
+							&& Integer.parseInt(String.valueOf(stmpInfoList.get(i).get("dayRstrtnCnt"))) >= 1) {
+
+						int dayHisStmp = dao.getStmpDayHist(hisPrm);
+						if (dayHisStmp >= Integer.parseInt(String.valueOf(stmpInfoList.get(i).get("dayRstrtnCnt")))) {
 							continue;
 						}
 					}
@@ -245,31 +256,33 @@ public class CrmMshipStmpBasService extends AbstractCrmService {
 
 						// 쿠폰 마스터 정보로 쿠폰 발급연동 MCP22051315382955708 쿠폰 마스터
 						// 쿠폰,포인트 전송
-						if (stmpInfoList.get(i).get("bnfitCd").equals("001")) { // 포인트
-
+						// 20230331 스탬프 혜택 동시지급 가능
+//                        if (stmpInfoList.get(i).get("bnfitCd").equals("001")) { // 포인트
+						if (Utilities.isNotEmpty(stmpInfoList.get(i).get("pointScore"))
+								&& Integer.parseInt(String.valueOf(stmpInfoList.get(i).get("pointScore"))) >= 1) {
 							CrmPointHstVo poiVo = new CrmPointHstVo();
-							// poiVo.setChitNo(vo.getChitNo());		// 수기 전표
+							// poiVo.setChitNo(vo.getChitNo()); // 수기 전표
 							poiVo.setItgCustNo(vo.getItgCustNo()); // CST22042618203144252
 							// poiVo.setPblsChlCd(vo.getChlCd());
 							poiVo.setPblsDivCd("903"); // 스탬프 구분코드
 
 							// 유효기간 1년 으로 설정
-							Calendar cal = Calendar.getInstance();
-							SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd", Locale.KOREA);
-							//SimpleDateFormat simpleDateFormat1 = new SimpleDateFormat("yyyyMMddHHmmss", Locale.KOREA);
-							cal.setTime(new Date());
-							String validPerdStaYmd = simpleDateFormat.format(cal.getTime());
-							cal.add(Calendar.MONTH, 12);
-							String validPerdEndYmd = simpleDateFormat.format(cal.getTime());
-							//String extncDt = simpleDateFormat1.format(cal.getTime());
-							//poiVo.setExtncDt(extncDt); // 2022/06/15 오전 10:05:31
-							poiVo.setValidPerdStaYmd(validPerdStaYmd); // 20220608
-							poiVo.setValidPerdEndYmd(validPerdEndYmd); // 20240608
+//							Calendar cal = Calendar.getInstance();
+//							SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd", Locale.KOREA);
+//							// SimpleDateFormat simpleDateFormat1 = new SimpleDateFormat("yyyyMMddHHmmss",
+//							// Locale.KOREA);
+//							cal.setTime(new Date());
+//							String validPerdStaYmd = simpleDateFormat.format(cal.getTime());
+//							cal.add(Calendar.MONTH, 24);
+//							String validPerdEndYmd = simpleDateFormat.format(cal.getTime());
+							// String extncDt = simpleDateFormat1.format(cal.getTime());
+							// poiVo.setExtncDt(extncDt); // 2022/06/15 오전 10:05:31
+//							poiVo.setValidPerdStaYmd(validPerdStaYmd); // 20220608
+//							poiVo.setValidPerdEndYmd(validPerdEndYmd); // 20240608
 
-							poiVo.setChitNo(Utilities.getAutoSeq("CHT"));	// 전표중복 방지
-							
-							poiVo.setOccurPointScore(
-									Utilities.parseInt(stmpInfoList.get(i).get("pointScore")));
+							poiVo.setChitNo(Utilities.getAutoSeq("CHT")); // 전표중복 방지
+
+							poiVo.setOccurPointScore(Utilities.parseInt(stmpInfoList.get(i).get("pointScore")));
 							CrmPointInfoVo ret = poiService.saveDeposit(poiVo);
 							if (ret == null) {
 //								throw new EzApiException(Constants._API_POINT_NO_DATA,
@@ -279,7 +292,8 @@ public class CrmMshipStmpBasService extends AbstractCrmService {
 							}
 							inHisPrm.put("pointScore", stmpInfoList.get(i).get("pointScore"));
 
-						} else if (stmpInfoList.get(i).get("bnfitCd").equals("002")) { // 쿠폰
+						}
+						if (Utilities.isNotEmpty(stmpInfoList.get(i).get("coupnNo"))) { // 쿠폰
 							CrmCouponVo cpVo = new CrmCouponVo();
 							cpVo.setMshipCoupnBasNo(String.valueOf(stmpInfoList.get(i).get("coupnNo")));
 							cpVo.setItgCustNo(vo.getItgCustNo());
@@ -314,7 +328,7 @@ public class CrmMshipStmpBasService extends AbstractCrmService {
 				mshipStmpBasNos2.add(mshipStmpBasNos.get(j));
 			}
 		}
-		
+
 		if (mshipStmpBasNos2.size() > 0) {
 			EzMap resultParm = new EzMap();
 			resultParm.put("mshipStmpBasNo", mshipStmpBasNos2);
@@ -398,10 +412,10 @@ public class CrmMshipStmpBasService extends AbstractCrmService {
 //				cancelList.add(stmpInfoList.get(i));
 //			}
 
-			// 타입 동일 등급불일치 
-			// 타입 불일치 등급 일치 
+			// 타입 동일 등급불일치
+			// 타입 불일치 등급 일치
 			// 타입 불일치 등급 불일치
-			// 타입 동일 제휴사일경우 코드동일 
+			// 타입 동일 제휴사일경우 코드동일
 //			if (Arrays.asList(mshipTypeCd.split(",")).contains(vo.getMshipTypeCd()) ) {
 //				if (vo.getMshipTypeCd().equals("002") && !String.valueOf(stmpInfoList.get(i).get("cprtCmpNo")).equals(vo.getCprtCmpNo())) {
 //					cancelList.add(stmpInfoList.get(i));
@@ -409,9 +423,9 @@ public class CrmMshipStmpBasService extends AbstractCrmService {
 //			} else if (!Arrays.asList(mshipTypeCd.split(",")).contains(vo.getMshipTypeCd())) {
 //				
 //			}
-			
+
 			// 003 회원 002 제휴 001 임직
-			
+
 //			if (vo.getMshipTypeCd().equals("003") && !Arrays.asList(applyMshpGradeCtnts.split(",")).contains(vo.getMshpGradeCd())) {
 //				cancelList.add(stmpInfoList.get(i));
 //			} else {
@@ -428,53 +442,55 @@ public class CrmMshipStmpBasService extends AbstractCrmService {
 //			}
 			// System.out.println(stmpInfoList.get(i).get("mshipStmpBasNo"));
 			if (!Arrays.asList(applyMshpGradeCtnts.split(",")).contains(vo.getMshpGradeCd())) {
-				if (vo.getMshipTypeCd().equals("001") && !Arrays.asList(mshipTypeCd.split(",")).contains(vo.getMshipTypeCd())) {
+				if (vo.getMshipTypeCd().equals("001")
+						&& !Arrays.asList(mshipTypeCd.split(",")).contains(vo.getMshipTypeCd())) {
 					cancelList.add(stmpInfoList.get(i));
-				} else if (vo.getMshipTypeCd().equals("002") ) {
-					if (Utilities.isEmpty(stmpInfoList.get(i).get("cprtCmpNo")))  {
+				} else if (vo.getMshipTypeCd().equals("002")) {
+					if (Utilities.isEmpty(stmpInfoList.get(i).get("cprtCmpNo"))) {
 						cancelList.add(stmpInfoList.get(i));
-					} else if (Utilities.isNotEmpty(stmpInfoList.get(i).get("cprtCmpNo")) && !String.valueOf(stmpInfoList.get(i).get("cprtCmpNo")).equals(vo.getCprtCmpNo())) {
+					} else if (Utilities.isNotEmpty(stmpInfoList.get(i).get("cprtCmpNo"))
+							&& !String.valueOf(stmpInfoList.get(i).get("cprtCmpNo")).equals(vo.getCprtCmpNo())) {
 						cancelList.add(stmpInfoList.get(i));
 					}
-				} else if (vo.getMshipTypeCd().equals("003") ) {
+				} else if (vo.getMshipTypeCd().equals("003")) {
 					cancelList.add(stmpInfoList.get(i));
 				}
 			}
-			
+
 		}
 
 		stmpInfoList = checkList(cancelList, stmpInfoList);
 		cancelList.removeAll(cancelList);
-
-		// 스탬프 마스터 체크 시작
-		for (int i = 0; i < stmpInfoList.size(); i++) {
-			// 유효기간 체크
-			if (stmpInfoList.get(i).get("validYn").equals("Y")) {
-				// 유효기간 있을시 마지막 적립 일자 로 부터 설정한 일수 초과 시 적립 불가
-				Calendar getToday = Calendar.getInstance();
-				getToday.setTime(new Date()); // 금일 날짜 validPerd
-
-				EzMap lastDt = new EzMap();
-				lastDt.put("mshipStmpBasNo", String.valueOf(stmpInfoList.get(i).get("mshipStmpBasNo")));
-				lastDt.put("itgCustNo", vo.getItgCustNo());
-				String seq = dao.getStmpHisSeq(lastDt);
-
-				if (!Utilities.isEmpty(seq)) {
-					EzMap last = dao.getStmpMaxSeq(seq);
-					Date date = (Date) last.get("accumDt");
-					Calendar cmpDate = Calendar.getInstance();
-					cmpDate.setTime(date); // 특정 일자
-
-					long diffSec = (getToday.getTimeInMillis() - cmpDate.getTimeInMillis()) / 1000;
-					long diffDays = diffSec / (24 * 60 * 60); // 일자수 차이
-
-					if (diffDays > Long.parseLong(String.valueOf(stmpInfoList.get(i).get("validPerd")))) {
-						cancelList.add(stmpInfoList.get(i));
-					}
-				}
-
-			}
-		}
+//
+//		// 스탬프 마스터 체크 시작
+//		for (int i = 0; i < stmpInfoList.size(); i++) {
+//			// 유효기간 체크
+//			if (stmpInfoList.get(i).get("validYn").equals("Y")) {
+//				// 유효기간 있을시 마지막 적립 일자 로 부터 설정한 일수 초과 시 적립 불가
+//				Calendar getToday = Calendar.getInstance();
+//				getToday.setTime(new Date()); // 금일 날짜 validPerd
+//
+//				EzMap lastDt = new EzMap();
+//				lastDt.put("mshipStmpBasNo", String.valueOf(stmpInfoList.get(i).get("mshipStmpBasNo")));
+//				lastDt.put("itgCustNo", vo.getItgCustNo());
+//				String seq = dao.getStmpHisSeq(lastDt);
+//
+//				if (!Utilities.isEmpty(seq)) {
+//					EzMap last = dao.getStmpMaxSeq(seq);
+//					Date date = (Date) last.get("accumDt");
+//					Calendar cmpDate = Calendar.getInstance();
+//					cmpDate.setTime(date); // 특정 일자
+//
+//					long diffSec = (getToday.getTimeInMillis() - cmpDate.getTimeInMillis()) / 1000;
+//					long diffDays = diffSec / (24 * 60 * 60); // 일자수 차이
+//
+//					if (diffDays > Long.parseLong(String.valueOf(stmpInfoList.get(i).get("validPerd")))) {
+//						cancelList.add(stmpInfoList.get(i));
+//					}
+//				}
+//
+//			}
+//		}
 
 		stmpInfoList = checkList(cancelList, stmpInfoList);
 		cancelList.removeAll(cancelList);
@@ -532,7 +548,7 @@ public class CrmMshipStmpBasService extends AbstractCrmService {
 		return stmpInfoList;
 	}
 
-	@SuppressWarnings("unchecked")
+//	@SuppressWarnings("unchecked")
 	public List<CrmMshipStmpIssueVo> cancelStmp(@Valid CrmMshipStmpAccumVo vo) {
 
 		List<CrmMshipStmpIssueVo> resultData = new ArrayList<CrmMshipStmpIssueVo>();
@@ -570,85 +586,105 @@ public class CrmMshipStmpBasService extends AbstractCrmService {
 //		if (vo.getChitNo() == null || vo.getChitNo().isEmpty()) {
 //			throw new EzApiException(Constants._API_CHIT_NO_DATA, Constants._API_CHIT_NO_DATA_MSG);
 //		}
-
+//		List<String> checkGodsNos = new ArrayList<>();
 		// 적립 예외 상품 제외하기
 		List<CrmMshipStmpAccumGodsVo> itemList = vo.getItemList();
 		if (itemList.size() < 1) {
 			throw new EzApiException(Constants._API_GODS_NO_DATA, Constants._API_GODS_NO_DATA_MSG);
 		}
-
-		for (int i = 0; i < itemList.size(); i++) {
-			if (itemList.get(i).getApplyYn().equals("Y")) {
+		int itemSize = itemList.size();
+		for (int i = itemSize - 1; i >= 0; i--) {
+			CrmMshipStmpAccumGodsVo item = itemList.get(i);
+			if (Utilities.isEmpty(item.getApplyQnty()) || item.getApplyQnty() == 0) {
 				itemList.remove(i);
+				continue;
 			}
-
-			if (Utilities.isEmpty(itemList.get(i).getApplyQnty()) || itemList.get(i).getApplyQnty() == 0) {
+			if (item.getApplyYn().equals("Y")) {
 				itemList.remove(i);
+				continue;
 			}
+			if (Utilities.isEmpty(item.getBuyGodsNo())) {
+				itemList.remove(i);
+				continue;
+			}
+//			checkGodsNos.add(itemList.get(i).getBuyGodsNo());
 		}
 
 		if (itemList.size() < 1) {
 			throw new EzApiException(Constants._API_GODS_NO_DATA, Constants._API_GODS_NO_DATA_MSG);
 		}
+		List<EzMap> list = getMasterStmpByGodsList(vo);
 
 		for (int i = 0; i < itemList.size(); i++) {
-			if (Utilities.isEmpty(itemList.get(i).getApplyQnty()) || itemList.get(i).getApplyQnty() == 0) {
-				itemList.remove(i);
-			}
-		}
-
-		if (itemList.size() < 1) {
-			throw new EzApiException(Constants._API_GODS_NO_DATA, Constants._API_GODS_NO_DATA_MSG);
-		}
-
-		// 스탬프 마스터 코드 존재 여부
-		List<String> checkGodsNos = new ArrayList<>();
-		for (int i = 0; i < itemList.size(); i++) {
-			checkGodsNos.add(itemList.get(i).getBuyGodsNo());
-		}
-
-		// 매장코드,채널코드,상품코드 스탬프 마스터 조회
-		EzMap checkParm = new EzMap(vo);
-		checkParm.put("itemList", checkGodsNos);
-		List<String> stmpMarstList = dao.getStmpMarstList(checkParm);
-
-		if (stmpMarstList == null || stmpMarstList.size() < 1) {
-			throw new EzApiException(Constants._API_STMP_NO_DATA, Constants._API_STMP_NO_DATA_MSG);
-		}
-
-		// 취소 데이터 셋팅
-		List<EzMap> stmpInfoList = cancelStmpInitData(vo, itemList);
-
-		if (stmpInfoList == null) {
-			throw new EzApiException(Constants._API_STMP_NO_DATA, Constants._API_STMP_NO_DATA_MSG);
-		}
-
-		List<String> mshipStmpBasNos = new ArrayList<String>();
-		// 취소 진행
-		for (int i = 0; i < stmpInfoList.size(); i++) {
-
-			List<String> cancelSeqs = (List<String>) stmpInfoList.get(i).get("cancelSeq");
-			if (cancelSeqs.size() > 0) {
-				for (String hisSeq : cancelSeqs) {
-					EzMap delParm = new EzMap();
-					delParm.put("stmpHstSeq", hisSeq);
-					dao.deleteStmpHis(delParm);
+			CrmMshipStmpAccumGodsVo item = itemList.get(i);
+			String godsNo = item.getBuyGodsNo();
+			for (int j = 0; j < list.size(); j++) {
+				EzMap master = list.get(j);
+//				String mshipStmpBasNo = master.getString("mshipStmpBasNo");
+				String gods = master.getString("godsNo");
+				int cancelCnt = master.getInt("cancelCnt");
+				int availableCnt = master.getInt("availableCnt");
+				if (availableCnt > cancelCnt && gods.indexOf(godsNo) > -1) {
+					cancelCnt += item.getApplyQnty();
+					master.setInt("cancelCnt", cancelCnt);
 				}
-				mshipStmpBasNos.add(String.valueOf(stmpInfoList.get(i).get("mshipStmpBasNo"))); // 취소부분
 			}
+
 		}
 
-		if (mshipStmpBasNos.size() > 0) {
-//			EzMap resultParm = new EzMap();
-//			resultParm.put("mshipStmpBasNo", mshipStmpBasNos);
-//			resultParm.put("itgCustNo", vo.getItgCustNo());
-//			resultData = dao.getStmpIssueList(resultParm);
-			// 빈값 내려줌
-			CrmMshipStmpIssueVo vo2 = new CrmMshipStmpIssueVo();
-			resultData.add(vo2);
+		for (int i = 0; i < list.size(); i++) {
+			EzMap master = list.get(i);
+			int cancelCnt = master.getInt("cancelCnt");
+			if (cancelCnt > 0) {
+				List<CrmMshipStmpIssueVo> ml = dao.selectStmpCancelList(master);
+				resultData.addAll(ml);
+				dao.deleteStmpCancel(master);
+			}
 		}
 
 		return resultData;
+		// 매장코드,채널코드,상품코드 스탬프 마스터 조회
+//		EzMap checkParm = new EzMap(vo);
+//		checkParm.put("itemList", checkGodsNos);
+//		List<String> stmpMarstList = dao.getStmpMarstList(checkParm);
+
+//		if (stmpMarstList == null || stmpMarstList.size() < 1) {
+//			throw new EzApiException(Constants._API_STMP_NO_DATA, Constants._API_STMP_NO_DATA_MSG);
+//		}
+
+		// 취소 데이터 셋팅
+//		List<EzMap> stmpInfoList = cancelStmpInitData(vo, itemList);
+//
+//		if (stmpInfoList == null) {
+//			throw new EzApiException(Constants._API_STMP_NO_DATA, Constants._API_STMP_NO_DATA_MSG);
+//		}
+//
+//		List<String> mshipStmpBasNos = new ArrayList<String>();
+//		// 취소 진행
+//		for (int i = 0; i < stmpInfoList.size(); i++) {
+//
+//			List<String> cancelSeqs = (List<String>) stmpInfoList.get(i).get("cancelSeq");
+//			if (cancelSeqs.size() > 0) {
+//				for (String hisSeq : cancelSeqs) {
+//					EzMap delParm = new EzMap();
+//					delParm.put("stmpHstSeq", hisSeq);
+//					dao.deleteStmpHis(delParm);
+//				}
+//				mshipStmpBasNos.add(String.valueOf(stmpInfoList.get(i).get("mshipStmpBasNo"))); // 취소부분
+//			}
+//		}
+//
+//		if (mshipStmpBasNos.size() > 0) {
+////			EzMap resultParm = new EzMap();
+////			resultParm.put("mshipStmpBasNo", mshipStmpBasNos);
+////			resultParm.put("itgCustNo", vo.getItgCustNo());
+////			resultData = dao.getStmpIssueList(resultParm);
+//			// 빈값 내려줌
+//			CrmMshipStmpIssueVo vo2 = new CrmMshipStmpIssueVo();
+//			resultData.add(vo2);
+//		}
+//
+//		return resultData;
 	}
 
 	private List<EzMap> cancelStmpInitData(@Valid CrmMshipStmpAccumVo vo, List<CrmMshipStmpAccumGodsVo> itemList) {
@@ -713,7 +749,7 @@ public class CrmMshipStmpBasService extends AbstractCrmService {
 //					cancelList.add(stmpInfoList.get(i));
 //				}
 //			}
-			
+
 //			if (vo.getMshipTypeCd().equals("003") && !Arrays.asList(applyMshpGradeCtnts.split(",")).contains(vo.getMshpGradeCd())) {
 //				cancelList.add(stmpInfoList.get(i));
 //			} else {
@@ -729,15 +765,17 @@ public class CrmMshipStmpBasService extends AbstractCrmService {
 //			}
 			// 003 회원 , 002 제휴 , 001 임직
 			if (!Arrays.asList(applyMshpGradeCtnts.split(",")).contains(vo.getMshpGradeCd())) {
-				if (vo.getMshipTypeCd().equals("001") && !Arrays.asList(mshipTypeCd.split(",")).contains(vo.getMshipTypeCd())) {
+				if (vo.getMshipTypeCd().equals("001")
+						&& !Arrays.asList(mshipTypeCd.split(",")).contains(vo.getMshipTypeCd())) {
 					cancelList.add(stmpInfoList.get(i));
-				} else if (vo.getMshipTypeCd().equals("002") ) {
-					if (Utilities.isEmpty(stmpInfoList.get(i).get("cprtCmpNo")))  {
+				} else if (vo.getMshipTypeCd().equals("002")) {
+					if (Utilities.isEmpty(stmpInfoList.get(i).get("cprtCmpNo"))) {
 						cancelList.add(stmpInfoList.get(i));
-					} else if (Utilities.isNotEmpty(stmpInfoList.get(i).get("cprtCmpNo")) && !String.valueOf(stmpInfoList.get(i).get("cprtCmpNo")).equals(vo.getCprtCmpNo())) {
+					} else if (Utilities.isNotEmpty(stmpInfoList.get(i).get("cprtCmpNo"))
+							&& !String.valueOf(stmpInfoList.get(i).get("cprtCmpNo")).equals(vo.getCprtCmpNo())) {
 						cancelList.add(stmpInfoList.get(i));
 					}
-				} else if (vo.getMshipTypeCd().equals("003") ) {
+				} else if (vo.getMshipTypeCd().equals("003")) {
 					cancelList.add(stmpInfoList.get(i));
 				}
 			}
@@ -762,8 +800,15 @@ public class CrmMshipStmpBasService extends AbstractCrmService {
 			if (stmpInfoList.get(i).get("condCnt") != null) {
 				condCnt = stmpInfoList.get(i).getInt("condCnt");
 			}
-			
-			int cancelCnt = stmpGodsList.get(0).getInt("applyQnty") * condCnt;
+
+			int applyQnty = 0;
+			if (stmpGodsList != null) {
+				for (int j = 0; j < stmpGodsList.size(); j++) {
+					applyQnty += stmpGodsList.get(j).getInt("applyQnty");
+				}
+			}
+
+			int cancelCnt = applyQnty * condCnt;
 			parm.put("cancelCnt", cancelCnt);
 			List<EzMap> cancelData = dao.getStmpCancelData(parm);
 
@@ -829,6 +874,16 @@ public class CrmMshipStmpBasService extends AbstractCrmService {
 					}
 				}
 
+				// 일 최대 적립 제한
+				if (Utilities.isNotEmpty(stmpInfoList.get(i).get("dayRstrtnCnt"))
+						&& Integer.parseInt(String.valueOf(stmpInfoList.get(i).get("dayRstrtnCnt"))) >= 1) {
+
+					int dayHisStmp = dao.getStmpDayHist(hisPrm);
+					if (dayHisStmp >= Integer.parseInt(String.valueOf(stmpInfoList.get(i).get("dayRstrtnCnt")))) {
+						continue;
+					}
+				}
+
 				// 적립
 				EzMap inHisPrm = new EzMap();
 				inHisPrm.put("mshipStmpBasNo", stmpInfoList.get(i).get("mshipStmpBasNo")); // 스탬프 번호
@@ -861,26 +916,28 @@ public class CrmMshipStmpBasService extends AbstractCrmService {
 
 					// 쿠폰 마스터 정보로 쿠폰 발급연동 MCP22051315382955708 쿠폰 마스터
 					// 쿠폰,포인트 전송
-					if (stmpInfoList.get(i).get("bnfitCd").equals("001")) { // 포인트
-
+					// 20230331 스탬프 혜택 동시지급
+					if (Utilities.isNotEmpty(stmpInfoList.get(i).get("pointScore"))
+							&& Integer.parseInt(String.valueOf(stmpInfoList.get(i).get("pointScore"))) >= 1) {
 						// 유효기간 1년 으로 설정
-						Calendar cal = Calendar.getInstance();
-						SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd", Locale.KOREA);
-						//SimpleDateFormat simpleDateFormat1 = new SimpleDateFormat("yyyyMMddHHmmss", Locale.KOREA);
-						cal.setTime(new Date());
-						String validPerdStaYmd = simpleDateFormat.format(cal.getTime());
-						cal.add(Calendar.MONTH, 12);
-						String validPerdEndYmd = simpleDateFormat.format(cal.getTime());
-						//String extncDt = simpleDateFormat1.format(cal.getTime());
+//						Calendar cal = Calendar.getInstance();
+//						SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd", Locale.KOREA);
+						// SimpleDateFormat simpleDateFormat1 = new SimpleDateFormat("yyyyMMddHHmmss",
+						// Locale.KOREA);
+//						cal.setTime(new Date());
+//						String validPerdStaYmd = simpleDateFormat.format(cal.getTime());
+//						cal.add(Calendar.DATE, 365);
+//						String validPerdEndYmd = simpleDateFormat.format(cal.getTime());
+						// String extncDt = simpleDateFormat1.format(cal.getTime());
 
 						CrmPointHstVo poiVo = new CrmPointHstVo();
 						poiVo.setChitNo(Utilities.getAutoSeq("CHT")); // 전표번호
 						poiVo.setItgCustNo(vo.getItgCustNo()); // CST22042618203144252
 						poiVo.setPblsDivCd("903"); // 스탬프 구분코드
-						//poiVo.setExtncDt(extncDt); // 2022/06/15 오전 10:05:31
-						poiVo.setValidPerdStaYmd(validPerdStaYmd); // 20220608
-						poiVo.setValidPerdEndYmd(validPerdEndYmd); // 20240608
-						poiVo.setMessageYn("Y");	 				
+						// poiVo.setExtncDt(extncDt); // 2022/06/15 오전 10:05:31
+//						poiVo.setValidPerdStaYmd(validPerdStaYmd); // 20220608
+//						poiVo.setValidPerdEndYmd(validPerdEndYmd); // 20240608
+						poiVo.setMessageYn("Y");
 						poiVo.setOccurPointScore(
 								Integer.parseInt(String.valueOf(stmpInfoList.get(i).get("pointScore"))));
 						CrmPointInfoVo ret = poiService.saveDeposit(poiVo);
@@ -890,7 +947,8 @@ public class CrmMshipStmpBasService extends AbstractCrmService {
 						}
 						inHisPrm.put("pointScore", stmpInfoList.get(i).get("pointScore"));
 
-					} else if (stmpInfoList.get(i).get("bnfitCd").equals("002")) { // 쿠폰
+					}
+					if (Utilities.isNotEmpty(stmpInfoList.get(i).get("coupnNo"))) {
 						CrmCouponVo cpVo = new CrmCouponVo();
 						cpVo.setMshipCoupnBasNo(String.valueOf(stmpInfoList.get(i).get("coupnNo")));
 						cpVo.setItgCustNo(vo.getItgCustNo());
@@ -929,48 +987,60 @@ public class CrmMshipStmpBasService extends AbstractCrmService {
 		EzMap parm = new EzMap(vo);
 		List<EzMap> stmpMarstList = dao.getStmpMarstListForEvent(parm);
 
-		for (int i = 0; i < stmpMarstList.size(); i++) {
-
-			// 날짜 제외
-			Date date1 = (Date) stmpMarstList.get(i).get("toUsePossDt");
-			Date date2 = new Date();
-			if (date1.before(date2)) {
-				stmpMarstList.remove(i);
-				continue;
-			}
-
-			// 유효기간 제외
-			if (stmpMarstList.get(i).get("validYn").equals("Y")) {
-
-				Calendar getToday = Calendar.getInstance();
-				getToday.setTime(new Date()); // 금일 날짜 validPerd
-
-				Date fromDate = (Date) stmpMarstList.get(i).get("fromUsePossDt");
-				Calendar cmpDate = Calendar.getInstance();
-				cmpDate.setTime(fromDate); // 특정 일자
-
-				long diffSec = (getToday.getTimeInMillis() - cmpDate.getTimeInMillis()) / 1000;
-				long diffDays = diffSec / (24 * 60 * 60); // 일자수 차이
-
-				if (diffDays > Long.parseLong(String.valueOf(stmpMarstList.get(i).get("validPerd")))) {
-					stmpMarstList.remove(i);
-					continue;
-				}
-			}
-
-			// 판당 0 제외
-			if (Long.parseLong(String.valueOf(stmpMarstList.get(i).get("stmpQnty"))) < 1) {
-				stmpMarstList.remove(i);
-				continue;
-			}
-		}
+//		for (int i = 0; i < stmpMarstList.size(); i++) {
+//
+//			// 날짜 제외
+//			Date date1 = (Date) stmpMarstList.get(i).get("toUsePossDt");
+//			Date date2 = new Date();
+//			if (date1.before(date2)) {
+//				stmpMarstList.remove(i);
+//				continue;
+//			}
+//
+//			// 유효기간 제외
+//			if (stmpMarstList.get(i).get("validYn").equals("Y")) {
+//
+//				Calendar getToday = Calendar.getInstance();
+//				getToday.setTime(new Date()); // 금일 날짜 validPerd
+//
+//				Date fromDate = (Date) stmpMarstList.get(i).get("fromUsePossDt");
+//				Calendar cmpDate = Calendar.getInstance();
+//				cmpDate.setTime(fromDate); // 특정 일자
+//
+//				long diffSec = (getToday.getTimeInMillis() - cmpDate.getTimeInMillis()) / 1000;
+//				long diffDays = diffSec / (24 * 60 * 60); // 일자수 차이
+//
+//				if (diffDays > Long.parseLong(String.valueOf(stmpMarstList.get(i).get("validPerd")))) {
+//					stmpMarstList.remove(i);
+//					continue;
+//				}
+//			}
+//
+//			// 판당 0 제외
+//			if (Long.parseLong(String.valueOf(stmpMarstList.get(i).get("stmpQnty"))) < 1) {
+//				stmpMarstList.remove(i);
+//				continue;
+//			}
+//		}
 
 		return stmpMarstList;
 	}
 
 	public List<CrmMshipStmpIssueVo> getStmpIssueList(EzMap param) {
 
-		return dao.getStmpIssueList(param);
+		List<CrmMshipStmpIssueVo> stmpIssueList = dao.getStmpIssueList(param);
+
+		for (int i = 0; i < stmpIssueList.size(); i++) {
+
+			if (String.valueOf(stmpIssueList.get(i).getStmpAccumQnty())
+					.equals(String.valueOf(stmpIssueList.get(i).getStmpQnty()))) {
+				stmpIssueList.remove(i);
+				i--;
+				continue;
+			}
+		}
+
+		return stmpIssueList;
 	}
 
 	public List<EzMap> checkList(List<EzMap> cancelList, List<EzMap> stmpInfoList) {
@@ -984,10 +1054,16 @@ public class CrmMshipStmpBasService extends AbstractCrmService {
 				if (stmpInfoList.get(i).getString("mshipStmpBasNo")
 						.equals(cancelList.get(j).getString("mshipStmpBasNo"))) {
 					stmpInfoList.remove(i);
+					i--;
+					break;
 				}
 			}
 		}
 		return stmpInfoList;
 	}
 
+	public List<EzMap> getMasterStmpByGodsList(CrmMshipStmpAccumVo parm) {
+		List<EzMap> list = dao.getMasterStmpByGodsList(parm);
+		return list;
+	};
 }
