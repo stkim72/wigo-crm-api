@@ -1,13 +1,10 @@
 package com.ceragem.api.crm.service;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 import javax.validation.Valid;
 
@@ -686,152 +683,152 @@ public class CrmMshipStmpBasService extends AbstractCrmService {
 //
 //		return resultData;
 	}
-
-	private List<EzMap> cancelStmpInitData(@Valid CrmMshipStmpAccumVo vo, List<CrmMshipStmpAccumGodsVo> itemList) {
-
-		List<String> godsNos = new ArrayList<>();
-		for (int i = 0; i < itemList.size(); i++) {
-			godsNos.add(itemList.get(i).getBuyGodsNo());
-		}
-
-		EzMap parm = new EzMap(vo);
-		parm.put("itemList", godsNos);
-		List<String> stmpMarstList = dao.getStmpMarstList(parm); // 상품별 그룹
-
-		if (stmpMarstList == null) {
-			return null;
-		}
-
-		// 스탬프 마스터번호로 스탬프 정보 받아옴
-		EzMap infoPrm = new EzMap();
-		infoPrm.put("stmpList", stmpMarstList);
-		List<EzMap> stmpInfoList = dao.getStmpInfoList(infoPrm); // 마스터 코드, 상품으로 교차값 배열 2개
-
-		List<EzMap> cancelList = new ArrayList<EzMap>();
-		stmpInfoList = checkList(cancelList, stmpInfoList);
-		cancelList.removeAll(cancelList);
-
-		// 발급일 체크
-		for (int i = 0; i < stmpInfoList.size(); i++) {
-			// 날짜 제외
-			Date toUsePossDt = (Date) stmpInfoList.get(i).get("toUsePossDt");
-			Date toDay = new Date();
-			if (toUsePossDt.before(toDay)) {
-				cancelList.add(stmpInfoList.get(i));
-			}
-		}
-
-		// 회원 구분 선체크 1. 임직원 2. 제휴 3.등급
-		stmpInfoList = checkList(cancelList, stmpInfoList);
-		cancelList.removeAll(cancelList);
-
-		for (int i = 0; i < stmpInfoList.size(); i++) {
-			String mshipTypeCd = String.valueOf(stmpInfoList.get(i).get("mshipTypeCds"));
-			String applyMshpGradeCtnts = String.valueOf(stmpInfoList.get(i).get("applyMshpGradeCtnts"));
-//			if (!Arrays.asList(mshipTypeCd.split(",")).contains(vo.getMshipTypeCd())
-//					&& !Arrays.asList(applyMshpGradeCtnts.split(",")).contains(vo.getMshpGradeCd())) {
-//				if (vo.getMshipTypeCd().equals("002")
-//						&& !String.valueOf(stmpInfoList.get(i).get("cprtCmpNo")).equals(vo.getCprtCmpNo())) { // 제휴사 시
-//																												// 코드체크
-//					return null;
-//				}
-//				cancelList.add(stmpInfoList.get(i));
-//			} else if (!Arrays.asList(mshipTypeCd.split(",")).contains(vo.getMshipTypeCd())
-//					&& !Arrays.asList(applyMshpGradeCtnts.split(",")).contains(vo.getMshpGradeCd())) {
+//
+//	private List<EzMap> cancelStmpInitData(@Valid CrmMshipStmpAccumVo vo, List<CrmMshipStmpAccumGodsVo> itemList) {
+//
+//		List<String> godsNos = new ArrayList<>();
+//		for (int i = 0; i < itemList.size(); i++) {
+//			godsNos.add(itemList.get(i).getBuyGodsNo());
+//		}
+//
+//		EzMap parm = new EzMap(vo);
+//		parm.put("itemList", godsNos);
+//		List<String> stmpMarstList = dao.getStmpMarstList(parm); // 상품별 그룹
+//
+//		if (stmpMarstList == null) {
+//			return null;
+//		}
+//
+//		// 스탬프 마스터번호로 스탬프 정보 받아옴
+//		EzMap infoPrm = new EzMap();
+//		infoPrm.put("stmpList", stmpMarstList);
+//		List<EzMap> stmpInfoList = dao.getStmpInfoList(infoPrm); // 마스터 코드, 상품으로 교차값 배열 2개
+//
+//		List<EzMap> cancelList = new ArrayList<EzMap>();
+//		stmpInfoList = checkList(cancelList, stmpInfoList);
+//		cancelList.removeAll(cancelList);
+//
+//		// 발급일 체크
+//		for (int i = 0; i < stmpInfoList.size(); i++) {
+//			// 날짜 제외
+//			Date toUsePossDt = (Date) stmpInfoList.get(i).get("toUsePossDt");
+//			Date toDay = new Date();
+//			if (toUsePossDt.before(toDay)) {
 //				cancelList.add(stmpInfoList.get(i));
 //			}
-//			if (vo.getMshipTypeCd().equals("003") && !Arrays.asList(applyMshpGradeCtnts.split(",")).contains(vo.getMshpGradeCd())) {
-//				cancelList.add(stmpInfoList.get(i));
-//			} else {
-//				if (!Arrays.asList(mshipTypeCd.split(",")).contains(vo.getMshipTypeCd()) && !Arrays.asList(applyMshpGradeCtnts.split(",")).contains(vo.getMshpGradeCd())) {
+//		}
+//
+//		// 회원 구분 선체크 1. 임직원 2. 제휴 3.등급
+//		stmpInfoList = checkList(cancelList, stmpInfoList);
+//		cancelList.removeAll(cancelList);
+//
+//		for (int i = 0; i < stmpInfoList.size(); i++) {
+//			String mshipTypeCd = String.valueOf(stmpInfoList.get(i).get("mshipTypeCds"));
+//			String applyMshpGradeCtnts = String.valueOf(stmpInfoList.get(i).get("applyMshpGradeCtnts"));
+////			if (!Arrays.asList(mshipTypeCd.split(",")).contains(vo.getMshipTypeCd())
+////					&& !Arrays.asList(applyMshpGradeCtnts.split(",")).contains(vo.getMshpGradeCd())) {
+////				if (vo.getMshipTypeCd().equals("002")
+////						&& !String.valueOf(stmpInfoList.get(i).get("cprtCmpNo")).equals(vo.getCprtCmpNo())) { // 제휴사 시
+////																												// 코드체크
+////					return null;
+////				}
+////				cancelList.add(stmpInfoList.get(i));
+////			} else if (!Arrays.asList(mshipTypeCd.split(",")).contains(vo.getMshipTypeCd())
+////					&& !Arrays.asList(applyMshpGradeCtnts.split(",")).contains(vo.getMshpGradeCd())) {
+////				cancelList.add(stmpInfoList.get(i));
+////			}
+////			if (vo.getMshipTypeCd().equals("003") && !Arrays.asList(applyMshpGradeCtnts.split(",")).contains(vo.getMshpGradeCd())) {
+////				cancelList.add(stmpInfoList.get(i));
+////			} else {
+////				if (!Arrays.asList(mshipTypeCd.split(",")).contains(vo.getMshipTypeCd()) && !Arrays.asList(applyMshpGradeCtnts.split(",")).contains(vo.getMshpGradeCd())) {
+////					cancelList.add(stmpInfoList.get(i));
+////				} else if (vo.getMshipTypeCd().equals("002") && !String.valueOf(stmpInfoList.get(i).get("cprtCmpNo")).equals(vo.getCprtCmpNo())) {
+////					cancelList.add(stmpInfoList.get(i));
+////				}
+////			}
+//
+////			if (vo.getMshipTypeCd().equals("003") && !Arrays.asList(applyMshpGradeCtnts.split(",")).contains(vo.getMshpGradeCd())) {
+////				cancelList.add(stmpInfoList.get(i));
+////			} else {
+////				if (!Arrays.asList(mshipTypeCd.split(",")).contains(vo.getMshipTypeCd()) && !Arrays.asList(applyMshpGradeCtnts.split(",")).contains(vo.getMshpGradeCd())) {
+////					cancelList.add(stmpInfoList.get(i));
+////				} else if (vo.getMshipTypeCd().equals("002") ) {
+////					if (Utilities.isEmpty(stmpInfoList.get(i).get("cprtCmpNo")) && !Arrays.asList(applyMshpGradeCtnts.split(",")).contains(vo.getMshpGradeCd())) {
+////						cancelList.add(stmpInfoList.get(i));
+////					} else if (!String.valueOf(stmpInfoList.get(i).get("cprtCmpNo")).equals(vo.getCprtCmpNo())) {
+////						cancelList.add(stmpInfoList.get(i));
+////					}
+////				} 
+////			}
+//			// 003 회원 , 002 제휴 , 001 임직
+//			if (!Arrays.asList(applyMshpGradeCtnts.split(",")).contains(vo.getMshpGradeCd())) {
+//				if (vo.getMshipTypeCd().equals("001")
+//						&& !Arrays.asList(mshipTypeCd.split(",")).contains(vo.getMshipTypeCd())) {
 //					cancelList.add(stmpInfoList.get(i));
-//				} else if (vo.getMshipTypeCd().equals("002") && !String.valueOf(stmpInfoList.get(i).get("cprtCmpNo")).equals(vo.getCprtCmpNo())) {
-//					cancelList.add(stmpInfoList.get(i));
-//				}
-//			}
-
-//			if (vo.getMshipTypeCd().equals("003") && !Arrays.asList(applyMshpGradeCtnts.split(",")).contains(vo.getMshpGradeCd())) {
-//				cancelList.add(stmpInfoList.get(i));
-//			} else {
-//				if (!Arrays.asList(mshipTypeCd.split(",")).contains(vo.getMshipTypeCd()) && !Arrays.asList(applyMshpGradeCtnts.split(",")).contains(vo.getMshpGradeCd())) {
-//					cancelList.add(stmpInfoList.get(i));
-//				} else if (vo.getMshipTypeCd().equals("002") ) {
-//					if (Utilities.isEmpty(stmpInfoList.get(i).get("cprtCmpNo")) && !Arrays.asList(applyMshpGradeCtnts.split(",")).contains(vo.getMshpGradeCd())) {
+//				} else if (vo.getMshipTypeCd().equals("002")) {
+//					if (Utilities.isEmpty(stmpInfoList.get(i).get("cprtCmpNo"))) {
 //						cancelList.add(stmpInfoList.get(i));
-//					} else if (!String.valueOf(stmpInfoList.get(i).get("cprtCmpNo")).equals(vo.getCprtCmpNo())) {
+//					} else if (Utilities.isNotEmpty(stmpInfoList.get(i).get("cprtCmpNo"))
+//							&& !String.valueOf(stmpInfoList.get(i).get("cprtCmpNo")).equals(vo.getCprtCmpNo())) {
 //						cancelList.add(stmpInfoList.get(i));
 //					}
-//				} 
-//			}
-			// 003 회원 , 002 제휴 , 001 임직
-			if (!Arrays.asList(applyMshpGradeCtnts.split(",")).contains(vo.getMshpGradeCd())) {
-				if (vo.getMshipTypeCd().equals("001")
-						&& !Arrays.asList(mshipTypeCd.split(",")).contains(vo.getMshipTypeCd())) {
-					cancelList.add(stmpInfoList.get(i));
-				} else if (vo.getMshipTypeCd().equals("002")) {
-					if (Utilities.isEmpty(stmpInfoList.get(i).get("cprtCmpNo"))) {
-						cancelList.add(stmpInfoList.get(i));
-					} else if (Utilities.isNotEmpty(stmpInfoList.get(i).get("cprtCmpNo"))
-							&& !String.valueOf(stmpInfoList.get(i).get("cprtCmpNo")).equals(vo.getCprtCmpNo())) {
-						cancelList.add(stmpInfoList.get(i));
-					}
-				} else if (vo.getMshipTypeCd().equals("003")) {
-					cancelList.add(stmpInfoList.get(i));
-				}
-			}
-		}
-
-		stmpInfoList = checkList(cancelList, stmpInfoList);
-		cancelList.removeAll(cancelList);
-
-		List<EzMap> stmpMarstInfoList = new ArrayList<>();
-		for (int i = 0; i < stmpInfoList.size(); i++) {
-
-			parm.put("mshipStmpBasNo", stmpInfoList.get(i).getString("mshipStmpBasNo"));
-			EzMap stmpMarstInfo = dao.getStmpMarstInfo(parm);
-
-			// 상품 카운터
-			parm.put("itemList", itemList);
-			List<EzMap> stmpGodsList = dao.getStmpGodsList(parm);
-			stmpMarstInfo.put("itemList", stmpGodsList);
-
-			// 해당 마스터 에서 취소 가능한 수량
-			int condCnt = 1;
-			if (stmpInfoList.get(i).get("condCnt") != null) {
-				condCnt = stmpInfoList.get(i).getInt("condCnt");
-			}
-
-			int applyQnty = 0;
-			if (stmpGodsList != null) {
-				for (int j = 0; j < stmpGodsList.size(); j++) {
-					applyQnty += stmpGodsList.get(j).getInt("applyQnty");
-				}
-			}
-
-			int cancelCnt = applyQnty * condCnt;
-			parm.put("cancelCnt", cancelCnt);
-			List<EzMap> cancelData = dao.getStmpCancelData(parm);
-
-			List<String> cancelSeq = new ArrayList<>();
-			for (EzMap cData : cancelData) {
-				// 혜택지급 제외
-				if (cData.getInt("coupnNo") != 0 || cData.getInt("pointScore") != 0) {
-					break;
-				}
-				// 없을시 제외
-//				if (Utilities.isEmpty(cData.getString("issueCnt")) && Utilities.isEmpty(cData.getString("pointScore")) ) {
-//					continue;
+//				} else if (vo.getMshipTypeCd().equals("003")) {
+//					cancelList.add(stmpInfoList.get(i));
 //				}
-				cancelSeq.add(cData.getString("stmpHstSeq"));
-			}
-
-			stmpMarstInfo.put("cancelSeq", cancelSeq);
-			stmpMarstInfoList.add(stmpMarstInfo);
-
-		}
-
-		return stmpMarstInfoList;
-	}
+//			}
+//		}
+//
+//		stmpInfoList = checkList(cancelList, stmpInfoList);
+//		cancelList.removeAll(cancelList);
+//
+//		List<EzMap> stmpMarstInfoList = new ArrayList<>();
+//		for (int i = 0; i < stmpInfoList.size(); i++) {
+//
+//			parm.put("mshipStmpBasNo", stmpInfoList.get(i).getString("mshipStmpBasNo"));
+//			EzMap stmpMarstInfo = dao.getStmpMarstInfo(parm);
+//
+//			// 상품 카운터
+//			parm.put("itemList", itemList);
+//			List<EzMap> stmpGodsList = dao.getStmpGodsList(parm);
+//			stmpMarstInfo.put("itemList", stmpGodsList);
+//
+//			// 해당 마스터 에서 취소 가능한 수량
+//			int condCnt = 1;
+//			if (stmpInfoList.get(i).get("condCnt") != null) {
+//				condCnt = stmpInfoList.get(i).getInt("condCnt");
+//			}
+//
+//			int applyQnty = 0;
+//			if (stmpGodsList != null) {
+//				for (int j = 0; j < stmpGodsList.size(); j++) {
+//					applyQnty += stmpGodsList.get(j).getInt("applyQnty");
+//				}
+//			}
+//
+//			int cancelCnt = applyQnty * condCnt;
+//			parm.put("cancelCnt", cancelCnt);
+//			List<EzMap> cancelData = dao.getStmpCancelData(parm);
+//
+//			List<String> cancelSeq = new ArrayList<>();
+//			for (EzMap cData : cancelData) {
+//				// 혜택지급 제외
+//				if (cData.getInt("coupnNo") != 0 || cData.getInt("pointScore") != 0) {
+//					break;
+//				}
+//				// 없을시 제외
+////				if (Utilities.isEmpty(cData.getString("issueCnt")) && Utilities.isEmpty(cData.getString("pointScore")) ) {
+////					continue;
+////				}
+//				cancelSeq.add(cData.getString("stmpHstSeq"));
+//			}
+//
+//			stmpMarstInfo.put("cancelSeq", cancelSeq);
+//			stmpMarstInfoList.add(stmpMarstInfo);
+//
+//		}
+//
+//		return stmpMarstInfoList;
+//	}
 
 	public List<CrmMshipStmpIssueVo> eventStmp(@Valid CrmMshipStmpEventVo vo) throws Exception {
 

@@ -88,7 +88,7 @@ public class CrmMshipLoginHstController extends BaseRestController {
 	@GetMapping("/{loginHstId}")
 	@Operation(summary = "CRM사용자로그인이력 단건", description = "CRM사용자로그인이력 단건 검색")
 	public ResponseEntity<ApiResultVo<CrmMshipLoginHstVo>> getCrmMshipLoginHst(
-			@Parameter(description = "로그인이력ID") @PathVariable("loginHstId") String loginHstId) throws Exception {
+			@Parameter(description = "로그인이력ID") @PathVariable String loginHstId) throws Exception {
 		CrmMshipLoginHstSo so = new CrmMshipLoginHstSo();
 		so.setLoginHstId(loginHstId);
 		CrmMshipLoginHstVo vo = service.get(so);
@@ -151,7 +151,7 @@ public class CrmMshipLoginHstController extends BaseRestController {
 	@DeleteMapping("/{loginHstId}")
 	@Operation(summary = "CRM사용자로그인이력 삭제", description = "CRM사용자로그인이력 삭제")
 	public ResponseEntity<ApiResultVo<Object>> removeCrmMshipLoginHst(
-			@Parameter(description = "로그인이력ID") @PathVariable("loginHstId") String loginHstId) throws Exception {
+			@Parameter(description = "로그인이력ID") @PathVariable String loginHstId) throws Exception {
 		CrmMshipLoginHstVo vo = new CrmMshipLoginHstVo();
 		vo.setLoginHstId(loginHstId);
 		int ret = service.delete(vo);

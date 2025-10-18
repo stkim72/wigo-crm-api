@@ -85,7 +85,7 @@ CrmStorBasService service;
 	@GetMapping("/{storNo}")
 	@Operation(summary = "CRM매장기본 단건", description = "CRM매장기본 단건 검색")
 	public ResponseEntity<ApiResultVo<CrmStorBasVo>> getCrmStorBas(
-			@Parameter(description = "매장번호") @PathVariable("storNo") String storNo)
+			@Parameter(description = "매장번호") @PathVariable String storNo)
 			throws Exception {
 		CrmStorBasSo so  = new CrmStorBasSo();
 		so.setStorNo(storNo);
@@ -151,7 +151,7 @@ CrmStorBasService service;
 	@DeleteMapping("/{storNo}")
 	@Operation(summary = "CRM매장기본 삭제", description = "CRM매장기본 삭제")
 	public ResponseEntity<ApiVoidResultVo> removeCrmStorBas(
-			@Parameter(description = "매장번호") @PathVariable("storNo") String storNo)
+			@Parameter(description = "매장번호") @PathVariable String storNo)
 			throws Exception {
 		CrmStorBasVo vo = new CrmStorBasVo();
 		vo.setStorNo(storNo);

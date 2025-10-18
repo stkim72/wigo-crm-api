@@ -85,7 +85,7 @@ CrmDormCustBasService service;
 	@GetMapping("/{itgCustNo}")
 	@Operation(summary = "CRM휴면고객기본 단건", description = "CRM휴면고객기본 단건 검색")
 	public ResponseEntity<ApiResultVo<CrmDormCustBasVo>> getCrmDormCustBas(
-			@Parameter(description = "통합고객번호") @PathVariable("itgCustNo") String itgCustNo)
+			@Parameter(description = "통합고객번호") @PathVariable String itgCustNo)
 			throws Exception {
 		CrmDormCustBasSo so  = new CrmDormCustBasSo();
 		so.setItgCustNo(itgCustNo);
@@ -151,7 +151,7 @@ CrmDormCustBasService service;
 	@DeleteMapping("/{itgCustNo}")
 	@Operation(summary = "CRM휴면고객기본 삭제", description = "CRM휴면고객기본 삭제")
 	public ResponseEntity<ApiVoidResultVo> removeCrmDormCustBas(
-			@Parameter(description = "통합고객번호") @PathVariable("itgCustNo") String itgCustNo)
+			@Parameter(description = "통합고객번호") @PathVariable String itgCustNo)
 			throws Exception {
 		CrmDormCustBasVo vo = new CrmDormCustBasVo();
 		vo.setItgCustNo(itgCustNo);

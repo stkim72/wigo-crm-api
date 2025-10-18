@@ -85,7 +85,7 @@ public class CrmCustInfoPtuseAgreeHstController extends BaseRestController {
 	@GetMapping("/{infoPtuseAgreeHstSeq}")
 	@Operation(summary = "CRM고객정보활용동의 단건", description = "CRM고객정보활용동의 단건 검색")
 	public ResponseEntity<ApiResultVo<CrmCustInfoPtuseAgreeHstVo>> getCrmCustInfoPtuseAgreeHst(
-			@Parameter(description = "정보활용동의일련번호") @PathVariable("infoPtuseAgreeHstSeq") String infoPtuseAgreeHstSeq)
+			@Parameter(description = "정보활용동의일련번호") @PathVariable String infoPtuseAgreeHstSeq)
 			throws Exception {
 		CrmCustInfoPtuseAgreeHstSo so = new CrmCustInfoPtuseAgreeHstSo();
 		so.setInfoPtuseAgreeHstSeq(infoPtuseAgreeHstSeq);
@@ -151,7 +151,7 @@ public class CrmCustInfoPtuseAgreeHstController extends BaseRestController {
 	@DeleteMapping("/{infoPtuseAgreeHstSeq}")
 	@Operation(summary = "CRM고객정보활용동의 삭제", description = "CRM고객정보활용동의 삭제")
 	public ResponseEntity<ApiVoidResultVo> removeCrmCustInfoPtuseAgreeHst(
-			@Parameter(description = "정보활용동의일련번호") @PathVariable("infoPtuseAgreeHstSeq") String infoPtuseAgreeHstSeq)
+			@Parameter(description = "정보활용동의일련번호") @PathVariable String infoPtuseAgreeHstSeq)
 			throws Exception {
 		CrmCustInfoPtuseAgreeHstVo vo = new CrmCustInfoPtuseAgreeHstVo();
 		vo.setInfoPtuseAgreeHstSeq(infoPtuseAgreeHstSeq);

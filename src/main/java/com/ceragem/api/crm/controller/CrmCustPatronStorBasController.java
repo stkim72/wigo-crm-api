@@ -52,8 +52,8 @@ public class CrmCustPatronStorBasController extends BaseRestController {
 	@PostMapping("/{storNo}/{itgCustNo}")
 	@Operation(summary = "CRM고객단골매장등록", description = "CRM고객단골매장등록")
 	public ResponseEntity<ApiResultVo<CrmCustPatronStorBasVo>> registerCrmCustPatronStorBas(
-			@Parameter(description = "매장번호") @PathVariable("storNo") String storNo,
-			@Parameter(description = "통합고객번호") @PathVariable("itgCustNo") String itgCustNo,
+			@Parameter(description = "매장번호") @PathVariable String storNo,
+			@Parameter(description = "통합고객번호") @PathVariable String itgCustNo,
 			@Parameter(description = "CRM고객단골매장 객체", hidden = true) @ModelAttribute CrmCustPatronStorBasVo vo)
 			throws Exception {
 		vo.setItgCustNo(itgCustNo);
@@ -77,8 +77,8 @@ public class CrmCustPatronStorBasController extends BaseRestController {
 	@DeleteMapping("/{storNo}/{itgCustNo}")
 	@Operation(summary = "CRM고객단골매장삭제", description = "CRM고객단골매장삭제")
 	public ResponseEntity<ApiVoidResultVo> removeCrmCustPatronStorBas(
-			@Parameter(description = "매장번호") @PathVariable("storNo") String storNo,
-			@Parameter(description = "통합고객번호") @PathVariable("itgCustNo") String itgCustNo,
+			@Parameter(description = "매장번호") @PathVariable String storNo,
+			@Parameter(description = "통합고객번호") @PathVariable String itgCustNo,
 			@Parameter(description = "CRM고객단골매장 객체", hidden = true) @ModelAttribute CrmCustPatronStorBasVo vo)
 			throws Exception {
 		vo.setItgCustNo(itgCustNo);

@@ -23,12 +23,12 @@ public class TransactionAspect {
 	private static final int TX_TIMEOUT = 30;
 
 	@Bean
-	public TransactionInterceptor transactionAdvice(TransactionManager txManager) {
+	TransactionInterceptor transactionAdvice(TransactionManager txManager) {
 		return advice(txManager);
 	}
 
 	@Bean
-	public Advisor crmTransactionAdviceAdvisor(@Qualifier("crmTransactionManager") TransactionManager txManager) {
+	Advisor crmTransactionAdviceAdvisor(@Qualifier("crmTransactionManager") TransactionManager txManager) {
 		AspectJExpressionPointcut pointcut = new AspectJExpressionPointcut();
 		pointcut.setExpression(CRM_AOP_TRANSCTION_EXPRESSION);
 		return new DefaultPointcutAdvisor(pointcut, advice(txManager));

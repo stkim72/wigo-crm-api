@@ -102,7 +102,7 @@ public class CrmPointHstController extends BaseRestController {
 	@GetMapping("info/{itgCustNo}")
 	@Operation(summary = "CRM 회원 포인트 정보", description = "CRM 회원 포인트 정보")
 	public ResponseEntity<ApiResultVo<CrmPointInfoVo>> getCrmCustBasList(
-			@Parameter(description = "통합회원번호") @PathVariable("itgCustNo") String itgCustNo) throws Exception {
+			@Parameter(description = "통합회원번호") @PathVariable String itgCustNo) throws Exception {
 		CrmCustVo vo = new CrmCustVo();
 		vo.setItgCustNo(itgCustNo);
 		CrmPointInfoVo info = service.getPointInfo(vo);
@@ -122,7 +122,7 @@ public class CrmPointHstController extends BaseRestController {
 	@GetMapping("/{pointHstSeq}")
 	@Operation(summary = "CRM포인트이력 단건", description = "CRM포인트이력 단건 검색")
 	public ResponseEntity<ApiResultVo<CrmPointHstVo>> getCrmPointHst(
-			@Parameter(description = "포인트이력일련번호") @PathVariable("pointHstSeq") String pointHstSeq) throws Exception {
+			@Parameter(description = "포인트이력일련번호") @PathVariable String pointHstSeq) throws Exception {
 		CrmPointHstSo so = new CrmPointHstSo();
 		so.setPointHstSeq(pointHstSeq);
 		CrmPointHstVo vo = service.get(so);
@@ -144,9 +144,9 @@ public class CrmPointHstController extends BaseRestController {
 	@GetMapping("/{pblsChlCd}/{chitNo}")
 	@Operation(summary = "CRM 전표별 포인트 적립/사용 조회", description = "CRM 전표별 포인트 적립/사용 조회")
 	public ResponseEntity<ApiResultVo<List<CrmPointHstVo>>> getCrmPointHst(
-			@Parameter(description = "포인트 적립/사용 채널") @PathVariable("pblsChlCd") String pblsChlCd,
-			@Parameter(description = "채널별 적립시 사용한 전표번호 또는 고유번호") @PathVariable("chitNo") String chitNo,
-			@Parameter(description = "사용유형코드 [001 : 사용 , 002 : 적립 , 003 : 취소]", required = false) @RequestParam(value = "useTypeCd", required = false) String useTypeCd)
+			@Parameter(description = "포인트 적립/사용 채널") @PathVariable String pblsChlCd,
+			@Parameter(description = "채널별 적립시 사용한 전표번호 또는 고유번호") @PathVariable String chitNo,
+			@Parameter(description = "사용유형코드 [001 : 사용 , 002 : 적립 , 003 : 취소]", required = false) @RequestParam(required = false) String useTypeCd)
 			throws Exception {
 		CrmPointHstSo so = new CrmPointHstSo();
 		so.setChitNo(chitNo);
@@ -171,8 +171,8 @@ public class CrmPointHstController extends BaseRestController {
 	@PostMapping("deposit/{pblsChlCd}/{chitNo}")
 	@Operation(summary = "CRM포인트 적립", description = "CRM포인트 적립")
 	public ResponseEntity<ApiResultVo<CrmPointInfoVo>> deposit(
-			@Parameter(description = "포인트 적립 채널") @PathVariable("pblsChlCd") String pblsChlCd,
-			@Parameter(description = "채널별 적립시 사용한 전표번호 또는 고유번호") @PathVariable("chitNo") String chitNo,
+			@Parameter(description = "포인트 적립 채널") @PathVariable String pblsChlCd,
+			@Parameter(description = "채널별 적립시 사용한 전표번호 또는 고유번호") @PathVariable String chitNo,
 			@Parameter(description = "CRM포인트이력 객체") @RequestBody @Valid CrmPointHstVo vo) throws Exception {
 		vo.setChitNo(chitNo);
 		vo.setPblsChlCd(pblsChlCd);
@@ -186,8 +186,8 @@ public class CrmPointHstController extends BaseRestController {
 	@GetMapping("expire-list/{itgCustNo}")
 	@Operation(summary = "소멸예정 포인트 조회", description = "소멸예정 포인트 조회")
 	public ResponseEntity<ApiResultVo<List<CrmPointExpireVo>>> getExpirePointList(
-			@Parameter(description = "통합고객번호") @PathVariable("itgCustNo") String itgCustNo,
-			@Parameter(description = "소멸예정일(현재부터 예정일 까지 조회) 기본값 현재일 + 90일") @RequestParam(value = "expireYmd", required = false) String expireYmd)
+			@Parameter(description = "통합고객번호") @PathVariable String itgCustNo,
+			@Parameter(description = "소멸예정일(현재부터 예정일 까지 조회) 기본값 현재일 + 90일") @RequestParam(required = false) String expireYmd)
 			throws Exception {
 		EzMap so = new EzMap();
 		so.setString("itgCustNo", itgCustNo);
@@ -216,8 +216,8 @@ public class CrmPointHstController extends BaseRestController {
 	@PostMapping("deposit-amt/{pblsChlCd}/{chitNo}")
 	@Operation(summary = "CRM포인트 구매내역으로 포인트 적립", description = "CRM포인트 구매내역으로 포인트 적립")
 	public ResponseEntity<ApiResultVo<CrmPointInfoVo>> depositAmt(
-			@Parameter(description = "포인트 사용 채널") @PathVariable("pblsChlCd") String pblsChlCd,
-			@Parameter(description = "채널별 사용시 사용한 전표번호 또는 고유번호") @PathVariable("chitNo") String chitNo,
+			@Parameter(description = "포인트 사용 채널") @PathVariable String pblsChlCd,
+			@Parameter(description = "채널별 사용시 사용한 전표번호 또는 고유번호") @PathVariable String chitNo,
 			@Parameter(description = "CRM포인트 객체") @RequestBody @Valid CrmPointVo vo) throws Exception {
 		vo.setChitNo(chitNo);
 		vo.setPblsChlCd(pblsChlCd);
@@ -272,8 +272,8 @@ public class CrmPointHstController extends BaseRestController {
 	@PostMapping("approve/{pblsChlCd}/{chitNo}")
 	@Operation(summary = "CRM포인트 전표별 승인 적립/사용", description = "CRM포인트 전표별 승인 적립/사용")
 	public ResponseEntity<ApiResultVo<CrmPointInfoVo>> approve(
-			@Parameter(description = "포인트 사용 채널") @PathVariable("pblsChlCd") String pblsChlCd,
-			@Parameter(description = "채널별 사용시 사용한 전표번호 또는 고유번호") @PathVariable("chitNo") String chitNo,
+			@Parameter(description = "포인트 사용 채널") @PathVariable String pblsChlCd,
+			@Parameter(description = "채널별 사용시 사용한 전표번호 또는 고유번호") @PathVariable String chitNo,
 			@Parameter(description = "CRM포인트") @RequestBody @Valid List<CrmPointVo> list) throws Exception {
 
 		CrmPointInfoVo ret = service.saveApprove(pblsChlCd, chitNo, list);
@@ -296,8 +296,8 @@ public class CrmPointHstController extends BaseRestController {
 	@PostMapping("withdrawal/{pblsChlCd}/{chitNo}")
 	@Operation(summary = "CRM포인트 사용", description = "CRM포인트 사용")
 	public ResponseEntity<ApiResultVo<CrmPointInfoVo>> withdrawal(
-			@Parameter(description = "포인트 사용 채널") @PathVariable("pblsChlCd") String pblsChlCd,
-			@Parameter(description = "채널별 사용시 사용한 전표번호 또는 고유번호") @PathVariable("chitNo") String chitNo,
+			@Parameter(description = "포인트 사용 채널") @PathVariable String pblsChlCd,
+			@Parameter(description = "채널별 사용시 사용한 전표번호 또는 고유번호") @PathVariable String chitNo,
 			@Parameter(description = "CRM포인트이력 객체") @RequestBody @Valid CrmPointHstVo vo) throws Exception {
 		vo.setChitNo(chitNo);
 		vo.setPblsChlCd(pblsChlCd);
@@ -324,8 +324,8 @@ public class CrmPointHstController extends BaseRestController {
 	@PostMapping("cancel/{pblsChlCd}/{chitNo}")
 	@Operation(summary = "CRM포인트 적립/사용 취소", description = "CRM포인트 적립/사용 취소")
 	public ResponseEntity<ApiResultVo<CrmPointInfoVo>> cancelDeposit(
-			@Parameter(description = "포인트 적립용 채널") @PathVariable("pblsChlCd") @CodeValue(codeId = "S000") String pblsChlCd,
-			@Parameter(description = "채널별 적립시 사용한 전표번호 또는 고유번호") @PathVariable("chitNo") @MaxByte(max = 30) String chitNo,
+			@Parameter(description = "포인트 적립용 채널") @PathVariable @CodeValue(codeId = "S000") String pblsChlCd,
+			@Parameter(description = "채널별 적립시 사용한 전표번호 또는 고유번호") @PathVariable @MaxByte(max = 30) String chitNo,
 			@Parameter(description = "CRM포인트 객체", hidden = true) @RequestBody CrmPointHstVo point) throws Exception {
 		CrmPointHstVo vo = new CrmPointHstVo();
 
@@ -357,8 +357,8 @@ public class CrmPointHstController extends BaseRestController {
 	@PostMapping("gift/{fromItgCustNo}/{toItgCustNo}")
 	@Operation(summary = "CRM포인트 선물", description = "CRM포인트 선물")
 	public ResponseEntity<ApiResultVo<CrmPointInfoVo>> gift(
-			@Parameter(description = "보내는 통합회원 번호") @PathVariable("fromItgCustNo") String fromItgCustNo,
-			@Parameter(description = "받는 통합회원 번호") @PathVariable("toItgCustNo") String toItgCustNo,
+			@Parameter(description = "보내는 통합회원 번호") @PathVariable String fromItgCustNo,
+			@Parameter(description = "받는 통합회원 번호") @PathVariable String toItgCustNo,
 			@Parameter(description = "CRM포인트 객체") @RequestBody @Valid CrmPointHstVo vo) throws Exception {
 		CrmPointInfoVo ret = service.saveGiftPoint(vo, fromItgCustNo, toItgCustNo);
 		if (ret == null)
@@ -380,8 +380,8 @@ public class CrmPointHstController extends BaseRestController {
 	@PostMapping("gift-cancel/{fromItgCustNo}/{toItgCustNo}")
 	@Operation(summary = "CRM포인트 선물 취소", description = "CRM포인트 선물 취소", hidden = true)
 	public ResponseEntity<ApiResultVo<CrmPointHstVo>> cancelGift(
-			@Parameter(description = "포인트 사용 채널") @PathVariable("pblsChlCd") String pblsChlCd,
-			@Parameter(description = "채널별 사용시 사용한 전표번호 또는 고유번호") @PathVariable("chitNo") String chitNo,
+			@Parameter(description = "포인트 사용 채널") @PathVariable String pblsChlCd,
+			@Parameter(description = "채널별 사용시 사용한 전표번호 또는 고유번호") @PathVariable String chitNo,
 			@Parameter(description = "CRM포인트이력 객체") @RequestBody @Valid CrmPointHstVo vo) throws Exception {
 //		int ret = service.update(vo);
 //		if (ret == 0)

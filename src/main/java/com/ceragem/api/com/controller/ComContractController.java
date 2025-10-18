@@ -133,10 +133,10 @@ public class ComContractController extends BaseRestController {
 	@GetMapping("return-detail")
 	@Operation(summary = "CSS 반환내역 상세", description = "CSS 반환내역 상세")
 	public ResponseEntity<ApiResultVo<CrmBosRtnTxnVo>> getReturnDetail(
-			@Parameter(description = "계약번호") @RequestParam("cntrno") String cntrno,
-			@Parameter(description = "반환순번") @RequestParam("rtnsn") String rtnsn,
-			@Parameter(description = "고객번호") @RequestParam("custno") String custno,
-			@Parameter(description = "주문번호") @RequestParam("ordno") String ordno) throws Exception {
+			@Parameter(description = "계약번호") @RequestParam String cntrno,
+			@Parameter(description = "반환순번") @RequestParam String rtnsn,
+			@Parameter(description = "고객번호") @RequestParam String custno,
+			@Parameter(description = "주문번호") @RequestParam String ordno) throws Exception {
 		EzMap param = new EzMap();
 		param.put("cntrno", cntrno);
 		param.put("rtnsn", rtnsn);

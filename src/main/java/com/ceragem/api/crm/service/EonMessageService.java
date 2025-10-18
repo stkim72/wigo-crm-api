@@ -323,8 +323,8 @@ public class EonMessageService {
 		msgMap.put("휴면처리일자", procDt);
 		msgMap.put("탈퇴처리일자", procDt);
 		msgMap.put("가입일자", cust.getMshipSbscDt());
-		msgMap.put("비활동기간", cust.getDormPerdCd());
-		msgMap.put("비활동 기간", cust.getDormPerdCd());
+//		msgMap.put("비활동기간", cust.getDormPerdCd());
+//		msgMap.put("비활동 기간", cust.getDormPerdCd());
 
 		MsgIfVo message = getMessage(code, itgCustNo, cust.getMphonNo(), msgMap);
 		message.setCampaignId(null);

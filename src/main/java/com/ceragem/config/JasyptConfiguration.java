@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
 public class JasyptConfiguration {
 
 	@Bean(name = "jasyptStringEncryptor")
-	public StringEncryptor stringEncryptor() {
+	StringEncryptor stringEncryptor() {
 		String key = "ceragem2@22";
 		PooledPBEStringEncryptor encryptor = new PooledPBEStringEncryptor();
 		SimpleStringPBEConfig config = new SimpleStringPBEConfig();

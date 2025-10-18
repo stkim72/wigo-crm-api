@@ -72,9 +72,9 @@ public class CrmCouponController extends BaseRestController {
 	@GetMapping("barcode/{coupnPblsHstSeq}")
 	@Deprecated
 	@Operation(summary = "CRM쿠폰바코드", description = "CRM쿠폰바코드 스캐너 테스트용", hidden = true)
-	public void coupon(@PathVariable("coupnPblsHstSeq") String coupnPblsHstSeq,
-			@RequestParam(value = "width", required = false) Integer width,
-			@RequestParam(value = "height", required = false) Integer height) {
+	public void coupon(@PathVariable String coupnPblsHstSeq,
+			@RequestParam(required = false) Integer width,
+			@RequestParam(required = false) Integer height) {
 		Integer wd = width;
 		Integer ht = height;
 		ByteArrayInputStream in = null;
@@ -139,7 +139,7 @@ public class CrmCouponController extends BaseRestController {
 	@GetMapping("master/{mshipCoupnBasNo}")
 	@Operation(summary = "CRM쿠폰마스터 검색", description = "CRM마스터 검색", hidden = false)
 	public ResponseEntity<ApiResultVo<CrmMshipCoupnBasVo>> getCrmCustMasterList(
-			@Parameter(description = "쿠폰마스터일련번호") @PathVariable("mshipCoupnBasNo") String mshipCoupnBasNo
+			@Parameter(description = "쿠폰마스터일련번호") @PathVariable String mshipCoupnBasNo
 
 	) throws Exception {
 		CrmMshipCoupnBasSo so = new CrmMshipCoupnBasSo();
@@ -194,7 +194,7 @@ public class CrmCouponController extends BaseRestController {
 	@GetMapping("membership/{itgCustNo}")
 	@Operation(summary = "CRM 회원 쿠폰 목록", description = "CRM 회원 쿠폰 목록")
 	public ResponseEntity<ApiResultVo<List<CrmCouponVo>>> getCrmCustBasList(
-			@Parameter(description = "통합고객번호") @PathVariable("itgCustNo") String itgCustNo,
+			@Parameter(description = "통합고객번호") @PathVariable String itgCustNo,
 			@Parameter(description = "CRM쿠폰 검색객체") @ModelAttribute @ParameterObject @Valid CrmCouponCustNoSo no)
 			throws Exception {
 
@@ -274,8 +274,8 @@ public class CrmCouponController extends BaseRestController {
 	@GetMapping("membership/{regChlCd}/{itgCustNo}")
 	@Operation(summary = "CRM 회원 쿠폰 채널별 목록", description = "CRM 회원 쿠폰 채널별 목록")
 	public ResponseEntity<ApiResultVo<List<CrmCouponVo>>> getCrmCustBasList(
-			@Parameter(description = "통합고객번호") @PathVariable("itgCustNo") String itgCustNo,
-			@Parameter(description = "채널[COM:직영몰,POS:POS,MEM:멤버십]") @PathVariable("regChlCd") String regChlCd,
+			@Parameter(description = "통합고객번호") @PathVariable String itgCustNo,
+			@Parameter(description = "채널[COM:직영몰,POS:POS,MEM:멤버십]") @PathVariable String regChlCd,
 			@Parameter(description = "CRM쿠폰 검색객체") @ModelAttribute @ParameterObject @Valid CrmCouponCustNoSo no)
 			throws Exception {
 
@@ -297,7 +297,7 @@ public class CrmCouponController extends BaseRestController {
 	@GetMapping("/{coupnPblsBasNo}")
 	@Operation(summary = "CRM쿠폰 상세", description = "CRM쿠폰 상세")
 	public ResponseEntity<ApiResultVo<CrmCouponVo>> getCrmCoupnPblsHst(
-			@Parameter(description = "쿠폰번호") @PathVariable("coupnPblsBasNo") String coupnPblsBasNo) throws Exception {
+			@Parameter(description = "쿠폰번호") @PathVariable String coupnPblsBasNo) throws Exception {
 		CrmCouponSo so = new CrmCouponSo();
 		so.setCoupnPblsBasNo(coupnPblsBasNo);
 		CrmCouponVo vo = service.get(so);
@@ -327,7 +327,7 @@ public class CrmCouponController extends BaseRestController {
 	@GetMapping("certfNo/{certfNo}")
 	@Operation(summary = "CRM쿠폰 인증번호 조회", description = "CRM쿠폰 인증번호 조회")
 	public ResponseEntity<ApiResultVo<CrmCouponVo>> getCrmCertfNoCoupnPblsHst(
-			@Parameter(description = "인증번호") @PathVariable("certfNo") String certfNo) throws Exception {
+			@Parameter(description = "인증번호") @PathVariable String certfNo) throws Exception {
 		CrmCouponVo vo = service.getCertfNo(certfNo);
 
 		if (vo == null)
@@ -345,7 +345,7 @@ public class CrmCouponController extends BaseRestController {
 	@GetMapping("validate/{coupnPblsBasNo}")
 	@Operation(summary = "CRM쿠폰 유효성", description = "CRM쿠폰 유효성")
 	public ResponseEntity<ApiVoidResultVo> validCoupon(
-			@Parameter(description = "쿠폰번호") @PathVariable("coupnPblsBasNo") String coupnPblsBasNo,
+			@Parameter(description = "쿠폰번호") @PathVariable String coupnPblsBasNo,
 			@Parameter(description = "쿠폰정보", hidden = true) @ModelAttribute CrmCouponVo param) throws Exception {
 		param.setCoupnPblsBasNo(coupnPblsBasNo);
 		service.updateValidate(param);
@@ -385,8 +385,8 @@ public class CrmCouponController extends BaseRestController {
 	@GetMapping("issueCtc/{mshipCoupnBasNo}/{itgCustNo}")
 	@Operation(summary = "상담사 CRM 쿠폰  발행", description = "상담사 CRM 쿠폰  발행")
 	public ResponseEntity<ApiResultVo<CrmCouponVo>> issue(
-			@Parameter(description = "쿠폰마스터번호") @PathVariable("mshipCoupnBasNo") @MaxByte(max = 20) String mshipCoupnBasNo,
-			@Parameter(description = "통합고객번호") @PathVariable("itgCustNo") @MaxByte(max = 20) String itgCustNo,
+			@Parameter(description = "쿠폰마스터번호") @PathVariable @MaxByte(max = 20) String mshipCoupnBasNo,
+			@Parameter(description = "통합고객번호") @PathVariable @MaxByte(max = 20) String itgCustNo,
 			@Parameter(description = "상담사 사번") @RequestParam @MaxByte(max = 20) String empId
 	/*
 	 * , @Parameter(description = "CRM 쿠폰 객체", hidden = true) @ModelAttribute
@@ -416,11 +416,11 @@ public class CrmCouponController extends BaseRestController {
 	@PostMapping("/{mshipCoupnBasNo}/{itgCustNo}")
 	@Operation(summary = "CRM 쿠폰 발행 직영몰", description = "CRM 쿠폰 발행 직영몰")
 	public ResponseEntity<ApiResultVo<CrmCouponVo>> registerCrmCoupn(
-			@Parameter(description = "쿠폰마스터일련번호") @PathVariable("mshipCoupnBasNo") String mshipCoupnBasNo,
-			@Parameter(description = "통합고객번호") @PathVariable("itgCustNo") String itgCustNo,
-			@Parameter(description = "쿠폰명") @RequestParam(value = "couponNm", required = false) @MaxByte(max = 100) String couponNm,
-			@Parameter(description = "유효기간시작일[YYYYMMDD]") @RequestParam(value = "fromUseStdDay", required = false) @DateValue String fromUseStdDay,
-			@Parameter(description = "유효기간종료일[YYYYMMDD]") @RequestParam(value = "toUseStdDay", required = false) @DateValue String toUseStdDay)
+			@Parameter(description = "쿠폰마스터일련번호") @PathVariable String mshipCoupnBasNo,
+			@Parameter(description = "통합고객번호") @PathVariable String itgCustNo,
+			@Parameter(description = "쿠폰명") @RequestParam(required = false) @MaxByte(max = 100) String couponNm,
+			@Parameter(description = "유효기간시작일[YYYYMMDD]") @RequestParam(required = false) @DateValue String fromUseStdDay,
+			@Parameter(description = "유효기간종료일[YYYYMMDD]") @RequestParam(required = false) @DateValue String toUseStdDay)
 			throws Exception {
 		CrmCouponVo vo = new CrmCouponVo();
 		vo.setItgCustNo(itgCustNo);
@@ -447,7 +447,7 @@ public class CrmCouponController extends BaseRestController {
 	@PostMapping("approve/{coupnPblsBasNo}")
 	@Operation(summary = "CRM쿠폰 사용", description = "CRM쿠폰 사용")
 	public ResponseEntity<ApiResultVo<CrmCouponVo>> useCrmCoupnPblsHsts(
-			@Parameter(description = "쿠폰번호") @PathVariable("coupnPblsBasNo") String coupnPblsBasNo,
+			@Parameter(description = "쿠폰번호") @PathVariable String coupnPblsBasNo,
 			@Parameter(description = "쿠폰정보") @ModelAttribute @ParameterObject @Valid CrmCouponApproSo so
 	/* @Parameter(description = "쿠폰정보") @ModelAttribute CrmCouponVo param */) throws Exception {
 
@@ -484,7 +484,7 @@ public class CrmCouponController extends BaseRestController {
 	@PostMapping("cancel/{coupnPblsBasNo}")
 	@Operation(summary = "CRM쿠폰 사용 취소", description = "CRM쿠폰 사용 취소")
 	public ResponseEntity<ApiResultVo<CrmCouponVo>> cancelCrmCoupnPblsHst(
-			@Parameter(description = "쿠폰번호") @PathVariable("coupnPblsBasNo") String coupnPblsBasNo,
+			@Parameter(description = "쿠폰번호") @PathVariable String coupnPblsBasNo,
 			@Parameter(hidden = true) @ModelAttribute CrmCouponVo vo) throws Exception {
 		vo.setCoupnPblsBasNo(coupnPblsBasNo);
 		int ret = service.updateCancel(vo);
@@ -507,9 +507,9 @@ public class CrmCouponController extends BaseRestController {
 	@PostMapping("gift/{coupnPblsBasNo}/{fromItgCustNo}/{toItgCustNo}")
 	@Operation(summary = "CRM쿠폰 선물", description = "CRM쿠폰 선물")
 	public ResponseEntity<ApiResultVo<CrmCouponVo>> gift(
-			@Parameter(description = "보내는 통합회원 번호") @PathVariable("fromItgCustNo") String fromItgCustNo,
-			@Parameter(description = "받는 통합회원 번호") @PathVariable("toItgCustNo") String toItgCustNo,
-			@Parameter(description = "쿠폰번호") @PathVariable("coupnPblsBasNo") String coupnPblsBasNo) throws Exception {
+			@Parameter(description = "보내는 통합회원 번호") @PathVariable String fromItgCustNo,
+			@Parameter(description = "받는 통합회원 번호") @PathVariable String toItgCustNo,
+			@Parameter(description = "쿠폰번호") @PathVariable String coupnPblsBasNo) throws Exception {
 		CrmCouponVo ret = service.saveGiftCoupn(coupnPblsBasNo, fromItgCustNo, toItgCustNo);
 		if (ret == null)
 			throw new EzApiException(Constants._API_CODE_NO_DATA, Constants._API_CODE_NO_DATA_MSG);

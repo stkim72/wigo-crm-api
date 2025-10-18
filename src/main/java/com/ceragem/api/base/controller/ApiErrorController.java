@@ -28,6 +28,7 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -187,25 +188,25 @@ public class ApiErrorController implements ErrorController {
 		return getUnknownError(request, response, ex);
 	}
 
-	@RequestMapping(value = { "", "index" })
+	@RequestMapping(value = { "", "index" }, method = {RequestMethod.GET, RequestMethod.POST})
 	public Object init(HttpServletRequest request, HttpServletResponse response,
 			@RequestParam Map<String, Object> param, ModelMap model) throws Exception {
 		return parseError(request, response);
 
 	}
 
-	@RequestMapping(value = { "/jwt" })
+	@RequestMapping(value = { "/jwt" }, method = {RequestMethod.GET, RequestMethod.POST})
 	public Object jwtError(HttpServletRequest request, HttpServletResponse response) {
 		return getNotFoundError(request, response);
 
 	}
 
-	@RequestMapping(value = { "/jwt/epe" })
+	@RequestMapping(value = { "/jwt/epe" }, method = {RequestMethod.GET, RequestMethod.POST})
 	public Object jwtEpeError(HttpServletRequest request, HttpServletResponse response) {
 		return getNotFoundError(request, response);
 	}
 
-	@RequestMapping(value = { "/jwt/ade" })
+	@RequestMapping(value = { "/jwt/ade" }, method = {RequestMethod.GET, RequestMethod.POST})
 	public Object jwtApeError(HttpServletRequest request, HttpServletResponse response) {
 //		EzJwtAccessDeniedException e = new EzJwtAccessDeniedException(null);
 		return getNotFoundError(request, response);

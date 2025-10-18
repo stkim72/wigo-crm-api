@@ -5,17 +5,18 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.5.7</version>
+        <version>2.7.18</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.ceragem</groupId>
     <artifactId>ceragem-api</artifactId>
     <name>ceragem-api</name>
     <version>1.0.0</version>
+    <packaging>war</packaging>
     <description>ceragem api Project</description>
 
     <properties>
-        <java.version>1.8</java.version>
+        <java.version>17</java.version>
 		<mybatis.version>3.5.1</mybatis.version>
 		<tiles.version>3.0.8</tiles.version>
 		<jackson.version>2.9.9</jackson.version>
@@ -229,15 +230,19 @@
 			<version>1.9.4</version>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/com.oracle.database.jdbc/ojdbc17 -->
 		<dependency>
-			<groupId>com.oracle.ojdbc</groupId>
-			<artifactId>ojdbc8</artifactId>
+		    <groupId>com.oracle.database.jdbc</groupId>
+		    <artifactId>ojdbc17</artifactId>
+		    <version>23.9.0.25.07</version>
 		</dependency>
-		<dependency>
-			<groupId>com.oracle.ojdbc</groupId>
-			<artifactId>orai18n</artifactId>
-		</dependency>
-		
+        <!-- https://mvnrepository.com/artifact/com.oracle.ojdbc/orai18n -->
+        <dependency>
+            <groupId>com.oracle.ojdbc</groupId>
+            <artifactId>orai18n</artifactId>
+            <version>19.3.0.0</version>
+        </dependency>
+        		
       
         <!-- https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-ui -->
         <dependency>

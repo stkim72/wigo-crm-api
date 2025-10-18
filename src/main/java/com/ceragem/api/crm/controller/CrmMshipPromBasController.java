@@ -86,7 +86,7 @@ public class CrmMshipPromBasController extends BaseRestController {
 	@GetMapping("/{mshipPromBasNo}")
 	@Operation(summary = "CRM멤버십프로모션 단건", description = "CRM멤버십프로모션 단건 검색")
 	public ResponseEntity<ApiResultVo<CrmMshipPromBasVo>> getCrmMshipPromBas(
-			@Parameter(description = "멤버십프로모션기본번호") @PathVariable("mshipPromBasNo") String mshipPromBasNo)
+			@Parameter(description = "멤버십프로모션기본번호") @PathVariable String mshipPromBasNo)
 			throws Exception {
 		CrmMshipPromBasSo so = new CrmMshipPromBasSo();
 		so.setMshipPromBasNo(mshipPromBasNo);

@@ -68,7 +68,7 @@ public class CrmMshipCardBasController extends BaseRestController {
 	@GetMapping("list")
 	@Operation(summary = "CRM 보유카드 목록 검색", description = "CRM 보유카드 목록")
 	public ResponseEntity<ApiResultVo<ApiPagingPayload<CrmCardPblsHstVo>>> getCrmCustBasList(
-			@Parameter(description = "통합고객번호") @RequestParam("itgCustNo") String itgCustNo,
+			@Parameter(description = "통합고객번호") @RequestParam String itgCustNo,
 			@Parameter(description = "CRM카드발행이력 검색객체", hidden = true) @ParameterObject @Valid CrmCardPblsHstSo so) throws Exception {
 		EzMap param = new EzMap(so);
 		List<CrmCardPblsHstVo> list = service.getList(param);
@@ -93,12 +93,12 @@ public class CrmMshipCardBasController extends BaseRestController {
 	@GetMapping("point/{itgCustNo}")
 	@Operation(summary = "CRM 고객별 카드 사용내역", description = "CRM 고객별 카드 사용내역")
 	public ResponseEntity<ApiResultVo<ApiPagingPayload<CrmPointHstVo>>> getPointList(
-			@Parameter(description = "통합고객번호") @PathVariable("itgCustNo") String itgCustNo,
-			@Parameter(description = "카드번호", required = false) @RequestParam(required = false, value = "cardNo") String cardNo,
-			@Parameter(description = "검색시작일", required = false) @RequestParam(required = false, value = "startDt") String startDt,
-			@Parameter(description = "검색종료일", required = false) @RequestParam(required = false, value = "endDt") String endDt,
-			@Parameter(description = "페이지번호", required = false) @RequestParam(required = false, value = "currentPageNo") String currentPageNo,
-			@Parameter(description = "페이지당row", required = false) @RequestParam(required = false, value = "recordCountPerPage") String recordCountPerPage,
+			@Parameter(description = "통합고객번호") @PathVariable String itgCustNo,
+			@Parameter(description = "카드번호", required = false) @RequestParam(required = false) String cardNo,
+			@Parameter(description = "검색시작일", required = false) @RequestParam(required = false) String startDt,
+			@Parameter(description = "검색종료일", required = false) @RequestParam(required = false) String endDt,
+			@Parameter(description = "페이지번호", required = false) @RequestParam(required = false) String currentPageNo,
+			@Parameter(description = "페이지당row", required = false) @RequestParam(required = false) String recordCountPerPage,
 			@Parameter(hidden = true) @ParameterObject @ModelAttribute @Valid CrmPointHstSo so) throws Exception {
 		so.setUseCard("Y");
 		EzMap param = new EzMap(so);
@@ -125,11 +125,11 @@ public class CrmMshipCardBasController extends BaseRestController {
 	@GetMapping("card/{cardNo}")
 	@Operation(summary = "CRM 카드별 사용내역", description = "CRM 카드 사용내역")
 	public ResponseEntity<ApiResultVo<ApiPagingPayload<CrmPointHstVo>>> getCardPointList(
-			@Parameter(description = "카드번호", required = false) @RequestParam(required = false, value = "cardNo") String cardNo,
+			@Parameter(description = "카드번호", required = false) @RequestParam(required = false) String cardNo,
 			@Parameter(description = "검색시작일", required = false) @RequestParam(required = false, value = "startDt") String strtDt,
-			@Parameter(description = "검색종료일", required = false) @RequestParam(required = false, value = "endDt") String endDt,
-			@Parameter(description = "페이지번호", required = false) @RequestParam(required = false, value = "currentPageNo") String currentPageNo,
-			@Parameter(description = "페이지당row", required = false) @RequestParam(required = false, value = "recordCountPerPage") String recordCountPerPage,
+			@Parameter(description = "검색종료일", required = false) @RequestParam(required = false) String endDt,
+			@Parameter(description = "페이지번호", required = false) @RequestParam(required = false) String currentPageNo,
+			@Parameter(description = "페이지당row", required = false) @RequestParam(required = false) String recordCountPerPage,
 			@Parameter(hidden = true) @ModelAttribute @Valid ApiDateRangePagination p,
 			@Parameter(hidden = true) @ModelAttribute CrmPointHstSo so) throws Exception {
 		so.setUseCard("Y");

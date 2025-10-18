@@ -45,9 +45,9 @@ public class CrmMemberLoginController extends BaseRestController {
 	@PostMapping("/loginMember")
 	@Operation(summary = "CRM고객 로그인", description = "CRM고객 로그인")
 	public ResponseEntity<ApiResultVo<CrmCustVo>> loginMember(
-			@Parameter(description = "로그인 아이디") @RequestParam("loginId") String loginId,
-			@Parameter(description = "로그인 암호") @RequestParam("loginPwd") String loginPwd,
-			@Parameter(description = "접속 아이피") @RequestParam("ipAddr") String ipAddr) throws Exception {
+			@Parameter(description = "로그인 아이디") @RequestParam String loginId,
+			@Parameter(description = "로그인 암호") @RequestParam String loginPwd,
+			@Parameter(description = "접속 아이피") @RequestParam String ipAddr) throws Exception {
 		CrmCustVo vo = new CrmCustVo();
 		vo.setMshipLoginId(loginId);
 		vo.setMshipLoginPwd(loginPwd);

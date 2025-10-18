@@ -117,10 +117,10 @@ public class CrmMembershipController extends BaseRestController {
 	@GetMapping("/{itgCustNo}")
 	@Operation(summary = "CRM멤버십 단건", description = "CRM멤버십 단건 검색 [개인정보취급자번호-indiInfoHandlPrsnNo,접속자IP주소-connPrsnIpAddr 모두 제공시 암호화 해제 후 전송]")
 	public ResponseEntity<ApiResultVo<CrmCustVo>> getCrmCustBas(
-			@Parameter(description = "통합고객번호") @PathVariable("itgCustNo") String itgCustNo,
+			@Parameter(description = "통합고객번호") @PathVariable String itgCustNo,
 //			@Parameter(description = "연락처포함여부") @RequestParam(value = "includeContactYn", required = false, defaultValue = "N") String includeContactYn,
-			@Parameter(description = "개인정보 취급자 정보") @RequestParam(name = "indiInfoHandlPrsnNo", required = false) String indiInfoHandlPrsnNo,
-			@Parameter(description = "접속아이피") @RequestParam(name = "connPrsnIpAddr", required = false) String connPrsnIpAddr,
+			@Parameter(description = "개인정보 취급자 정보") @RequestParam(required = false) String indiInfoHandlPrsnNo,
+			@Parameter(description = "접속아이피") @RequestParam(required = false) String connPrsnIpAddr,
 			@Parameter(description = "개인정보 취급자 정보", required = false, hidden = true) @ModelAttribute CrmSnstvInfoInqrySo info)
 			throws Exception {
 //		String contactYn = includeContactYn;
@@ -154,7 +154,7 @@ public class CrmMembershipController extends BaseRestController {
 	@PostMapping("/dormancy/{itgCustNo}")
 	@Operation(summary = "CRM멤버십 휴면등록", description = "CRM멤버십 휴면등록")
 	public ResponseEntity<ApiVoidResultVo> dormancy(
-			@Parameter(description = "통합고객번호") @PathVariable("itgCustNo") String itgCustNo,
+			@Parameter(description = "통합고객번호") @PathVariable String itgCustNo,
 			@Parameter(description = "메시지코드") @RequestBody(required = false) String codeCd) throws Exception {
 
 		CrmCustVo vo = new CrmCustVo();
@@ -170,7 +170,7 @@ public class CrmMembershipController extends BaseRestController {
 	@PostMapping("/dormancy-cancel/{itgCustNo}")
 	@Operation(summary = "CRM멤버십 휴면취소", description = "CRM멤버십 휴면취소")
 	public ResponseEntity<ApiVoidResultVo> cancelDormancy(
-			@Parameter(description = "통합고객번호") @PathVariable("itgCustNo") String itgCustNo,
+			@Parameter(description = "통합고객번호") @PathVariable String itgCustNo,
 			@Parameter(description = "메시지코드") @RequestBody(required = false) String codeCd) throws Exception {
 
 		CrmCustVo vo = new CrmCustVo();
@@ -245,7 +245,7 @@ public class CrmMembershipController extends BaseRestController {
 	@DeleteMapping("/{itgCustNo}")
 	@Operation(summary = "CRM멤버십 탈회", description = "CRM멤버십 탈회")
 	public ResponseEntity<ApiVoidResultVo> removeCrmCustBas(
-			@Parameter(description = "통합고객번호") @PathVariable("itgCustNo") String itgCustNo,
+			@Parameter(description = "통합고객번호") @PathVariable String itgCustNo,
 			@Parameter(description = "메시지코드") @RequestBody(required = false) String codeCd) throws Exception {
 		CrmCustVo vo = new CrmCustVo();
 		vo.setItgCustNo(itgCustNo);
@@ -270,7 +270,7 @@ public class CrmMembershipController extends BaseRestController {
 	@GetMapping("/login")
 	@Operation(summary = "CRM멤버십 정보 by 로그인아이디", description = "CRM멤버십 정보 by 로그인아이디")
 	public ResponseEntity<ApiResultVo<CrmCustVo>> loginMember(
-			@Parameter(description = "로그인 아이디") @RequestParam("mshipLoginId") String mshipLoginId
+			@Parameter(description = "로그인 아이디") @RequestParam String mshipLoginId
 //			@Parameter(description = "로그인 암호") @RequestParam("loginPwd") String loginPwd
 //			@Parameter(description = "접속 아이피") @RequestParam("ipAddr") String ipAddr
 	) throws Exception {
@@ -300,8 +300,8 @@ public class CrmMembershipController extends BaseRestController {
 	@Hidden
 	@Operation(summary = "CRM멤버십 정보 by 로그인아이디/pwd", description = "CRM멤버십 정보 by 로그인아이디/Pwd")
 	public ResponseEntity<ApiResultVo<CrmCustVo>> loginMemberPwd(
-			@Parameter(description = "로그인 아이디") @RequestParam("mshipLoginId") String mshipLoginId,
-			@Parameter(description = "로그인 암호") @RequestParam("loginPwd") String loginPwd
+			@Parameter(description = "로그인 아이디") @RequestParam String mshipLoginId,
+			@Parameter(description = "로그인 암호") @RequestParam String loginPwd
 //			@Parameter(description = "접속 아이피") @RequestParam("ipAddr") String ipAddr
 	) throws Exception {
 		CrmCustVo vo = new CrmCustVo();
@@ -328,7 +328,7 @@ public class CrmMembershipController extends BaseRestController {
 	@GetMapping("/login-id/duplicate")
 	@Operation(summary = "로그인아이디 중복체크", description = "로그인아이디 중복체크 [hasId : Y/N]")
 	public ResponseEntity<ApiResultVo<Object>> duplicate(
-			@Parameter(description = "로그인 아이디") @RequestParam("mshipLoginId") String mshipLoginId) throws Exception {
+			@Parameter(description = "로그인 아이디") @RequestParam String mshipLoginId) throws Exception {
 		CrmCustVo vo = new CrmCustVo();
 //		vo.setDecryptYn("Y");
 		vo.setMshipLoginId(mshipLoginId);
@@ -369,7 +369,7 @@ public class CrmMembershipController extends BaseRestController {
 	@GetMapping("/agree/{itgCustNo}")
 	@Operation(summary = "고객정보활용동의내역", description = "고객정보활용동의내역")
 	public ResponseEntity<ApiResultVo<ApiPagingPayload<CrmCustInfoPtuseAgreeHstVo>>> agreeList(
-			@Parameter(description = "통합고객번호") @PathVariable("itgCustNo") String itgCustNo,
+			@Parameter(description = "통합고객번호") @PathVariable String itgCustNo,
 			@Parameter(description = "CRM고객 검색객체", hidden = true) CrmCustInfoPtuseAgreeHstSo so) throws Exception {
 		so.setItgCustNo(itgCustNo);
 
@@ -400,10 +400,10 @@ public class CrmMembershipController extends BaseRestController {
 	@GetMapping("/event/{itgCustNo}/{eventCd}/{regChlCd}")
 	@Operation(summary = "멤버십이벤트처리", description = "멤버십이벤트")
 	public ResponseEntity<ApiResultVo<Object>> event(
-			@Parameter(description = "통합고객번호") @PathVariable("itgCustNo") String itgCustNo,
-			@Parameter(description = "이벤트코드 [EV100] [010 : 웰카페 체험추천 , 020 : 홈체험 추천 , 030 : 멤버십 가입 추천 , 040 : 웰카페 체험 , 050 : 홈체험 , 060 : 멤버십회원 가입 , 070 : 마케팅정보 수신동의 , 080 : 앱 다운로드 , 090 : 추가 정보 입력 , 100 : 생일 , 110 : 휴면방지 , 120 : 휴면해제 , 130 : 출석체크 , 140 : 텍스트 후기 작성 , 150 : 이미지 후기 작성 , 160 : 동영상 후기 작성 , 170 : 세라체크 , 180 : 서베이 , 190 : IoT , 903 : 스탬프, 904 : 쿠폰, 905 : 프로모션, 940 : 수기차감, 950 : 수기지급, 960 : 캠페인지급, 970 : 승급]") @PathVariable("eventCd") String eventCd,
-			@Parameter(description = "등록채널코드  [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS , BOS : BOS , MEM : 멤버십 , CRA : 세라체크 , DNA : 세라DNA , IoT : IoT]") @PathVariable("regChlCd") String regChlCd,
-			@Parameter(description = "추천인통합고객번호") @RequestParam(name = "rcmdrCustNo", required = false) String rcmdrCustNo)
+			@Parameter(description = "통합고객번호") @PathVariable String itgCustNo,
+			@Parameter(description = "이벤트코드 [EV100] [010 : 웰카페 체험추천 , 020 : 홈체험 추천 , 030 : 멤버십 가입 추천 , 040 : 웰카페 체험 , 050 : 홈체험 , 060 : 멤버십회원 가입 , 070 : 마케팅정보 수신동의 , 080 : 앱 다운로드 , 090 : 추가 정보 입력 , 100 : 생일 , 110 : 휴면방지 , 120 : 휴면해제 , 130 : 출석체크 , 140 : 텍스트 후기 작성 , 150 : 이미지 후기 작성 , 160 : 동영상 후기 작성 , 170 : 세라체크 , 180 : 서베이 , 190 : IoT , 903 : 스탬프, 904 : 쿠폰, 905 : 프로모션, 940 : 수기차감, 950 : 수기지급, 960 : 캠페인지급, 970 : 승급]") @PathVariable String eventCd,
+			@Parameter(description = "등록채널코드  [CRM : CRM , CTC : 상담 , AS : AS , SAP : SAP , POS : POS , BOS : BOS , MEM : 멤버십 , CRA : 세라체크 , DNA : 세라DNA , IoT : IoT]") @PathVariable String regChlCd,
+			@Parameter(description = "추천인통합고객번호") @RequestParam(required = false) String rcmdrCustNo)
 			throws Exception {
 
 		CrmCustVo vo = new CrmCustVo();
@@ -473,9 +473,9 @@ public class CrmMembershipController extends BaseRestController {
 	@PostMapping("visit-store")
 	@Operation(summary = "최종방문매장등록", description = "최종방문매장등록")
 	public ResponseEntity<ApiResultVo<CrmCustVo>> visitStore(
-			@Parameter(description = "통합회원코드") @RequestParam("itgCustNo") String itgCustNo,
+			@Parameter(description = "통합회원코드") @RequestParam String itgCustNo,
 			@Parameter(description = "최종방문매장") @RequestParam("storeNo") String storNo,
-			@Parameter(description = "방문일시", required = false) @RequestParam(name = "visitDt", required = false) String visitDt,
+			@Parameter(description = "방문일시", required = false) @RequestParam(required = false) String visitDt,
 			@Parameter(description = "통합고객객체", required = false, hidden = true) @ModelAttribute CrmCustVo vo)
 			throws Exception {
 		vo.setMshipLastVisitStorNo(storNo);
@@ -500,12 +500,12 @@ public class CrmMembershipController extends BaseRestController {
 	@PostMapping("login-success")
 	@Operation(summary = "최종로그인성공", description = "최종로그인성공")
 	public ResponseEntity<ApiVoidResultVo> loginSuccess(
-			@Parameter(description = "통합회원코드") @RequestParam("itgCustNo") String itgCustNo,
-			@Parameter(description = "최종로그인 IP", required = false) @RequestParam("mshipLastLoginIpAddr") String mshipLastLoginIpAddr,
-			@Parameter(description = "최종로그인일시(YYYYMMDDHH24MISS) 미제공 => 현재시간") @RequestParam(name = "mshipLastLoginDt", required = false) String mshipLastLoginDt,
-			@Parameter(description = "푸시토큰") @RequestParam(name = "appPushTokn", required = false) String appPushTokn,
-			@Parameter(description = "푸시앱OS코드 [1: 안드로이드,2: iOs]") @RequestParam(name = "appPushOsCd", required = false) String appPushOsCd,
-			@Parameter(description = "푸시동의여부") @RequestParam(name = "pushRcvAgreeYn", required = false) String pushRcvAgreeYn,
+			@Parameter(description = "통합회원코드") @RequestParam String itgCustNo,
+			@Parameter(description = "최종로그인 IP", required = false) @RequestParam String mshipLastLoginIpAddr,
+			@Parameter(description = "최종로그인일시(YYYYMMDDHH24MISS) 미제공 => 현재시간") @RequestParam(required = false) String mshipLastLoginDt,
+			@Parameter(description = "푸시토큰") @RequestParam(required = false) String appPushTokn,
+			@Parameter(description = "푸시앱OS코드 [1: 안드로이드,2: iOs]") @RequestParam(required = false) String appPushOsCd,
+			@Parameter(description = "푸시동의여부") @RequestParam(required = false) String pushRcvAgreeYn,
 			@Parameter(description = "통합고객객체", required = false, hidden = true) @ModelAttribute CrmCustVo vo)
 			throws Exception {
 
@@ -535,8 +535,8 @@ public class CrmMembershipController extends BaseRestController {
 	@PostMapping("change-password")
 	@Operation(summary = "로그인암호변경", description = "로그인암호변경")
 	public ResponseEntity<ApiVoidResultVo> savePassword(
-			@Parameter(description = "통합회원코드") @RequestParam("itgCustNo") String itgCustNo,
-			@Parameter(description = "로그인암호", required = false) @RequestParam("mshipLoginPwd") String mshipLoginPwd,
+			@Parameter(description = "통합회원코드") @RequestParam String itgCustNo,
+			@Parameter(description = "로그인암호", required = false) @RequestParam String mshipLoginPwd,
 			@Parameter(description = "통합고객객체", required = false, hidden = true) @ModelAttribute CrmCustVo vo)
 			throws Exception {
 		vo.setMshipLoginPwd(mshipLoginPwd);
@@ -561,9 +561,9 @@ public class CrmMembershipController extends BaseRestController {
 	@PostMapping("change-id-password")
 	@Operation(summary = "로그인아이디-암호변경", description = "로그인아이디-암호변경")
 	public ResponseEntity<ApiVoidResultVo> savePassword(
-			@Parameter(description = "통합회원코드") @RequestParam("itgCustNo") String itgCustNo,
-			@Parameter(description = "로그인아이디", required = false) @RequestParam("mshipLoginId") String mshipLoginId,
-			@Parameter(description = "로그인암호", required = false) @RequestParam("mshipLoginPwd") String mshipLoginPwd,
+			@Parameter(description = "통합회원코드") @RequestParam String itgCustNo,
+			@Parameter(description = "로그인아이디", required = false) @RequestParam String mshipLoginId,
+			@Parameter(description = "로그인암호", required = false) @RequestParam String mshipLoginPwd,
 			@Parameter(description = "통합고객객체", required = false, hidden = true) @ModelAttribute CrmCustVo vo)
 			throws Exception {
 		vo.setMshipLoginId(mshipLoginId);
@@ -589,11 +589,11 @@ public class CrmMembershipController extends BaseRestController {
 	@PostMapping("register-alliance")
 	@Operation(summary = "제휴회원등록", description = "제휴회원등록")
 	public ResponseEntity<ApiVoidResultVo> saveAlliance(
-			@Parameter(description = "통합회원코드") @RequestParam(name = "itgCustNo", required = false) String itgCustNo,
-			@Parameter(description = "휴대전화번호") @RequestParam(name = "mphonNo", required = false) String mphonNo,
-			@Parameter(description = "사용자명") @RequestParam("custNm") String custNm,
-			@Parameter(description = "사번") @RequestParam("empNo") String empNo,
-			@Parameter(description = "제휴사코드") @RequestParam(name = "cprtCmpNo", required = false) String cprtCmpNo)
+			@Parameter(description = "통합회원코드") @RequestParam(required = false) String itgCustNo,
+			@Parameter(description = "휴대전화번호") @RequestParam(required = false) String mphonNo,
+			@Parameter(description = "사용자명") @RequestParam String custNm,
+			@Parameter(description = "사번") @RequestParam String empNo,
+			@Parameter(description = "제휴사코드") @RequestParam(required = false) String cprtCmpNo)
 			throws Exception {
 		EzMap vo = new EzMap();
 		vo.put("itgCustNo", itgCustNo);
@@ -621,8 +621,8 @@ public class CrmMembershipController extends BaseRestController {
 	@Deprecated
 	@Operation(summary = "멤버십앱토큰정보저장", description = "토큰정보저장")
 	public ResponseEntity<ApiVoidResultVo> appToken(
-			@Parameter(description = "통합고객번호") @PathVariable("itgCustNo") String itgCustNo,
-			@Parameter(description = "토큰") @RequestParam("token") String token,
+			@Parameter(description = "통합고객번호") @PathVariable String itgCustNo,
+			@Parameter(description = "토큰") @RequestParam String token,
 			@Parameter(description = "OS정보( 1:안드로이드, 2:iOs , 3 Web )") @RequestParam("osCd") String appPushOsCd,
 			@Parameter(description = "푸시수신동의여부") @RequestParam(value = "agreeYn", required = false) String pushRcvAgreeYn)
 			throws Exception {
@@ -670,9 +670,9 @@ public class CrmMembershipController extends BaseRestController {
 	@GetMapping("/push-read")
 	@Operation(summary = "푸시열람상태저장", description = "푸시열람상태저장")
 	public ResponseEntity<ApiVoidResultVo> pushRead(
-			@Parameter(description = "푸시전송ID") @RequestParam("dspHstId") String dspHstId,
-			@Parameter(description = "앱푸시토큰") @RequestParam("appPushTokn") String appPushTokn,
-			@Parameter(description = "통합고객번호", hidden = true) @RequestParam(required = false, value = "itgCustNo") String itgCustNo)
+			@Parameter(description = "푸시전송ID") @RequestParam String dspHstId,
+			@Parameter(description = "앱푸시토큰") @RequestParam String appPushTokn,
+			@Parameter(description = "통합고객번호", hidden = true) @RequestParam(required = false) String itgCustNo)
 			throws Exception {
 		EzMap so = new EzMap();
 		so.setString("dspHstId", dspHstId);
@@ -698,7 +698,7 @@ public class CrmMembershipController extends BaseRestController {
 	@GetMapping("/push-read-all/{itgCustNo}")
 	@Operation(summary = "푸시전체열람처리", description = "푸시전체열람처리")
 	public ResponseEntity<ApiVoidResultVo> pushAllRead(
-			@Parameter(description = "통합고객번호") @PathVariable("itgCustNo") String itgCustNo) throws Exception {
+			@Parameter(description = "통합고객번호") @PathVariable String itgCustNo) throws Exception {
 		EzMap so = new EzMap();
 		so.setString("itgCustNo", itgCustNo);
 		int ret = service.updateAppPushReadAll(so);
@@ -711,9 +711,9 @@ public class CrmMembershipController extends BaseRestController {
 	@GetMapping("/push-info")
 	@Operation(summary = "푸시정보조회", description = "푸시정보조회")
 	public ResponseEntity<ApiResultVo<CrmAppPushTrmHstVo>> pushInfo(
-			@Parameter(description = "푸시전송ID") @RequestParam("dspHstId") String dspHstId,
-			@Parameter(description = "앱푸시토큰") @RequestParam("appPushTokn") String appPushTokn,
-			@Parameter(description = "통합고객번호", hidden = true) @RequestParam(required = false, value = "itgCustNo") String itgCustNo)
+			@Parameter(description = "푸시전송ID") @RequestParam String dspHstId,
+			@Parameter(description = "앱푸시토큰") @RequestParam String appPushTokn,
+			@Parameter(description = "통합고객번호", hidden = true) @RequestParam(required = false) String itgCustNo)
 			throws Exception {
 		EzMap so = new EzMap();
 		so.setString("dspHstId", dspHstId);
@@ -729,11 +729,11 @@ public class CrmMembershipController extends BaseRestController {
 	@GetMapping("/push-list/{itgCustNo}")
 	@Operation(summary = "푸시발송내역", description = "푸시발송내역")
 	public ResponseEntity<ApiResultVo<ApiPagingPayload<CrmAppPushTrmHstVo>>> pushList(
-			@Parameter(description = "통합고객번호") @PathVariable("itgCustNo") String itgCustNo,
+			@Parameter(description = "통합고객번호") @PathVariable String itgCustNo,
 //			@Parameter(description = "전송성공여부") @RequestParam(value = "successYn", required = false) @YnValue String successYn,
-			@Parameter(description = "푸시열람상태") @RequestParam(value = "pushStatusCd", required = false) @CodeValue(codeId = "PS070") String pushStatusCd,
+			@Parameter(description = "푸시열람상태") @RequestParam(required = false) @CodeValue(codeId = "PS070") String pushStatusCd,
 
-			@Parameter(description = "푸시열람여부") @RequestParam(value = "readYn", required = false) @YnValue String readYn,
+			@Parameter(description = "푸시열람여부") @RequestParam(required = false) @YnValue String readYn,
 			@Parameter(description = "CRM멤버십 검색객체") @ParameterObject @Valid ApiBasePagination pagination)
 			throws Exception {
 		EzMap so = new EzMap(pagination);
@@ -763,7 +763,7 @@ public class CrmMembershipController extends BaseRestController {
 	@GetMapping("/acqie/{itgCustNo}")
 	@Operation(summary = "CRM지인 검색", description = "CRM지인 검색")
 	public ResponseEntity<ApiResultVo<List<CrmAcqieHstVo>>> getCrmCustBasList(
-			@Parameter(description = "통합고객번호") @PathVariable("itgCustNo") String itgCustNo) throws Exception {
+			@Parameter(description = "통합고객번호") @PathVariable String itgCustNo) throws Exception {
 		CrmAcqieHstSo so = new CrmAcqieHstSo();
 		so.setItgCustNo(itgCustNo);
 		EzMap param = new EzMap(so);
@@ -786,8 +786,8 @@ public class CrmMembershipController extends BaseRestController {
 	@PostMapping("/acqie/{itgCustNo}/{acqieItgCustNo}")
 	@Operation(summary = "CRM지인 입력", description = "CRM지인 입력")
 	public ResponseEntity<ApiVoidResultVo> registerCrmAcqieHst(
-			@Parameter(description = "통합고객번호") @PathVariable("itgCustNo") String itgCustNo,
-			@Parameter(description = "지인통합고객번호") @PathVariable("acqieItgCustNo") String acqieItgCustNo)
+			@Parameter(description = "통합고객번호") @PathVariable String itgCustNo,
+			@Parameter(description = "지인통합고객번호") @PathVariable String acqieItgCustNo)
 			throws Exception {
 		if (itgCustNo.equals(acqieItgCustNo))
 			throw new EzApiException(Constants._API_CODE_INVALID_PARAM, "자기 자신을 지인으로 등록할 수 없습니다.");
@@ -813,7 +813,7 @@ public class CrmMembershipController extends BaseRestController {
 	@DeleteMapping("/acqie/{acqieHstSeq}")
 	@Operation(summary = "CRM지인 삭제", description = "CRM지인 삭제")
 	public ResponseEntity<ApiVoidResultVo> removeCrmAcqieHst(
-			@Parameter(description = "지인이력일련번호") @PathVariable("acqieHstSeq") String acqieHstSeq) throws Exception {
+			@Parameter(description = "지인이력일련번호") @PathVariable String acqieHstSeq) throws Exception {
 		CrmAcqieHstVo vo = new CrmAcqieHstVo();
 		vo.setAcqieHstSeq(acqieHstSeq);
 		int ret = acqService.delete(vo);

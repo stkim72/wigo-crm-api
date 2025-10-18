@@ -43,7 +43,7 @@ public class TokenController extends BaseRestController {
 	 *
 	 */
 	@GetMapping("")
-	public ResponseEntity<ApiResultVo<TokenVo>> getToken(@PathVariable("channelCode") String channelCode)
+	public ResponseEntity<ApiResultVo<TokenVo>> getToken(@PathVariable String channelCode)
 			throws Exception {
 		if (StringUtils.isBlank(channelCode)) {
 			throw new EzApiException(Constants._API_CODE_NO_TOKEN, "채널코드가 유효하지 않습니다.");

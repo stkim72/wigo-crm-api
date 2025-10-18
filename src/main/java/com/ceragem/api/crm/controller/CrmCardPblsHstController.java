@@ -81,7 +81,7 @@ public class CrmCardPblsHstController extends BaseRestController {
 	@GetMapping("/{cardPblsHstSeq}")
 	@Operation(summary = "CRM카드발행이력 단건", description = "CRM카드발행이력 단건 검색")
 	public ResponseEntity<ApiResultVo<CrmCardPblsHstVo>> getCrmCardPblsHst(
-			@Parameter(description = "카드발행이력일련번호") @PathVariable("cardPblsHstSeq") String cardPblsHstSeq)
+			@Parameter(description = "카드발행이력일련번호") @PathVariable String cardPblsHstSeq)
 			throws Exception {
 		CrmCardPblsHstSo so = new CrmCardPblsHstSo();
 		so.setCardPblsHstSeq(cardPblsHstSeq);
@@ -145,7 +145,7 @@ public class CrmCardPblsHstController extends BaseRestController {
 	@DeleteMapping("/{cardPblsHstSeq}")
 	@Operation(summary = "CRM카드발행이력 삭제", description = "CRM카드발행이력 삭제")
 	public ResponseEntity<ApiVoidResultVo> removeCrmCardPblsHst(
-			@Parameter(description = "카드발행이력일련번호") @PathVariable("cardPblsHstSeq") String cardPblsHstSeq)
+			@Parameter(description = "카드발행이력일련번호") @PathVariable String cardPblsHstSeq)
 			throws Exception {
 		CrmCardPblsHstVo vo = new CrmCardPblsHstVo();
 		vo.setCardPblsHstSeq(cardPblsHstSeq);

@@ -88,7 +88,7 @@ public class CrmBllkCustHstController extends BaseRestController {
 	@GetMapping("/{bllkCustHstSeq}")
 	@Operation(summary = "CRM주의고객 단건", description = "CRM주의고객이력 단건 검색")
 	public ResponseEntity<ApiResultVo<CrmBllkCustHstVo>> getCrmBllkCustHst(
-			@Parameter(description = "주의고객이력일련번호") @PathVariable("bllkCustHstSeq") String bllkCustHstSeq)
+			@Parameter(description = "주의고객이력일련번호") @PathVariable String bllkCustHstSeq)
 			throws Exception {
 		CrmBllkCustHstSo so = new CrmBllkCustHstSo();
 		so.setBllkCustHstSeq(bllkCustHstSeq);
@@ -152,7 +152,7 @@ public class CrmBllkCustHstController extends BaseRestController {
 	@DeleteMapping("/{bllkCustHstSeq}")
 	@Operation(summary = "CRM주의고객 해제", description = "CRM주의고객 삭제")
 	public ResponseEntity<ApiVoidResultVo> removeCrmBllkCustHst(
-			@Parameter(description = "주의고객이력일련번호") @PathVariable("bllkCustHstSeq") String bllkCustHstSeq)
+			@Parameter(description = "주의고객이력일련번호") @PathVariable String bllkCustHstSeq)
 			throws Exception {
 		CrmBllkCustHstVo vo = new CrmBllkCustHstVo();
 		vo.setBllkCustHstSeq(bllkCustHstSeq);
@@ -175,8 +175,8 @@ public class CrmBllkCustHstController extends BaseRestController {
 	@DeleteMapping("/{regChlCd}/{itgCustNo}")
 	@Operation(summary = "CRM 채널별 주의고객 해제", description = "CRM 채널별 주의고객 삭제")
 	public ResponseEntity<ApiVoidResultVo> removeCrmBllkCustHst3(
-			@Parameter(description = "채널코드") @PathVariable("regChlCd") String regChlCd,
-			@Parameter(description = "통합고객번호") @PathVariable("itgCustNo") String itgCustNo) throws Exception {
+			@Parameter(description = "채널코드") @PathVariable String regChlCd,
+			@Parameter(description = "통합고객번호") @PathVariable String itgCustNo) throws Exception {
 		CrmBllkCustHstVo vo = new CrmBllkCustHstVo();
 		vo.setRegChlCd(regChlCd);
 		vo.setItgCustNo(itgCustNo);
@@ -199,9 +199,9 @@ public class CrmBllkCustHstController extends BaseRestController {
 	@DeleteMapping("/{regChlCd}/{storeNo}/{itgCustNo}")
 	@Operation(summary = "CRM 매장별 주의고객 해제", description = "CRM 매장별 주의고객 삭제")
 	public ResponseEntity<ApiVoidResultVo> removeCrmBllkCustHst2(
-			@Parameter(description = "채널코드") @PathVariable("regChlCd") String regChlCd,
-			@Parameter(description = "매장번호") @PathVariable("storeNo") String storeNo,
-			@Parameter(description = "통합고객번호") @PathVariable("itgCustNo") String itgCustNo) throws Exception {
+			@Parameter(description = "채널코드") @PathVariable String regChlCd,
+			@Parameter(description = "매장번호") @PathVariable String storeNo,
+			@Parameter(description = "통합고객번호") @PathVariable String itgCustNo) throws Exception {
 		CrmBllkCustHstVo vo = new CrmBllkCustHstVo();
 		vo.setRegChlCd(regChlCd);
 		vo.setStorNo(storeNo);

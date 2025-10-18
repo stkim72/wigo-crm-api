@@ -58,7 +58,7 @@ public class CrmAcqieHstController extends BaseRestController {
 	@GetMapping("/{itgCustNo}")
 	@Operation(summary = "CRM지인 검색", description = "CRM지인 검색")
 	public ResponseEntity<ApiResultVo<List<CrmAcqieHstVo>>> getCrmCustBasList(
-			@Parameter(description = "통합고객번호") @PathVariable("itgCustNo") String itgCustNo) throws Exception {
+			@Parameter(description = "통합고객번호") @PathVariable String itgCustNo) throws Exception {
 		CrmAcqieHstSo so = new CrmAcqieHstSo();
 		so.setItgCustNo(itgCustNo);
 		EzMap param = new EzMap(so);
@@ -81,8 +81,8 @@ public class CrmAcqieHstController extends BaseRestController {
 	@PostMapping("/{itgCustNo}/{acqieItgCustNo}")
 	@Operation(summary = "CRM지인 입력", description = "CRM지인 입력")
 	public ResponseEntity<ApiVoidResultVo> registerCrmAcqieHst(
-			@Parameter(description = "통합고객번호") @PathVariable("itgCustNo") String itgCustNo,
-			@Parameter(description = "지인통합고객번호") @PathVariable("acqieItgCustNo") String acqieItgCustNo)
+			@Parameter(description = "통합고객번호") @PathVariable String itgCustNo,
+			@Parameter(description = "지인통합고객번호") @PathVariable String acqieItgCustNo)
 			throws Exception {
 		if(itgCustNo.equals(acqieItgCustNo))
 			throw new EzApiException(Constants._API_CODE_INVALID_PARAM, "자기 자신을 지인으로 등록할 수 없습니다.");
@@ -108,7 +108,7 @@ public class CrmAcqieHstController extends BaseRestController {
 	@DeleteMapping("/{acqieHstSeq}")
 	@Operation(summary = "CRM지인 삭제", description = "CRM지인 삭제")
 	public ResponseEntity<ApiVoidResultVo> removeCrmAcqieHst(
-			@Parameter(description = "지인이력일련번호") @PathVariable("acqieHstSeq") String acqieHstSeq) throws Exception {
+			@Parameter(description = "지인이력일련번호") @PathVariable String acqieHstSeq) throws Exception {
 		CrmAcqieHstVo vo = new CrmAcqieHstVo();
 		vo.setAcqieHstSeq(acqieHstSeq);
 		int ret = service.delete(vo);

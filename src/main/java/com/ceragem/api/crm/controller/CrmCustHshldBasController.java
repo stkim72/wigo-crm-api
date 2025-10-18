@@ -86,7 +86,7 @@ public class CrmCustHshldBasController extends BaseRestController {
 	@GetMapping("/{itgCustNo}")
 	@Operation(summary = "CRM가족결합 단건", description = "CRM가족결합 단건 검색")
 	public ResponseEntity<ApiResultVo<CrmCustHshldBasVo>> getCrmCustHshldBas(
-			@Parameter(description = "통합고객번호") @PathVariable("itgCustNo") String itgCustNo,
+			@Parameter(description = "통합고객번호") @PathVariable String itgCustNo,
 			@Parameter(description = "개인정보 취급자 정보") @ParameterObject CrmSnstvInfoInqrySo info) throws Exception {
 		CrmCustHshldBasSo so = new CrmCustHshldBasSo();
 		so.setSo(info);
@@ -151,7 +151,7 @@ public class CrmCustHshldBasController extends BaseRestController {
 	@DeleteMapping("/{itgCustNo}")
 	@Operation(summary = "CRM가족결합 탈퇴", description = "CRM가족결합 탈퇴")
 	public ResponseEntity<ApiVoidResultVo> removeCrmCustHshldBas(
-			@Parameter(description = "통합고객번호") @PathVariable("itgCustNo") String itgCustNo) throws Exception {
+			@Parameter(description = "통합고객번호") @PathVariable String itgCustNo) throws Exception {
 		CrmCustHshldBasVo vo = new CrmCustHshldBasVo();
 		vo.setItgCustNo(itgCustNo);
 		int ret = service.delete(vo);

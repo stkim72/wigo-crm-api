@@ -100,7 +100,7 @@ public class CrmCustCntplcBasController extends BaseRestController {
 	@GetMapping("/{cntplcSeq}")
 	@Operation(summary = "CRM고객연락처 단건", description = "CRM고객연락처 단건 검색[개인정보취급자번호-indiInfoHandlPrsnNo,접속자IP주소-connPrsnIpAddr,수행업무코드-pfmWorkCd 모두 제공시 암호화 해제 후 전송]")
 	public ResponseEntity<ApiResultVo<CrmCustCntplcBasVo>> getCrmCustCntplcBas(
-			@Parameter(description = "연락처일련번호") @PathVariable("cntplcSeq") String cntplcSeq,
+			@Parameter(description = "연락처일련번호") @PathVariable String cntplcSeq,
 			@Parameter(description = "개인정보 취급자 정보") @ParameterObject CrmSnstvInfoInqrySo info) throws Exception {
 		CrmCustCntplcBasSo so = new CrmCustCntplcBasSo();
 		so.setSo(info);
@@ -188,7 +188,7 @@ public class CrmCustCntplcBasController extends BaseRestController {
 	@DeleteMapping("/{cntplcSeq}")
 	@Operation(summary = "CRM고객연락처 삭제", description = "CRM고객연락처 삭제")
 	public ResponseEntity<ApiVoidResultVo> removeCrmCustCntplcBas(
-			@Parameter(description = "연락처일련번호") @PathVariable("cntplcSeq") String cntplcSeq) throws Exception {
+			@Parameter(description = "연락처일련번호") @PathVariable String cntplcSeq) throws Exception {
 		CrmCustCntplcBasVo vo = new CrmCustCntplcBasVo();
 		vo.setCntplcSeq(cntplcSeq);
 		int ret = service.delete(vo);

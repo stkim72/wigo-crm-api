@@ -129,7 +129,7 @@ public class CrmCouponBookController extends BaseRestController {
 	@GetMapping("/{coupnBookHstSeq}")
 	@Operation(summary = "CRM 서비스권 상세", description = "CRM 서비스권 상세")
 	public ResponseEntity<ApiResultVo<CrmCouponBookVo>> getCrmCoupnPblsHst(
-			@Parameter(description = "서비스권번호") @PathVariable("coupnBookHstSeq") String coupnBookHstSeq)
+			@Parameter(description = "서비스권번호") @PathVariable String coupnBookHstSeq)
 			throws Exception {
 		CrmCouponBookSo so = new CrmCouponBookSo();
 		so.setCoupnBookHstSeq(coupnBookHstSeq);
@@ -142,9 +142,9 @@ public class CrmCouponBookController extends BaseRestController {
 	@GetMapping("validate/{coupnBookHstSeq}")
 	@Operation(summary = "CRM 서비스권번호 유효성", description = "CRM 서비스권번호 유효성")
 	public ResponseEntity<ApiResultVo<CrmCouponBookVo>> validCoupon(
-			@Parameter(description = "CRM 서비스권번호") @PathVariable("coupnBookHstSeq") String coupnBookHstSeq,
-			@Parameter(description = "사용횟수") @RequestParam("applyCnt") int applyCnt,
-			@Parameter(description = "매장번호", required = false) @RequestParam("storeNo") String storeNo,
+			@Parameter(description = "CRM 서비스권번호") @PathVariable String coupnBookHstSeq,
+			@Parameter(description = "사용횟수") @RequestParam int applyCnt,
+			@Parameter(description = "매장번호", required = false) @RequestParam String storeNo,
 			@Parameter(description = "CRM 서비스권객체", hidden = true) @ModelAttribute CrmCouponBookVo param)
 			throws Exception {
 		param.setCoupnBookHstSeq(coupnBookHstSeq);
@@ -167,9 +167,9 @@ public class CrmCouponBookController extends BaseRestController {
 	@PostMapping("approve/{coupnBookHstSeq}")
 	@Operation(summary = "CRM 서비스권 사용", description = "CRM 서비스권 사용")
 	public ResponseEntity<ApiResultVo<CrmCouponBookVo>> approveCrmCoupnBook(
-			@Parameter(description = "CRM 서비스권번호") @PathVariable("coupnBookHstSeq") String coupnBookHstSeq,
-			@Parameter(description = "사용횟수") @RequestParam("applyCnt") int applyCnt,
-			@Parameter(description = "매장번호", required = false) @RequestParam("storeNo") String storeNo,
+			@Parameter(description = "CRM 서비스권번호") @PathVariable String coupnBookHstSeq,
+			@Parameter(description = "사용횟수") @RequestParam int applyCnt,
+			@Parameter(description = "매장번호", required = false) @RequestParam String storeNo,
 			@Parameter(description = "CRM 서비스권객체", hidden = true) @ModelAttribute CrmCouponBookVo param)
 			throws Exception {
 		param.setCoupnBookHstSeq(coupnBookHstSeq);
@@ -194,8 +194,8 @@ public class CrmCouponBookController extends BaseRestController {
 	@PostMapping("cancel/{coupnBookHstSeq}")
 	@Operation(summary = "CRM 서비스권 사용취소", description = "CRM 서비스권 사용취소")
 	public ResponseEntity<ApiResultVo<CrmCouponBookVo>> cancelCrmCoupnPblsHsts(
-			@Parameter(description = "CRM 서비스권번호") @PathVariable("coupnBookHstSeq") String coupnBookHstSeq,
-			@Parameter(description = "적용횟수") @RequestParam("applyCnt") int applyCnt,
+			@Parameter(description = "CRM 서비스권번호") @PathVariable String coupnBookHstSeq,
+			@Parameter(description = "적용횟수") @RequestParam int applyCnt,
 			@Parameter(description = "CRM 서비스권객체", hidden = true) @ModelAttribute CrmCouponBookVo param)
 			throws Exception {
 		param.setCoupnBookHstSeq(coupnBookHstSeq);

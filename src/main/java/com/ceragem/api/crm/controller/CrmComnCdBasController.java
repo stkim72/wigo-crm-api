@@ -55,7 +55,7 @@ public class CrmComnCdBasController extends BaseRestController {
 	@GetMapping("large-cd")
 	@Operation(summary = "공통코드 대분류 검색", description = "공통코드 대분류 검색")
 	public ResponseEntity<ApiResultVo<List<CrmCommonCodeVo>>> getCrmCustBasList(
-			@Parameter(description = "대분류명", required = false) @RequestParam(required = false, value = "keyword") String keyword)
+			@Parameter(description = "대분류명", required = false) @RequestParam(required = false) String keyword)
 			throws Exception {
 		EzMap param = new EzMap();
 		if (Utilities.isNotEmpty(keyword))

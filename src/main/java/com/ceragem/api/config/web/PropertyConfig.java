@@ -25,7 +25,7 @@ import com.ceragem.crm.common.model.EzPropertyServiceImpl;
 @Configuration
 public class PropertyConfig {
     @Bean(name="propertiesService")
-    public EzPropertyService tilesViewResolver() {
+    EzPropertyService tilesViewResolver() {
 
         final EzPropertyServiceImpl propertyService = new EzPropertyServiceImpl();
         EzMap map = new EzMap();

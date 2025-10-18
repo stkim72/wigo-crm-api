@@ -82,7 +82,7 @@ public class CrmStpltBasController extends BaseRestController {
 	@GetMapping("/{stpltNo}")
 	@Operation(summary = "CRM약관 조회", description = "CRM약관 조회")
 	public ResponseEntity<ApiResultVo<CrmStpltBasVo>> getCrmStpltBas(
-			@Parameter(description = "약관번호") @PathVariable("stpltNo") String stpltNo) throws Exception {
+			@Parameter(description = "약관번호") @PathVariable String stpltNo) throws Exception {
 		CrmStpltBasSo so = new CrmStpltBasSo();
 		so.setStpltNo(stpltNo);
 		CrmStpltBasVo vo = service.get(so);
